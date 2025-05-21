@@ -1,0 +1,110 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:form name="post" object="{post}" controller="Post" action="{action}" id="post" enctype="multipart/form-data">
+	<div class="card">
+		<f:if condition="{header}">
+			<div class="card-header">
+				<h2>
+					{header}
+				</h2>
+			</div>
+		</f:if>
+		<div class="card-body">
+			<f:if condition="{currentUser.anonymous}">
+				<div class="form-group">
+					<label for="authorName">
+						<f:translate key="Post_New_Author" />
+					</label>
+					<f:form.textfield property="authorName" id="authorName" class="form-control" required="true"/>
+				</div>
+			</f:if>
+
+			<f:if condition="{post.firstPost}">
+				<div class="form-group">
+					<label for="topicSubject">
+						<f:translate key="Topic_New_Subject" />
+					</label>
+					<f:form.textfield id="topicSubject" property="topic.subject" value="{post.topic.subject}" class="form-control" required="true"/>
+				</div>
+			</f:if>
+
+			<div class="form-group">
+				<label for="editor">
+					<f:translate key="Post_New_Text" />
+				</label>
+				<f:form.textarea property="text" id="editor" rows="7" class="form-control"></f:form.textarea>
+
+				<f:comment>
+					<mmf:form.bbCodeEditor property="text" id="editor" rows="7" class="form-control"/>
+				</f:comment>
+			</div>
+			<div class="form-group">
+				<label for="newAttachments">
+					<f:translate key="Post_New_Attachments" />
+				</label>
+				<f:if condition="{post.attachments}">
+					<div class="mt-1 mb-2">
+						<f:render partial="Attachment/List" arguments="{attachments: post.attachments, argumentName: 'keepAttachments'}" />
+					</div>
+				</f:if>
+				<f:form.upload id="newAttachments" name="newAttachments" multiple="true" />
+			</div>
+
+			<f:if condition="{post.firstPost}">
+				<f:if condition="{availableTags}">
+					<f:asset.script identifier="bootstrap-tags" src="EXT:typo3_forum/Resources/Public/Javascript/bootstrap-tags.js" type="module" />
+
+					<div class="form-group">
+						<label for="tags">
+							<f:translate key="Topic_New_Tags" />
+						</label>
+						<f:form.select name="tags" multiple="1" data="{
+							bootstrap-tag-input: true,
+							max: settings.forum.tag.maxPerTopic,
+							placeholder: '{f:translate(key: \'Topic_New_Tags_Placeholder\')}',
+							base-class: 'badge tx-typo3forum-var-color tx-typo3forum-var-background d-flex flex-row align-items-center h5 fw-bold m-0 px-2'
+						}">
+							<f:for each="{availableTags}" as="tag">
+								<f:form.select.option
+									value="{tag.uid}"
+									data="{background: tag.color.secondaryColor, color: tag.color.primaryColor}"
+									selected="{mmf:tag.ifOnTopic(topic: post.topic, tag: tag, then: 1, else: 0)}"
+								>
+									{tag.name}
+								</f:form.select.option>
+							</f:for>
+						</f:form.select>
+					</div>
+				</f:if>
+
+				<div class="form-group">
+					<label for="topicQuestion">
+						<f:translate key="Topic_New_Question" />
+						<div>
+							<f:form.checkbox class="form-check-input me-2" property="topic.question" id="topicQuestion" value="1" />
+							<f:translate key="Topic_New_QuestionMore"/>
+						</div>
+					</label>
+				</div>
+			</f:if>
+
+			<div class="form-actions mt-4">
+				<f:if condition="{post.uid}">
+					<f:then>
+						<f:link.action controller="Post" action="show" class="btn btn-info" arguments="{post: post}">
+							<i class="fas fa-chevron-left me-1"></i>
+							<f:translate key="Button_Back" />
+						</f:link.action>
+					</f:then>
+					<f:else>
+						<f:link.action controller="Topic" action="show" class="btn btn-info" arguments="{topic: topic}">
+							<i class="fas fa-chevron-left me-1"></i>
+							<f:translate key="Button_Back" />
+						</f:link.action>
+					</f:else>
+				</f:if>
+				<f:form.hidden name="topic" value="{topic}"/>
+				<f:form.submit value="{f:translate(key: submitLabel)}" class="btn btn-primary"/>
+			</div>
+		</div>
+	</div>
+</f:form>

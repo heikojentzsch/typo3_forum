@@ -1,0 +1,100 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default"/>
+
+<f:section name="main">
+	<h1><f:translate key="User_Index_Dashboard" /></h1>
+	<div class="row">
+		<table class="table">
+			<colgroup>
+				<col width="25%"/>
+				<col width="25%"/>
+				<col width="25%"/>
+				<col width="25%"/>
+			</colgroup>
+			<thead>
+				<tr>
+					<td colspan="4">
+						<f:render partial="User/InformationRow" arguments="{user: user, hidePostCount: 1, hideRank: 1}"/>
+					</td>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td style="text-align: right;">
+						<f:translate key="User_Index_Posts" />
+					</td><td>
+						<f:link.action pageUid="{settings.pids.UserShow}" controller="User" action="listPosts">{user.postCount}</f:link.action>
+					</td>
+
+					<td style="text-align: right;">
+						<f:translate key="User_Index_HelpfulCount" />
+					</td><td>
+						{user.helpfulCount}
+					</td>
+				</tr>
+
+				<tr>
+					<td style="text-align: right;">
+						<f:translate key="User_Index_Topics" />
+					</td><td>
+						<f:link.action pageUid="{settings.pids.Dashboard}" controller="User" action="listTopics">{user.topicCount}</f:link.action>
+					</td>
+
+					<td style="text-align: right;">
+						<f:translate key="User_Index_Questions" />
+					</td><td>
+						<f:link.action pageUid="{settings.pids.Dashboard}" controller="User" action="listQuestions">{user.questionCount}</f:link.action>
+					</td>
+				</tr>
+
+				<tr>
+					<td style="text-align: right;">
+						<f:translate key="User_Show_Rank" />
+					</td><td>
+						<f:render partial="User/Rank" arguments="{rank: user.rank}" />
+					</td>
+
+					<td style="text-align: right;">
+						<f:translate key="User_Show_Points" />
+					</td><td>
+						{user.points}
+					</td>
+				</tr>
+
+				<tr>
+					<td colspan="4" style="text-align: center;">
+						<f:link.page pageUid="{settings.pids.UserShow}"><f:translate key="Link_My_Profile" /></f:link.page>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+	</div>
+
+	<div class="mt-5">
+		<legend>
+			<f:translate key="User_ListSubscriptions" />
+		</legend>
+		<f:render partial="User/ListSubscribedTopics" arguments="{topics: subscribedTopics}"/>
+		<div class="mt-n3">
+			<f:render partial="User/ListSubscribedForums" arguments="{forums: subscribedForums}"/>
+		</div>
+		<f:link.action pageUid="{settings.pids.Dashboard}" controller="User" action="listSubscriptions" class="btn btn-primary">
+			<f:translate key="Generic_More"/>
+		</f:link.action>
+	</div>
+
+	<div class="mt-5">
+		<legend>
+			<f:translate key="User_Index_MyTopics"/>
+		</legend>
+		<f:render partial="Topic/List" arguments="{topics: topics}"/>
+		<f:link.action pageUid="{settings.pids.UserShow}" controller="User" action="listTopics" arguments="{user: user}" class="btn btn-primary">
+			<f:translate key="Generic_More"/>
+		</f:link.action>
+	</div>
+
+
+</f:section>
+
+<f:section name="menu"/>

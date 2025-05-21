@@ -1,0 +1,22 @@
+.scannerwork/
+.idea
+nbproject
+Resources/Public/CSS/.sass-cache/
+.Build
+typo3scan.phar
+.phplint-cache
+.phplint.cache
+.php_cs.cache
+
+
+# composer related ignores:
+bin
+composer.lock
+index.php
+Packages
+typo3
+typo3_src
+typo3temp
+public/typo3/*
+
+!./public/typo3/.htaccess

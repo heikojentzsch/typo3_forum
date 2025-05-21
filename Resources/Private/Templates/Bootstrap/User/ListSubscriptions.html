@@ -1,0 +1,33 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default"/>
+
+
+<!-- MAIN Section -->
+<f:section name="main">
+
+	<h2>
+		<f:translate key="User_ListSubscriptions" />
+	</h2>
+
+	<mmf:pagination.paginate objects="{topics}" as="paginatedTopics" page="{topicPage}" configuration="{settings.pagebrowser.subscribedTopicList}" configAs="pagination">
+		<f:render partial="User/ListSubscribedTopics" arguments="{topics: paginatedTopics}"/>
+
+		<f:render partial="User/SubscribedTopicPageBrowser" arguments="{pagination: pagination, user: user, forumPage: forumPage}" />
+	</mmf:pagination.paginate>
+
+	<mmf:pagination.paginate objects="{forums}" as="paginatedForums" page="{forumPage}" configuration="{settings.pagebrowser.subscribedForumList}" configAs="pagination">
+		<f:render partial="User/ListSubscribedForums" arguments="{forums: paginatedForums}"/>
+
+		<f:render partial="User/SubscribedForumPageBrowser" arguments="{pagination: pagination, user: user, topicPage: topicPage}" />
+	</mmf:pagination.paginate>
+
+</f:section>
+
+
+<!-- MENU Section -->
+<f:section name="menu">
+	<f:link.action controller="User" action="dashboard" class="btn btn-info">
+		<i class="fas fa-chevron-left me-1"></i>
+		<f:translate key="Button_Back" />
+	</f:link.action>
+</f:section>

@@ -1,0 +1,89 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+
+<table class="table table-striped">
+	<colgroup>
+		<col width="56" />
+		<col />
+		<col width="15%" />
+		<col width="10%" />
+		<col width="20%" />
+		<col width="15%" />
+	</colgroup>
+	<thead>
+		<tr>
+			<th></th>
+			<th>
+				<f:translate key="Forum_Index_Name"/>
+			</th>
+			<th class="text-center">
+				<f:translate key="Forum_Index_Topics"/>
+			</th>
+			<th class="text-center">
+				<f:translate key="Forum_Index_Posts"/>
+			</th>
+			<th>
+				<f:translate key="Forum_Index_LastPost"/>
+			</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody>
+		<f:if condition="{forums}">
+			<f:then>
+				<f:for each="{forums}" as="forum">
+					<tr>
+						<td class="align-middle">
+							<mmf:forum.forumIcon forum="{forum}" />
+						</td>
+						<td class="align-middle">
+							<div>
+								<f:link.action action="show" pluginName="Forum" controller="Forum" arguments="{forum: forum}" pageUid="{settings.pids.Forum}">
+									{forum.title}
+								</f:link.action>
+							</div>
+							<div>{forum.description}</div>
+						</td>
+						<td class="text-center align-middle">{forum.topicCount}</td>
+						<td class="text-center align-middle">{forum.postCount}</td>
+						<td class="align-middle">
+							<f:render partial="Post/Summary" arguments="{post: forum.lastPost}"/>
+						</td>
+						<td class="align-middle">
+							<div class="btn-group">
+								<f:link.action
+									controller="User"
+									action="subscribe"
+									arguments="{forum: forum, unsubscribe: 1, prioritizeRefererRedirect: 1}"
+									pageUid="{settings.pids.Forum}"
+									pluginName="Forum"
+									class="btn btn-secondary text-nowrap"
+								>
+									<f:translate key="User_ListSubscriptions_Unsubscribe"/>
+								</f:link.action>
+								<f:link.action
+									controller="Forum"
+									action="show"
+									arguments="{forum: forum}"
+									pageUid="{settings.pids.Forum}"
+									pluginName="Forum"
+									class="btn btn-info text-nowrap"
+								>
+									<f:translate key="User_ListSubscriptions_Goto"/>
+								</f:link.action>
+							</div>
+						</td>
+					</tr>
+				</f:for>
+			</f:then>
+			<f:else>
+				<tr>
+					<td colspan="6" class="align-middle">
+						<div class="alert alert-info m-0">
+							<f:translate key="Forum_Index_Empty"/>
+						</div>
+					</td>
+				</tr>
+			</f:else>
+		</f:if>
+	</tbody>
+</table>

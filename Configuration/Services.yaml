@@ -1,0 +1,310 @@
+services:
+    _defaults:
+        autowire: false
+        autoconfigure: true
+        public: false
+
+    Mittwald\Typo3Forum\:
+        resource: '../Classes/*'
+
+    cache.typo3forum_main:
+        class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
+        factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
+        arguments: ['typo3forum_main']
+
+    Mittwald\Typo3Forum\ViewHelpers\Form\BbCodeEditorViewHelper:
+        autowire: true
+        arguments:
+          $cache: '@cache.typo3forum_main'
+
+    Mittwald\Typo3Forum\Service\Authentication\AuthenticationService:
+        autowire: true
+        arguments:
+          $cache: '@cache.typo3forum_main'
+
+
+    Mittwald\Typo3Forum\Command\CounterUpdateCommand:
+        public: true
+        tags:
+          - name: console.command
+            command: 'forum:updateCounters'
+            description: 'Updates counters (post count, topic count, user count etc.).'
+
+    Mittwald\Typo3Forum\Command\MarkForumsReadCommand:
+        public: true
+        tags:
+          - name: console.command
+            command: 'forum:markForumsRead'
+            description: 'Update forum read status for all users.'
+
+    Mittwald\Typo3Forum\Command\StatsUpdateCommand:
+        public: true
+        tags:
+          - name: console.command
+            command: 'forum:updateStats'
+            description: 'Update current forum statistics.'
+
+
+    Mittwald\Typo3Forum\Controller\ForumController:
+      autowire: true
+      public: false
+      autoconfigure: true
+      arguments:
+        $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+        $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+        $rootForum: '@Mittwald\Typo3Forum\Domain\Model\Forum\RootForum'
+
+    Mittwald\Typo3Forum\Domain\Model\Forum\RootForum:
+      autowire: true
+      public: false
+      autoconfigure: true
+      arguments:
+          $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+
+    Mittwald\Typo3Forum\ViewHelpers\Forum\ForumIconViewHelper:
+      autowire: true
+      public: false
+      autoconfigure: true
+      arguments:
+          $frontendUserRepository: '@Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository'
+
+    Mittwald\Typo3Forum\ViewHelpers\Forum\TopicIconViewHelper:
+      autowire: true
+      public: false
+      autoconfigure: true
+      arguments:
+          $frontendUserRepository: '@Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository'
+
+    Mittwald\Typo3Forum\ViewHelpers\Authentication\IfAccessViewHelper:
+      autowire: true
+      public: false
+      autoconfigure: true
+      arguments:
+          $frontendUserRepository: '@Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository'
+
+    Mittwald\Typo3Forum\Controller\TopicController:
+        autowire: true
+        public: false
+        autoconfigure: true
+        arguments:
+            $attachmentService: '@Mittwald\Typo3Forum\Service\AttachmentService'
+            $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+            $postFactory: '@Mittwald\Typo3Forum\Domain\Factory\Forum\PostFactory'
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+            $tagRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository'
+            $tagService: '@Mittwald\Typo3Forum\Service\TagService'
+            $topicFactory: '@Mittwald\Typo3Forum\Domain\Factory\Forum\TopicFactory'
+            $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+            $persistenceManager: '@TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+
+    Mittwald\Typo3Forum\Service\AttachmentService:
+        autowire: true
+        public: false
+        autoconfigure: true
+        arguments:
+            $resourceFactory: '@TYPO3\CMS\Core\Resource\ResourceFactory'
+
+
+    Mittwald\Typo3Forum\Domain\Factory\Forum\PostFactory:
+        autowire: true
+        public: false
+        autoconfigure: true
+        arguments:
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+            $topicFactory: '@Mittwald\Typo3Forum\Domain\Factory\Forum\TopicFactory'
+            $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+
+    Mittwald\Typo3Forum\Domain\Factory\Forum\TopicFactory:
+        autowire: true
+        public: false
+        autoconfigure: true
+        arguments:
+            $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+            $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+            $persistenceManager: '@TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+
+    Mittwald\Typo3Forum\Configuration\ConfigurationBuilder:
+        autowire: true
+        public: false
+        autoconfigure: true
+
+    Mittwald\Typo3Forum\Service\TagService:
+        autowire: true
+        public: false
+        autoconfigure: true
+        arguments:
+            $tagRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository'
+
+
+    Mittwald\Typo3Forum\ViewHelpers\Format\TextParserViewHelper:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+            $textParserService: '@Mittwald\Typo3Forum\TextParser\TextParserService'
+
+    Mittwald\Typo3Forum\TextParser\TextParserService:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $typoScriptReader: '@Mittwald\Typo3Forum\Utility\TypoScript'
+
+    Mittwald\Typo3Forum\Utility\TypoScript:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $configurationManager: '@TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface'
+
+
+    Mittwald\Typo3Forum\TextParser\Service\BBCodeParserService:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $bbCodeRepository: '@Mittwald\Typo3Forum\Domain\Repository\Format\BBCodeRepository'
+
+    Mittwald\Typo3Forum\TextParser\Service\SmileyParserService:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $smileyRepository: '@Mittwald\Typo3Forum\Domain\Repository\Format\SmileyRepository'
+
+    Mittwald\Typo3Forum\TextParser\Service\QuoteParserService:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+
+
+    Mittwald\Typo3Forum\TextParser\Service\SyntaxHighlightingParserService:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $geshiService: '@Mittwald\Typo3Forum\TextParser\Service\GeshiService'
+
+    Mittwald\Typo3Forum\Controller\PostController:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $attachmentRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\AttachmentRepository'
+            $attachmentService: '@Mittwald\Typo3Forum\Service\AttachmentService'
+            $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+            $postFactory: '@Mittwald\Typo3Forum\Domain\Factory\Forum\PostFactory'
+            $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+            $topicFactory: '@Mittwald\Typo3Forum\Domain\Factory\Forum\TopicFactory'
+            $persistenceManager: '@TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+            $tagRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository'
+            $tagService: '@Mittwald\Typo3Forum\Service\TagService'
+
+
+    Mittwald\Typo3Forum\Controller\ReportController:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $postReportRepository: '@Mittwald\Typo3Forum\Domain\Repository\Moderation\PostReportRepository'
+            $reportFactory: '@Mittwald\Typo3Forum\Domain\Factory\Moderation\ReportFactory'
+            $reportRepository: '@Mittwald\Typo3Forum\Domain\Repository\Moderation\ReportRepository'
+            $userReportRepository: '@Mittwald\Typo3Forum\Domain\Repository\Moderation\UserReportRepository'
+
+
+    Mittwald\Typo3Forum\Domain\Factory\Moderation\ReportFactory:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $reportWorkflowStatusRepository: '@Mittwald\Typo3Forum\Domain\Repository\Moderation\ReportWorkflowStatusRepository'
+
+    Mittwald\Typo3Forum\Controller\UserController:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+            $notificationRepository: '@Mittwald\Typo3Forum\Domain\Repository\User\NotificationRepository'
+            $rankRepository: '@Mittwald\Typo3Forum\Domain\Repository\User\RankRepository'
+            $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+            $userfieldRepository: '@Mittwald\Typo3Forum\Domain\Repository\User\UserfieldRepository'
+
+
+    Mittwald\Typo3Forum\Domain\Repository\User\UserfieldRepository:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $configurationManager: '@TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface'
+
+
+    Mittwald\Typo3Forum\Controller\ModerationController:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+            $persistenceManager: '@TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+            $postReportRepository: '@Mittwald\Typo3Forum\Domain\Repository\Moderation\PostReportRepository'
+            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
+            $reportRepository: '@Mittwald\Typo3Forum\Domain\Repository\Moderation\ReportRepository'
+            $topicFactory: '@Mittwald\Typo3Forum\Domain\Factory\Forum\TopicFactory'
+            $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+            $userReportRepository: '@Mittwald\Typo3Forum\Domain\Repository\Moderation\UserReportRepository'
+
+
+    Mittwald\Typo3Forum\Domain\Repository\Moderation\PostReportRepository:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $authenticationService: '@Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface'
+            $configurationManager: '@TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface'
+
+
+    Mittwald\Typo3Forum\Controller\TagController:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $tagRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository'
+            $topicRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository'
+            $colorRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ColorRepository'
+
+
+    Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $authenticationService: '@Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface'
+            $persistenceManager: '@TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
+
+
+    Mittwald\Typo3Forum\Service\Notification\SubscriptionListener:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $notificationService: '@Mittwald\Typo3Forum\Service\Notification\NotificationService'
+
+        tags:
+            - name: event.listener
+              identifier: 'typo3_forum/PostCreateListener'
+              method: 'onPostCreated'
+
+            - name: event.listener
+              identifier: 'typo3_forum/TopicCreateListener'
+              method: 'onTopicCreated'
+
+    Mittwald\Typo3Forum\Service\Notification\NotificationService:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $htmlMailingService: '@Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService'
+            $uriBuilder: '@TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder'
+            $configurationBuilder: '@Mittwald\Typo3Forum\Configuration\ConfigurationBuilder'
+
+
+    Mittwald\Typo3Forum\ViewHelpers\Form\ForumSelectViewHelper:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $forumRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository'
+
+
+    Mittwald\Typo3Forum\Controller\StatsController:
+        autowire: true
+        autoconfigure: true
+        arguments:
+            $summaryRepository: '@Mittwald\Typo3Forum\Domain\Repository\Stats\SummaryRepository'

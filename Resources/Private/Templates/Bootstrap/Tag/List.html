@@ -1,0 +1,64 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default" />
+
+<f:section name="main">
+
+	<h2>
+		<f:translate key="Tags_List_All" />
+	</h2>
+	<f:if condition="{tags}">
+		<f:then>
+
+			<div class="card card-body flex-row flex-wrap align-items-center tx-typo3forum-tag-gap">
+				<mmf:pagination.paginate objects="{tags}" as="paginatedTags" page="{page}" configuration="{settings.pagebrowser.tagList}" configAs="pagination">
+					<f:for each="{paginatedTags}" as="tag">
+						<f:render partial="Tag/Single" arguments="{tag: tag, showTopicCount: 1, linkToShowAction: 1}" />
+					</f:for>
+
+					<div class="mt-3 mb-2">
+						<f:render partial="Control/PageBrowser" arguments="{pagination: pagination, action: 'list'}" />
+					</div>
+				</mmf:pagination.paginate>
+			</div>
+
+		</f:then>
+		<f:else>
+
+			<div class="alert alert-info m-0" role="alert">
+				<f:translate key="Tags_List_NotFound" />
+			</div>
+
+		</f:else>
+	</f:if>
+
+	<div class="row">
+		<div class="col-md-12">
+			<f:if condition="{mine} == 1">
+				<f:then>
+					<f:link.action controller="Tag" action="list" arguments="{mine: 0}">
+						<f:translate key="Tags_List_Link_All" />
+					</f:link.action>
+				</f:then>
+				<f:else>
+					<f:if condition="{user.anonymous} == {FALSE}">
+						<f:link.action controller="Tag" action="list" arguments="{mine: 1}">
+							<f:translate key="Tags_List_Link_Mine" />
+						</f:link.action>
+					</f:if>
+				</f:else>
+			</f:if>
+		</div>
+	</div>
+
+</f:section>
+
+<f:section name="menu">
+
+	<mmf:tag.ifCanCreate>
+		<f:link.action controller="Tag" action="new" class="btn btn-primary">
+			<i class="fas fa-plus me-1"></i>
+			<f:translate key="Tags_New_Btn" />
+		</f:link.action>
+	</mmf:tag.ifCanCreate>
+
+</f:section>

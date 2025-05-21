@@ -1,0 +1,56 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default" />
+
+<f:section name="main">
+
+	<f:form action="create" id="create" object="{tag}" name="tag">
+		<div class="card">
+			<div class="card-header">
+				<h2>
+					<f:translate key="Tags_New" />
+				</h2>
+			</div>
+			<div class="card-body">
+
+				<div class="form-group">
+					<label for="name">
+						<f:translate key="Tags_New_Name" />
+					</label>
+					<f:form.textfield property="name" id="name" class="form-control" required="true" />
+				</div>
+				<f:if condition="{colors}">
+					<div class="form-group">
+						<label for="name">
+							<f:translate key="Tags_New_Color" />
+						</label>
+						<div class="card card-body d-flex flex-row flex-wrap align-items-center tx-typo3forum-tag-gap">
+							<f:for each="{colors}" as="color">
+
+								<label
+									class="btn tx-typo3forum-var-background tx-typo3forum-var-color"
+									style="--tx-typo3forum-background: {color.secondaryColor}; --tx-typo3forum-color: {color.primaryColor};"
+								>
+									<div class="form-check form-check-inline m-0 fw-bold">
+										<f:form.radio property="color" style="accent-color: #000;" value="{color.uid}" id="color-{color.uid}" class="form-check-input" />
+										<span class="form-check-label" for="color-{color.uid}">{color.name}</span>
+									</div>
+								</label>
+
+							</f:for>
+						</div>
+					</div>
+				</f:if>
+
+			</div>
+		</div>
+	</f:form>
+
+</f:section>
+
+<f:section name="menu">
+	<f:link.action action="list" class="btn btn-info">
+		<i class="fas fa-chevron-left me-1"></i>
+		<f:translate key="Button_Back" />
+	</f:link.action>
+	<input type="submit" form="create" value="{f:translate(key: 'Tags_New_Btn')}" class="btn btn-primary" />
+</f:section>

@@ -1,0 +1,63 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+
+<h2>
+	{header}
+</h2>
+
+<table class="table table-striped">
+	<colgroup>
+		<col width="56" />
+		<col />
+		<col width="5%" />
+		<col width="5%" />
+		<col width="20%" />
+	</colgroup>
+	<thead>
+		<tr>
+			<th></th>
+			<th>
+				<f:translate key="Forum_Index_Name" />
+			</th>
+			<th class="text-center">
+				<f:translate key="Forum_Index_Topics" />
+			</th>
+			<th class="text-center">
+				<f:translate key="Forum_Index_Posts" />
+			</th>
+			<th>
+				<f:translate key="Forum_Index_LastPost" />
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		<f:if condition="{category.children}">
+			<f:then>
+				<f:for each="{category.children}" as="forum">
+					<tr>
+						<td class="text-center align-middle">
+							<mmf:forum.forumIcon forum="{forum}" />
+						</td>
+						<td class="align-middle">
+							<div>
+								<f:link.action action="show" pluginName="Forum" arguments="{forum : forum}" pageUid="{settings.pids.Forum}">{forum.title}</f:link.action>
+							</div>
+							<div>{forum.description}</div>
+						</td>
+						<td class="text-center align-middle">{forum.topicCount}</td>
+						<td class="text-center align-middle">{forum.postCount}</td>
+						<td class="align-middle">
+							<f:render partial="Post/Summary" arguments="{post : forum.lastPost}" />
+						</td>
+					</tr>
+				</f:for>
+			</f:then>
+			<f:else>
+				<tr>
+					<td colspan="4">
+						<f:translate key="Forum_Index_Empty" />
+					</td>
+				</tr>
+			</f:else>
+		</f:if>
+	</tbody>
+</table>

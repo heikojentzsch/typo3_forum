@@ -1,0 +1,20 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default" />
+
+
+
+<f:section name="main">
+	<f:render partial="FormErrors" />
+	<f:render partial="Post/Form" arguments="{
+		post: post,
+		topic: topic,
+		action: 'create',
+		currentUser: currentUser,
+		header: '{f:translate(key: \'Post_New\', arguments: \'{0: topic.subject}\')}',
+		submitLabel: 'Post_New_Submit'
+	}" />
+</f:section>
+
+
+
+<f:section name="menu" />

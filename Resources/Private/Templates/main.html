@@ -1,0 +1,11 @@
+<!-- Include the default theme -->
+<f:asset.css identifier="default-SCEditor-css" href="EXT:typo3_forum/Resources/Public/SCEditor/minified/themes/default.min.css" priority="true" />
+
+<!-- Include the editors JS -->
+<f:asset.script src="EXT:typo3_forum/Resources/Public/SCEditor/minified/sceditor.min.js" identifier="sceditor" priority="true"/>
+
+
+<!-- Include the BBCode or XHTML formats -->
+<f:asset.script src="EXT:typo3_forum/Resources/Public/SCEditor/minified/formats/bbcode.js" identifier="bbcode" priority="true"/>
+<f:asset.script src="EXT:typo3_forum/Resources/Public/SCEditor/CustomBBCode.js" identifier="customBBcode" priority="5" defer="true"/>
+<f:format.raw>{content}</f:format.raw>

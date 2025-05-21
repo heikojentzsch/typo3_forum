@@ -1,0 +1,68 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default" />
+
+<f:section name="main">
+	<f:render partial="FormErrors" />
+
+	<h2>
+		<f:translate key="Moderation_EditTopic" arguments="{0: topic.subject}" />
+	</h2>
+	<f:form name="topic" object="{topic}" controller="Moderation" action="updateTopic" id="topic">
+		<div class="card card-body">
+			<div class="form-group row">
+				<label for="sticky" class="col-2 col-form-label">
+					<f:translate key="Moderation_EditTopic_Sticky" />
+				</label>
+				<div class="col-10 col-form-label">
+					<f:form.checkbox class="form-check-input" name="sticky" property="sticky" value="1" id="sticky" />
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label for="closed" class="col-2 col-form-label">
+					<f:translate key="Moderation_EditTopic_Closed" />
+				</label>
+				<div class="col-10 col-form-label">
+					<f:form.checkbox class="form-check-input" name="closed" property="closed" value="1" id="closed" />
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label for="question" class="col-2 col-form-label">
+					<f:translate key="Moderation_EditTopic_Question" />
+				</label>
+				<div class="col-10 col-form-label">
+					<f:form.checkbox class="form-check-input" name="question" property="question" value="1" id="question" />
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label for="moveTopicTarget" class="col-2 col-form-label">
+					<f:translate key="Moderation_EditTopic_Move" />
+				</label>
+				<div class="col-auto">
+					<mmf:form.forumSelect name="moveTopicTarget" value="{topic.forum}" class="form-control" id="moveTopicTarget" />
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label for="urlSegment" class="col-2 col-form-label">
+					<f:translate key="Moderation_EditTopic_Slug" />
+				</label>
+				<div class="col-auto">
+					<f:form.textfield class="form-control" name="urlSegment" property="slug" id="urlSegment" required="1" />
+				</div>
+			</div>
+		</div>
+	</f:form>
+</f:section>
+
+<f:section name="menu">
+	<div class="form-actions">
+		<f:link.action controller="Topic" action="show" arguments="{topic: topic}" class="btn btn-info">
+			<i class="fas fa-chevron-left me-1"></i>
+			<f:translate key="Button_Back" />
+		</f:link.action>
+		<input type="submit" form="topic" value="{f:translate(key:'Moderation_EditTopic_Submit')}" class="btn btn-primary" />
+	</div>
+</f:section>

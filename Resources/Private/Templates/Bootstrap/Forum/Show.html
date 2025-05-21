@@ -1,0 +1,30 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default" />
+
+<f:section name="main">
+	<h1>{forum.title}</h1>
+
+	<mmf:forum.rootline rootline="{forum.rootline}" forumicon="far fa-folder-open me-2" topicicon="far fa-comments me-2" />
+
+
+	<div class="mt-5">
+		<f:render partial="Forum/List" arguments="{category: forum, header: '{f:translate(key: \'Subforums\')}'}" />
+	</div>
+
+
+	<h2 class="mt-5">
+		<f:translate key="Forum_Show_Topics" />
+	</h2>
+
+	<mmf:pagination.paginate objects="{topics}" as="paginatedTopics" page="{page}" configuration="{settings.forumController.show.pagebrowser}" configAs="pagination">
+		<f:render partial="Topic/List" arguments="{topics: paginatedTopics, differentiateStickyTopics: 1}" />
+
+		<f:render partial="Forum/PageBrowser" arguments="{pagination: pagination, forum: forum}" />
+	</mmf:pagination.paginate>
+</f:section>
+
+<f:section name="menu">
+	<div class="forum_menu mt-5" data-uid="{forum.uid}">
+		<f:render partial="Forum/Menu" arguments="{forum: forum}" />
+	</div>
+</f:section>

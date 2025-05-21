@@ -1,0 +1,89 @@
+{namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
+<f:layout name="default" />
+
+<f:section name="main">
+	<h2>
+		<f:translate key="Moderation_Index_Reports" />
+	</h2>
+
+	<mmf:pagination.paginate objects="{postReports}" as="paginatedReports" page="{page}" configuration="{settings.reportController.list.pagebrowser}" configAs="pagination">
+		<table class="table table-striped">
+			<colgroup>
+				<col width="1" />
+				<col width="15%" />
+				<col />
+				<col width="10%" />
+				<col width="10%" />
+				<col width="10%" />
+				<col width="20%" />
+			</colgroup>
+			<thead>
+				<tr>
+					<th>#</th>
+					<th><f:translate key="Moderation_Index_Topic" /></th>
+					<th><f:translate key="Moderation_Index_Message" /></th>
+					<th class="text-center"><f:translate key="Moderation_Index_Author" /></th>
+					<th class="text-center"><f:translate key="Moderation_Index_Status" /></th>
+					<th class="text-center"><f:translate key="Moderation_Index_Reporter" /></th>
+					<th class="text-center"><f:translate key="Moderation_Index_Date" /></th>
+				</tr>
+			</thead>
+			<tbody>
+				<f:if condition="{paginatedReports}">
+					<f:then>
+						<f:for each="{paginatedReports}" as="report">
+							<f:alias map="{
+								editReportUrl: '{f:uri.action(action: \'editReport\', arguments: \'{postReport: report}\')}'
+							}">
+								<tr
+									data-content="{report.firstComment.text}"
+									data-original-title="{report.topic.subject}"
+									class="cursor-pointer"
+									onclick="window.location = '{editReportUrl}';"
+								>
+									<td class="text-center align-middle">
+										{report.uid}
+									</td>
+									<td class="align-middle">
+										<a href="{editReportUrl}">{report.topic.subject}</a>
+									</td>
+									<td class="align-middle">
+										<div class="tx-typo3forum-parsed-text tx-typo3forum-gradient-preview tx-typo3forum-preview-150">
+											<mmf:format.textParser post="{report.post}" />
+										</div>
+									</td>
+									<td class="text-center align-middle">
+										<mmf:user.link user="{report.post.author}" />
+									</td>
+									<td class="text-center align-middle">
+										{report.workflowStatus.name}
+									</td>
+									<td class="text-center align-middle">
+										<mmf:user.link user="{report.reporter}" />
+									</td>
+									<td class="text-center align-middle">
+										<f:format.date format="{settings.format.dateTimeFormat}">{report.crdate}</f:format.date>
+									</td>
+								</tr>
+							</f:alias>
+						</f:for>
+					</f:then>
+					<f:else>
+						<tr>
+							<td colspan="5">
+								<div class="alert alert-info m-0">
+									<strong><f:translate key="Moderation_Index_NothingHere" /></strong> <f:translate key="Moderation_Index_NoOpenReportsFound" />
+								</div>
+							</td>
+						</tr>
+					</f:else>
+				</f:if>
+			</tbody>
+		</table>
+
+		<f:render partial="Control/PageBrowser" arguments="{pagination: pagination, action: 'indexReport'}"/>
+	</mmf:pagination.paginate>
+
+</f:section>
+
+<f:section name="menu" />

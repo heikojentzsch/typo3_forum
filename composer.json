@@ -1,0 +1,68 @@
+{
+	"name": "mittwald/typo3_forum",
+	"description": "Forum extension",
+	"license": "GPL-2",
+	"type": "typo3-cms-extension",
+	"repositories": [
+		{
+			"type": "composer",
+			"url": "https://composer.typo3.org/"
+		}
+	],
+	"require": {
+		"typo3/cms-core": "^12.4.0",
+		"sjbr/static-info-tables": "^12.4.0"
+	},
+	"require-dev": {
+		"namelesscoder/typo3-repository-client": "^1.2",
+		"mikey179/vfsstream": "^1.4",
+		"phpunit/phpunit": "^5.0 || ^6.5",
+		"helmich/typo3-typoscript-lint": "^2.3",
+		"overtrue/phplint": "^2.1",
+		"friendsofphp/php-cs-fixer": "^2.16",
+		"phpmd/phpmd": "^2.9",
+		"phpstan/phpstan": "^0.12.52",
+		"psalm/phar": "^4.0"
+	},
+	"replace": {
+		"typo3-ter/typo3_forum": "self.version"
+	},
+	"config": {
+		"vendor-dir": ".Build/vendor",
+		"bin-dir": ".Build/bin",
+		"preferred-install": {
+			"typo3/cms": "source"
+		}
+	},
+	"autoload": {
+		"psr-4": {
+			"Mittwald\\Typo3Forum\\": "Classes"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Mittwald\\Typo3Forum\\Tests\\": "Tests",
+			"TYPO3\\CMS\\Core\\Tests\\": ".Build/vendor/typo3/cms/typo3/sysext/core/Tests/",
+			"TYPO3\\CMS\\Fluid\\Tests\\": ".Build/vendor/typo3/cms/typo3/sysext/fluid/Tests/"
+		}
+	},
+	"scripts": {
+		"php-lint": [
+			".Build/vendor/overtrue/phplint/bin/phplint"
+		],
+		"php-cs-fixer": [
+			".Build/vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix --config=.php_cs.php --dry-run --diff --diff-format=udiff Classes",
+			".Build/vendor/friendsofphp/php-cs-fixer/php-cs-fixer fix --config=.php_cs.php --dry-run --diff --diff-format=udiff Configuration"
+		]
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-master": "1.0.x-dev"
+		},
+		"typo3/cms": {
+			"extension-key": "typo3_forum",
+			"cms-package-dir": "{$vendor-dir}/typo3/cms",
+			"web-dir": ".Build/Web"
+		}
+	}
+}
