@@ -1,7 +1,7 @@
 {
 	"name": "pottkinder/typo3forum",
 	"description": "Forum extension",
-	"license": "GPL-2",
+	"license": "GPL-2.0",
 	"type": "typo3-cms-extension",
 	"repositories": [
 		{
@@ -10,8 +10,8 @@
 		}
 	],
 	"require": {
-		"typo3/cms-core": "^12.4.0",
-		"sjbr/static-info-tables": "^12.4.0"
+		"typo3/cms-core": "^12.4",
+		"sjbr/static-info-tables": "^12.4"
 	},
 	"require-dev": {
 		"namelesscoder/typo3-repository-client": "^1.2",
