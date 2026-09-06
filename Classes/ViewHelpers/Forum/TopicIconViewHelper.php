@@ -53,7 +53,7 @@ class TopicIconViewHelper extends AbstractViewHelper
     /**
      * Initializes the view helper arguments.
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         $this->registerArgument(
             'important',

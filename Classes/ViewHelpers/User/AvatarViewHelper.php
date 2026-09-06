@@ -54,7 +54,7 @@ class AvatarViewHelper extends AbstractTagBasedViewHelper
      * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
      * @return string Rendered tag
      */
-    public function render()
+    public function render(): string
     {
         /* @var FrontendUser $user */
         $user = $this->arguments['user'];

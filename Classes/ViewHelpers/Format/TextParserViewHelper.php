@@ -54,7 +54,7 @@ class TextParserViewHelper extends AbstractViewHelper
     /**
      * Initialize arguments.
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('configuration', 'string', 'The configuration path', false, 'plugin.tx_typo3forum.settings.textParsing');

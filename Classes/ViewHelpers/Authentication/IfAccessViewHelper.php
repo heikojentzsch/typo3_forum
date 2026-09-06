@@ -57,7 +57,7 @@ class IfAccessViewHelper extends AbstractViewHelper
     /**
      * initializeArguments.
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('object', AccessibleInterface::class, 'Object to check', true);

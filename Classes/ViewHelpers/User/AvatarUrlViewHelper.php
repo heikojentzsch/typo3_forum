@@ -49,7 +49,7 @@ class AvatarUrlViewHelper extends AbstractViewHelper
     /**
      * Initializes the view helper's arguments.
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
     }

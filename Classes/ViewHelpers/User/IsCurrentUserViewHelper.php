@@ -35,13 +35,13 @@ class IsCurrentUserViewHelper extends AbstractConditionViewHelper
 {
     protected static ?FrontendUser $currentUser = null;
 
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('user', FrontendUser::class, 'User to check identity of.', true);
     }
 
-    public static function verdict(array $arguments, RenderingContextInterface $renderingContext)
+    public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
     {
         /** @var ?FrontendUser $user */
         $user = $arguments['user'] ?? null;

@@ -75,7 +75,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
     /**
      * Initializes the view helper arguments.
      */
-    public function initializeArguments():void
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument(

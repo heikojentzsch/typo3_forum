@@ -44,7 +44,7 @@ class ForumIconViewHelper extends AbstractViewHelper
         $this->frontendUserRepository = $frontendUserRepository;
     }
 
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('forum', Forum::class, 'Current forum', true);

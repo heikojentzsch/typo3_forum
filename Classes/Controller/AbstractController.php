@@ -134,7 +134,7 @@ abstract class AbstractController extends ActionController
     *
     * @return bool Always FALSE.
     */
-    protected function getErrorFlashMessage()
+    protected function getErrorFlashMessage(): string|bool
     {
         return false;
     }

@@ -32,7 +32,6 @@ use TYPO3\CMS\Core\Country\CountryProvider;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use TYPO3\CMS\Fluid\ViewHelpers\CObjectViewHelper;
-use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
@@ -40,26 +39,20 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 class UserfieldViewHelper extends AbstractViewHelper
 {
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('user', FrontendUser::class, 'Frontend user object', true);
         $this->registerArgument('userfield', AbstractUserfield::class, 'User field', true);
     }
 
-    /**
-     * @return mixed
-     */
-    public static function renderStatic(
-        array $arguments,
-        \Closure $renderChildrenClosure,
-        RenderingContextInterface $renderingContext
-    ) {
-        $user = $arguments['user'];
-        $userfield = $arguments['userfield'];
+    public function render(): string
+    {
+        $user = $this->arguments['user'];
+        $userfield = $this->arguments['userfield'];
 
         if (!$userfield instanceof TyposcriptUserfield) {
-            return new \InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 'Only userfields of type TyposcriptUserField are supported',
                 1435048481
             );
@@ -69,7 +62,7 @@ class UserfieldViewHelper extends AbstractViewHelper
             ', ',
             array_filter(
                 array_map(
-                    function (string $propertyName) use ($renderingContext, $userfield, $user): string {
+                    function (string $propertyName) use ($userfield, $user): string {
                         if ($propertyName === 'country') {
                             return self::renderCountry($user->getCountry());
                         }
@@ -78,17 +71,17 @@ class UserfieldViewHelper extends AbstractViewHelper
                             [
                                 'typoscriptObjectPath' => $userfield->getTyposcriptPath() . '.output',
                                 'currentValueKey' => $propertyName,
-                                'table' => 'fe_users'
+                                'table' => 'fe_users',
                             ],
                             function () use ($user) {
                                 return $user;
                             },
-                            $renderingContext
+                            $this->renderingContext
                         );
                     },
                     explode('|', $userfield->getUserObjectPropertyName())
                 ),
-                function (string $renderedItem): bool {
+                static function (string $renderedItem): bool {
                     return $renderedItem !== '';
                 }
             )

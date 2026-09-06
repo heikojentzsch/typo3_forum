@@ -36,13 +36,13 @@ class IfCanCreateViewHelper extends AbstractConditionViewHelper
 {
     protected static ?FrontendUser $currentUser = null;
 
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('user', FrontendUser::class, 'User to check identity of.', false, null);
     }
 
-    public static function verdict(array $arguments, RenderingContextInterface $renderingContext)
+    public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
     {
         $authenticationService = GeneralUtility::makeInstance(AuthenticationService::class);
         if (static::$currentUser === null) {

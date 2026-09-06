@@ -8,7 +8,7 @@ return [
         'crdate' => 'crdate',
         'delete' => 'deleted',
         'enablecolumns' => ['disabled' => 'hidden'],
-        'iconfile' => 'EXT:typo3_forum/Resources/Public/Icons/Forum/Attachment.png'
+        'iconfile' => 'EXT:typo3_forum/Resources/Public/Icons/Forum/Attachment.png',
     ],
     'types' => [
         '1' => ['showitem' => 'name,referenced_files,download_count'],
@@ -19,21 +19,21 @@ return [
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.versionLabel',
             'config' => [
                 'type' => 'none',
-                'cols' => 27
+                'cols' => 27,
             ],
         ],
         'hidden' => [
             'exclude' => 1,
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.hidden',
             'config' => [
-                'type' => 'check'
+                'type' => 'check',
             ],
         ],
         'crdate' => [
             'exclude' => 1,
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.creationDate',
             'config' => [
-                'type' => 'passthrough'
+                'type' => 'passthrough',
             ],
         ],
         'post' => [
@@ -43,33 +43,31 @@ return [
                 'type' => 'select',
                 'renderType' => 'selectSingle',
                 'foreign_table' => 'tx_typo3forum_domain_model_forum_post',
-                'maxitems' => 1
+                'maxitems' => 1,
             ],
         ],
         'download_count' => [
             'exclude' => 1,
             'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_attachment.download_count',
             'config' => [
-                'type' => 'none'
+                'type' => 'none',
             ],
         ],
         'referenced_files' => [
             'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_attachment.referenced_files',
-            'config' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::getFileFieldTCAConfig(
-                'referenced_files',
-                [
-                    'maxitems' => 1,
-                ],
-                $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']
-            ),
+            'config' => [
+                'type' => 'file',
+                'maxitems' => 1,
+                'allowed' => 'common-image-types',
+            ],
         ],
         'name' => [
             'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_attachment.name',
             'config' => [
                 'type' => 'input',
                 'eval' => 'trim',
-                'limit' => 255,
-            ]
+                'max' => 255,
+            ],
         ],
     ],
 ];

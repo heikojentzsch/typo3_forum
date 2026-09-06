@@ -45,7 +45,7 @@ class LinkViewHelper extends AbstractViewHelper
      *
      * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception\InvalidVariableException
      */
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->settings = $this->templateVariableContainer->get('settings');
@@ -56,7 +56,7 @@ class LinkViewHelper extends AbstractViewHelper
      *
      * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('class', 'string', 'CSS class.');

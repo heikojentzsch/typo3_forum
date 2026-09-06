@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\Format;
 
 /*                                                                      *
@@ -24,18 +25,14 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Format;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
-use TYPO3Fluid\Fluid\Core\ViewHelper\Traits\CompileWithRenderStatic;
 
 /**
  * ViewHelper that replaces substrings inside a string.
  */
 class ReplaceViewHelper extends AbstractViewHelper
 {
-    use CompileWithRenderStatic;
-
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('search', 'string', 'Substring to replace.', true);
@@ -43,8 +40,12 @@ class ReplaceViewHelper extends AbstractViewHelper
         $this->registerArgument('subject', 'string', 'Replacement subject.', true);
     }
 
-    public static function renderStatic(array $arguments, \Closure $renderChildrenClosure, RenderingContextInterface $renderingContext): string
+    public function render(): string
     {
-        return str_replace($arguments['search'] ?? '', $arguments['replace'] ?? '', $arguments['subject'] ?? '');
+        return str_replace(
+            $this->arguments['search'] ?? '',
+            $this->arguments['replace'] ?? '',
+            $this->arguments['subject'] ?? ''
+        );
     }
 }

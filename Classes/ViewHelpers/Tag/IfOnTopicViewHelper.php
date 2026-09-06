@@ -35,14 +35,14 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper;
 
 class IfOnTopicViewHelper extends AbstractConditionViewHelper
 {
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('topic', Topic::class, 'Topic the tag could be on.', true);
         $this->registerArgument('tag', Tag::class, 'The Tag to check the presence of.', true);
     }
 
-    public static function verdict(array $arguments, RenderingContextInterface $renderingContext)
+    public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
     {
         /** @var ?Topic $topic */
         $topic = $arguments['topic'] ?? null;

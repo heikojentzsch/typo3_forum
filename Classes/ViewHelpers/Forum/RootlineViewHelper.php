@@ -48,7 +48,7 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
     /**
      * initializeArguments.
      */
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerUniversalTagAttributes();
@@ -63,7 +63,7 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
     /**
      * initialize.
      */
-    public function initialize()
+    public function initialize(): void
     {
         parent::initialize();
         $this->settings = $this->templateVariableContainer->get('settings');
@@ -73,7 +73,7 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
      * render.
      * @return string
      */
-    public function render()
+    public function render(): string
     {
         $rootline = $this->arguments['rootline'];
 

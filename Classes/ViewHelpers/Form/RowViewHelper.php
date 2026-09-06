@@ -42,11 +42,11 @@ class RowViewHelper extends AbstractTagBasedViewHelper {
     /**
      * @return void
      */
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
     }
 
-    public function initializeArguments() {
+    public function initializeArguments(): void {
         parent::initializeArguments();
         $this->registerArgument('llLabel', 'string', 'Locallang key for label.', FALSE, '');
         $this->registerArgument('label', 'string', 'Hardcoded label (better to use llLabel instead).', FALSE, '');
@@ -55,7 +55,7 @@ class RowViewHelper extends AbstractTagBasedViewHelper {
         $this->registerArgument('errorLLPrefix', 'string', 'Error label locallang prefix.', FALSE);
     }
 
-    public function render() {
+    public function render(): string {
         $class = 'control-group';
         $errorContent = '';
 

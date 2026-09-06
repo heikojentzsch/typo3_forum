@@ -33,7 +33,7 @@ use TYPO3Fluid\Fluid\ViewHelpers\IfViewHelper;
  */
 class IfInstanceOfViewHelper extends IfViewHelper
 {
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('object', AbstractDomainObject::class, 'Object to check', true);
@@ -45,7 +45,7 @@ class IfInstanceOfViewHelper extends IfViewHelper
      *
      * @return string
      */
-    public function render()
+    public function render(): mixed
     {
         $object = $this->arguments['object'];
         $className = $this->arguments['className'];

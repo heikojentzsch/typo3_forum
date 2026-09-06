@@ -50,7 +50,7 @@ class IfSubscribedViewHelper extends AbstractConditionViewHelper
     protected $forumRepository;
 
 
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('object', SubscribeableInterface::class, 'Object to check', true);

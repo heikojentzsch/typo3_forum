@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\Pagination;
 
 /*                                                                    - *
@@ -20,54 +21,64 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Pagination;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use Closure;
 use Mittwald\Typo3Forum\Helpers\Pagination;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 class PaginateViewHelper extends AbstractViewHelper
 {
     protected $escapeOutput = false;
 
-    public function initializeArguments()
+    public function initializeArguments(): void
     {
         parent::initializeArguments();
         $this->registerArgument('objects', 'array', 'The array of objects to paginate.', true);
         $this->registerArgument('as', 'string', 'Variable name to export the object slice as.', true);
         $this->registerArgument('page', 'int', 'Page of objects to display.', true);
         $this->registerArgument('configuration', 'array', 'Pagination configuration.', false, []);
-        $this->registerArgument('configAs', 'string', 'Variable name to export the configuration as, for the pagebrowser.', false, '');
+        $this->registerArgument(
+            'configAs',
+            'string',
+            'Variable name to export the configuration as, for the pagebrowser.',
+            false,
+            ''
+        );
     }
 
-    public static function renderStatic($arguments, Closure $renderChildrenClosure, RenderingContextInterface $renderingContext): string
+    public function render(): mixed
     {
-        $objects = $arguments['objects'];
-        if (is_object($objects)|| is_string($objects)) {
+        $objects = $this->arguments['objects'];
+
+        if (is_object($objects) || is_string($objects)) {
             if (method_exists($objects, 'toArray')) {
                 $objects = $objects->toArray();
             }
         }
 
-        /** @var Pagination $configuration */
-        $pagination = GeneralUtility::makeInstance(Pagination::class, $objects, $arguments['configuration']);
-        $pagination->setCurrentPage($arguments['page']);
+        /** @var Pagination $pagination */
+        $pagination = GeneralUtility::makeInstance(
+            Pagination::class,
+            $objects,
+            $this->arguments['configuration']
+        );
+        $pagination->setCurrentPage($this->arguments['page']);
 
-        // Render contents.
-        $configName = $arguments['configAs'];
+        $configName = $this->arguments['configAs'];
 
-        $variables = $renderingContext->getVariableProvider();
-        $variables->add($arguments['as'], $pagination->fetchPage());
+        $variables = $this->renderingContext->getVariableProvider();
+        $variables->add($this->arguments['as'], $pagination->fetchPage());
+
         if (!empty($configName)) {
             $variables->add($configName, $pagination);
         }
 
-        $output = $renderChildrenClosure();
+        $output = $this->renderChildren();
 
         if (!empty($configName)) {
             $variables->remove($configName);
         }
-        $variables->remove($arguments['as']);
+
+        $variables->remove($this->arguments['as']);
 
         return $output;
     }

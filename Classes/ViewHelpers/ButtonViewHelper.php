@@ -43,7 +43,7 @@ class ButtonViewHelper extends AbstractTagBasedViewHelper {
         $this->registerArgument('icon', 'string', 'Icon', FALSE, NULL);
     }
 
-    public function initialize() {
+    public function initialize(): void {
         parent::initialize();
 
         $class = 'btn';
@@ -55,7 +55,7 @@ class ButtonViewHelper extends AbstractTagBasedViewHelper {
         $this->tag->addAttribute('class', $class);
     }
 
-    public function renderChildren() {
+    public function renderChildren(): mixed {
         if ($this->arguments['icon']) {
             $content = '<i class="tx-typo3forum-icon-16-' . $this->arguments['icon'] . '"></i> ';
         } else {
