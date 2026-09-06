@@ -374,22 +374,6 @@ plugin {
 				date = d.m.Y
 			}
 
-			country.output = CONTENT
-			country.output {
-				select {
-					selectFields = cn_official_name_local
-					where {
-						current = 1
-						wrap = cn_iso_3="|"
-					}
-					pidInList = 0
-				}
-
-				table = static_countries
-				renderObj = TEXT
-				renderObj.field = cn_official_name_local
-			}
-
 			gender.output = CASE
 			gender.output {
 				0 = TEXT

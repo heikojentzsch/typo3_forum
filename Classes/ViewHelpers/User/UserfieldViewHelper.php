@@ -28,7 +28,9 @@ namespace Mittwald\Typo3Forum\ViewHelpers\User;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield;
 use Mittwald\Typo3Forum\Domain\Model\User\Userfield\TyposcriptUserfield;
+use TYPO3\CMS\Core\Country\CountryProvider;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use TYPO3\CMS\Fluid\ViewHelpers\CObjectViewHelper;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
@@ -68,6 +70,10 @@ class UserfieldViewHelper extends AbstractViewHelper
             array_filter(
                 array_map(
                     function (string $propertyName) use ($renderingContext, $userfield, $user): string {
+                        if ($propertyName === 'country') {
+                            return self::renderCountry($user->getCountry());
+                        }
+
                         return CObjectViewHelper::renderStatic(
                             [
                                 'typoscriptObjectPath' => $userfield->getTyposcriptPath() . '.output',
@@ -86,6 +92,24 @@ class UserfieldViewHelper extends AbstractViewHelper
                     return $renderedItem !== '';
                 }
             )
+        );
+    }
+
+    private static function renderCountry(string $alpha3IsoCode): string
+    {
+        if ($alpha3IsoCode === '') {
+            return '';
+        }
+
+        $countryProvider = GeneralUtility::makeInstance(CountryProvider::class);
+        $country = $countryProvider->getByAlpha3IsoCode($alpha3IsoCode);
+
+        if ($country === null) {
+            return $alpha3IsoCode;
+        }
+
+        return (string)LocalizationUtility::translate(
+            $country->getLocalizedNameLabel()
         );
     }
 }
