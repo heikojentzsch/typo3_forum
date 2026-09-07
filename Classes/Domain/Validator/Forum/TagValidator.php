@@ -33,16 +33,9 @@ class TagValidator extends AbstractValidator
 {
     protected TagRepository $tagRepository;
 
-    public function __construct(array $options = [])
+    public function __construct()
     {
         $this->tagRepository = GeneralUtility::makeInstance(TagRepository::class);
-        parent::__construct($options);
-    }
-
-    // @todo: Remove this method when v11 compatibility is dropped.
-    public function setOptions(array $options): void
-    {
-        $this->initializeDefaultOptions($options);
     }
 
     /**
@@ -66,8 +59,8 @@ class TagValidator extends AbstractValidator
             $result = false;
         }
         $name = ucwords($name);
-        $res = $this->tagRepository->findTagWithSpecificName($name);
-        if ($res[0] != false) {
+        $res = $this->tagRepository->findOneByName($name);
+        if ($res !== null) {
             $this->addError('The tag already exists!.', 1373871960);
             $result = false;
         }

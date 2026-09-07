@@ -38,6 +38,16 @@ class TagRepository extends Repository
         $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
     }
 
+    public function findOneByName(string $name): ?Tag
+    {
+        $query = $this->createQuery();
+
+        return $query->matching($query->equals('name', $name))
+            ->setLimit(1)
+            ->execute()
+            ->getFirst();
+    }
+
     /**
      * Find all ordered by topic count
      * @return QueryResultInterface<Tag>
