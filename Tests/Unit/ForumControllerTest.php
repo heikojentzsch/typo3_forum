@@ -1,204 +1,171 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Controller\ForumController;
-use Mittwald\Typo3Forum\Domain\Model\Forum\Forum;
-use Mittwald\Typo3Forum\Domain\Model\Forum\RootForum;
-use Mittwald\Typo3Forum\Domain\Model\User\AnonymousFrontendUser;
-use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
-use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
-use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
-use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
+use Mittwald\Typo3Forum\Domain\Exception\Authentication\{NoAccessException, NotLoggedInException};
+use Mittwald\Typo3Forum\Domain\Model\Forum\{Forum, RootForum, Topic};
+use Mittwald\Typo3Forum\Domain\Model\User\{AnonymousFrontendUser, FrontendUser};
+use Mittwald\Typo3Forum\Domain\Repository\Forum\{ForumRepository, TopicRepository};
+use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Extbase\Http\ForwardResponse;
+use TYPO3\CMS\Extbase\Persistence\{ObjectStorage, QueryResultInterface};
 
-class ForumControllerTest extends AbstractControllerTest
+final class ForumControllerTest extends AbstractControllerTestCase
 {
+    private ForumController $controller;
+    private ForumRepository&MockObject $forumRepository;
+    private TopicRepository&MockObject $topicRepository;
 
-    /**
-     * @var ForumController
-     */
-    protected $forumController;
-
-    /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|ForumRepository
-     */
-    protected $forumRepositoryMock;
-
-    /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|RootForum
-     */
-    protected $rootForumMock;
-
-    /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|TopicRepository
-     */
-    protected $topicRepositoryMock;
-
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
-        $this->forumController = new ForumController();
-
-        $this->inject($this->forumController, 'authenticationService', $this->authenticationServiceMock);
-        $this->inject($this->forumController, 'frontendUserRepository', $this->frontendUserRepositoryMock);
-        $this->inject($this->forumController, 'objectManager', $this->objectManagerMock);
-        $this->inject($this->forumController, 'request', $this->requestMock);
-        $this->inject($this->forumController, 'response', $this->responseMock);
-        $this->inject($this->forumController, 'uriBuilder', $this->uriBuilderMock);
-        $this->inject($this->forumController, 'view', $this->viewMock);
-
-        // inject root forum mock
-        $this->rootForumMock = $this->getMock(RootForum::class);
-        $this->inject($this->forumController, 'rootForum', $this->rootForumMock);
-
-        // inject forum repository mock
-        $this->forumRepositoryMock = $this->getMock(
-            ForumRepository::class,
-            [],
-            [$this->getMock(ObjectManager::class)]
+        $this->forumRepository = $this->createMock(ForumRepository::class);
+        $this->topicRepository = $this->createMock(TopicRepository::class);
+        $this->controller = new ForumController(
+            $this->forumRepository,
+            $this->topicRepository,
+            $this->createStub(RootForum::class),
         );
-        $this->inject($this->forumController, 'forumRepository', $this->forumRepositoryMock);
-
-        // inject topic repository mock
-        $this->topicRepositoryMock = $this->getMock(
-            TopicRepository::class,
-            [],
-            [$this->getMock(ObjectManager::class)]
-        );
-        $this->inject($this->forumController, 'topicRepository', $this->topicRepositoryMock);
+        $this->initializeController($this->controller);
     }
 
-    /**
-     * @test
-     */
-    public function indexActionAssertsReadAuthorization()
+    public function testIndexForwardsTheFirstRootForumToShow(): void
     {
-        $this->assertReadAuthorizationForForum($this->rootForumMock);
-        $this->forumController->indexAction();
+        $forum = $this->forum();
+        $this->forumRepository->expects(self::once())->method('findFirstRootForum')->willReturn($forum);
+        $this->view->expects(self::never())->method('render');
+        $response = $this->controller->indexAction();
+        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ForwardResponse::class, $response);
+        self::assertSame('show', $response->getActionName());
+        self::assertSame('Forum', $response->getControllerName());
+        self::assertSame(['forum' => $forum], $response->getArguments());
     }
 
-    /**
-     * @test
-     */
-    public function indexActionAssignsFoundForumsToView()
+    public function testIndexWithoutRootForumAssignsPageAndReturnsHtml(): void
     {
-        $foundForums = new ObjectStorage();
-        $this->forumRepositoryMock->expects($this->once())
-            ->method('findForIndex')
-            ->will($this->returnValue($foundForums));
-        $this->viewMock->expects($this->once())
-            ->method('assign')
-            ->with($this->isType('string'), $this->equalTo($foundForums));
-        $this->forumController->indexAction();
+        $this->forumRepository->expects(self::once())->method('findFirstRootForum')->willReturn(null);
+        $this->view->expects(self::once())->method('assign')->with('page', 3)->willReturnSelf();
+        $this->view->expects(self::once())->method('render')->willReturn('<p>No forums</p>');
+        $this->assertHtmlResponse($this->controller->indexAction(3), '<p>No forums</p>');
     }
 
-    /**
-     * @test
-     */
-    public function showActionAssertsReadAuthorization()
+    public function testShowChecksReadAccessAndAssignsForumTopicsAndPage(): void
     {
-        /** @var Forum $forum */
-        $forum = $this->getMock(Forum::class);
-        $this->assertReadAuthorizationForForum($forum);
-        $this->forumController->showAction($forum);
+        $forum = $this->forum();
+        $topics = $this->createStub(QueryResultInterface::class);
+        $this->topicRepository->expects(self::once())->method('findForIndex')->with($forum)->willReturn($topics);
+        $this->authenticationService->expects(self::once())->method('assertReadAuthorization')->with($forum);
+        $this->view->expects(self::once())->method('assignMultiple')
+            ->with(['forum' => $forum, 'topics' => $topics, 'page' => 2])->willReturnSelf();
+        $this->view->expects(self::once())->method('render')->willReturn('<p>Forum</p>');
+        $this->assertHtmlResponse($this->controller->showAction($forum, 2), '<p>Forum</p>');
     }
 
-    /**
-     * @test
-     */
-    public function showActionAssignsForumAndFoundTopicsToView()
+    public function testShowPropagatesDeniedReadAccessWithoutRendering(): void
     {
-        /** @var Forum $forum */
-        $forum = $this->getMock(Forum::class);
-        $foundTopics = new ObjectStorage();
-        $this->topicRepositoryMock->expects($this->once())
-            ->method('findForIndex')
-            ->will($this->returnValue($foundTopics));
-        $this->viewMock->expects($this->once())
-            ->method('assignMultiple')
-            ->with($this->logicalAnd(
-                $this->arrayHasKey('forum'),
-                $this->arrayHasKey('topics')
-            ));
-        $this->forumController->showAction($forum);
+        $forum = $this->forum();
+        $this->topicRepository->method('findForIndex')->willReturn($this->createStub(QueryResultInterface::class));
+        $this->authenticationService->expects(self::once())->method('assertReadAuthorization')->with($forum)
+            ->willThrowException(new NoAccessException('Denied', 1284709852));
+        $this->view->expects(self::never())->method('assignMultiple');
+        $this->view->expects(self::never())->method('render');
+        $this->expectException(NoAccessException::class);
+        $this->expectExceptionCode(1284709852);
+        $this->controller->showAction($forum);
     }
 
-    /**
-     * @test
-     * @expectedException \Mittwald\Typo3Forum\Domain\Exception\Authentication\NotLoggedInException
-     * @expectedExceptionCode 1288084981
-     */
-    public function markReadActionThrowsExceptionWhenNotLoggedIn()
+    public function testMarkReadRejectsTheAnonymousUserReturnedWhenLoggedOut(): void
     {
-        /** @var Forum $forum */
-        $forum = $this->getMock(Forum::class);
-        $this->forumController->markReadAction($forum);
+        // findCurrent() now always returns FrontendUser, with AnonymousFrontendUser for guests.
+        $user = (new \ReflectionClass(AnonymousFrontendUser::class))->newInstanceWithoutConstructor();
+        $forum = $this->forum();
+        $this->frontendUserRepository->expects(self::once())->method('findCurrent')->willReturn($user);
+        $this->forumRepository->expects(self::never())->method('update');
+        $this->uriBuilder->expects(self::never())->method('uriFor');
+        $this->expectException(NotLoggedInException::class);
+        $this->expectExceptionCode(1288084981);
+        $this->controller->markReadAction($forum);
     }
 
-    /**
-     * @test
-     * @expectedException \Mittwald\Typo3Forum\Domain\Exception\Authentication\NotLoggedInException
-     * @expectedExceptionCode 1288084981
-     */
-    public function markReadActionThrowsExceptionWhenAnonymous()
+    public function testMarkReadMarksAnEmptyForumAndReturns307Redirect(): void
     {
-        /** @var Forum $forum */
-        $forum = $this->getMock(Forum::class);
-        $anonymousFrontendUserMock = $this->getMock(AnonymousFrontendUser::class);
-        $anonymousFrontendUserMock->expects($this->once())
-            ->method('isAnonymous')
-            ->will($this->returnValue(true));
-        $this->frontendUserRepositoryMock->expects($this->once())
-            ->method('findCurrent')
-            ->will($this->returnValue($anonymousFrontendUserMock));
-        $this->forumController->markReadAction($forum);
+        $forum = $this->forum();
+        $user = $this->loggedInUser();
+        $this->forumRepository->expects(self::once())->method('update')->with($forum);
+        $this->expectShowUri($forum);
+        $response = $this->controller->markReadAction($forum);
+        self::assertTrue($forum->getReaders()->contains($user));
+        $this->assertShowRedirect($response);
     }
 
-    /**
-     * @test
-     * @expectedException \TYPO3\CMS\Extbase\Mvc\Exception\StopActionException
-     */
-    public function markReadActionRedirectsToShowAction()
+    public function testMarkReadUpdatesTheForumItsChildrenAndTheirTopics(): void
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Forum $forum */
-        $forum = $this->getMock(Forum::class);
-        $forum->expects($this->once())
-            ->method('getChildren')
-            ->will($this->returnValue(new ObjectStorage()));
-        $forum->expects($this->once())
-            ->method('getTopics')
-            ->will($this->returnValue(new ObjectStorage()));
-        $frontendUserMock = $this->getMock(FrontendUser::class);
-        $frontendUserMock->expects($this->once())
-            ->method('isAnonymous')
-            ->will($this->returnValue(false));
-        $this->frontendUserRepositoryMock->expects($this->once())
-            ->method('findCurrent')
-            ->will($this->returnValue($frontendUserMock));
-        $this->requestMock->expects($this->once())
-            ->method('getFormat')
-            ->will($this->returnValue('html'));
-        $this->uriBuilderMock->expects($this->once())
-            ->method('uriFor')
-            ->will($this->returnCallback(function ($action) {
-                return 'url/to/' . $action;
-            }));
-        $this->responseMock->expects($this->once())
-            ->method('setHeader')
-            ->with($this->equalTo('Location'), $this->callback(function ($url) {
-                return array_pop(explode('/', $url)) === 'show';
-            }));
-        $this->forumController->markReadAction($forum);
+        $forum = $this->forum();
+        $child = $this->forum();
+        $forum->getChildren()->attach($child);
+        $topic = $this->topic();
+        $childTopic = $this->topic();
+        $forum->getTopics()->attach($topic);
+        $child->getTopics()->attach($childTopic);
+        $user = $this->loggedInUser();
+        $updated = [];
+        $this->forumRepository->expects(self::exactly(2))->method('update')
+            ->willReturnCallback(static function (object $object) use (&$updated): void { $updated[] = $object; });
+        $this->expectShowUri($forum);
+        $response = $this->controller->markReadAction($forum);
+        self::assertSame([$forum, $child], $updated);
+        foreach ([$forum, $child, $topic, $childTopic] as $object) {
+            self::assertTrue($object->getReaders()->contains($user));
+        }
+        $this->assertShowRedirect($response);
     }
 
-    /**
-     * @param Forum $forum
-     */
-    protected function assertReadAuthorizationForForum(Forum $forum)
+    private function loggedInUser(): FrontendUser
     {
-        $this->authenticationServiceMock->expects($this->once())
-            ->method('assertReadAuthorization')
-            ->with($this->equalTo($forum))
-            ->will($this->returnValue(true));
+        $user = $this->createStub(FrontendUser::class);
+        $user->method('isAnonymous')->willReturn(false);
+        $this->frontendUserRepository->expects(self::once())->method('findCurrent')->willReturn($user);
+        return $user;
+    }
+
+    private function expectShowUri(Forum $forum): void
+    {
+        $this->uriBuilder->expects(self::once())->method('uriFor')
+            ->with('show', ['forum' => $forum], 'Forum')->willReturn('/forum/show');
+    }
+
+    private function assertShowRedirect(ResponseInterface $response): void
+    {
+        self::assertSame(307, $response->getStatusCode());
+        self::assertSame('/forum/show', $response->getHeaderLine('Location'));
+    }
+
+    private function assertHtmlResponse(ResponseInterface $response, string $html): void
+    {
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertSame($html, (string)$response->getBody());
+    }
+
+    private function forum(): Forum
+    {
+        // Keep real read-state behavior without the entity constructor's service dependencies.
+        $forum = (new \ReflectionClass(Forum::class))->newInstanceWithoutConstructor();
+        foreach (['children', 'visibleChildren', 'topics', 'readers'] as $property) {
+            $this->setProperty($forum, $property, new ObjectStorage());
+        }
+        return $forum;
+    }
+
+    private function topic(): Topic
+    {
+        $topic = (new \ReflectionClass(Topic::class))->newInstanceWithoutConstructor();
+        $this->setProperty($topic, 'readers', new ObjectStorage());
+        return $topic;
     }
 }
