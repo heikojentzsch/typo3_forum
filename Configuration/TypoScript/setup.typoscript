@@ -392,24 +392,6 @@ plugin {
 		}
 	}
 
-	tx_typo3forum_ajax = USER
-	tx_typo3forum_ajax {
-		userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
-		pluginName = Pi1
-		extensionName = Typo3Forum
-		vendorName = Mittwald
-		action = list
-		controller = Forum
-		htmlSpecialChars = 1
-		switchableControllerActions {
-			Ajax {
-				1 = preview
-			}
-		}
-
-		view =< plugin.tx_typo3forum.view
-		persistence =< plugin.tx_typo3forum.persistence
-	}
 }
 
 ["{$plugin.tx_typo3forum.settings.useDefaultCSS}" == "1"]
@@ -430,10 +412,6 @@ page {
 		jQuery.external = 1
 		typo3forum_markitup = EXT:typo3_forum/Resources/Public/Javascript/markitup/jquery.markitup.js
 	}
-	# TODO: Include when reimplementing AJAX
-	# includeJSFooter {
-	# 	typo3forum_main = EXT:typo3_forum/Resources/Public/Javascript/forum.js
-	# }
 }
 
 
