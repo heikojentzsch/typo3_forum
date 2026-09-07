@@ -62,11 +62,11 @@ class UserfieldRepository extends AbstractRepository
      * and merges the result with the core userfields that are loaded from the
      * typoscript setup.
      *
-     * @return \Traversable<\Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield>
+     * @return array<AbstractUserfield>
      *                             All userfields, both from the database and
      *                             the core typoscript setup.
      */
-    public function findAll()
+    public function findAll(): array
     {
         $query = $this->createQueryWithFallbackStoragePage();
         return array_merge($this->findCoreUserfields(), $query->execute()->toArray());
@@ -76,12 +76,12 @@ class UserfieldRepository extends AbstractRepository
      * Finds all core userfields. These are stored in the typoscript setting
      * plugin.tx_typo3forum.settings.userfields.core_fields.
      *
-     * @return array|\Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield
+     * @return array<AbstractUserfield>
      *     The core userfields that are generated from the
      *     typoscript configuration.
      * @throws \UnexpectedValueException
      */
-    protected function findCoreUserfields()
+    protected function findCoreUserfields(): array
     {
         if (count($this->coreUserfields) === 0) {
             $conf = $this->configurationManager->getConfiguration(ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK);

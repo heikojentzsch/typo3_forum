@@ -85,7 +85,7 @@ class FrontendUserRepository extends AbstractRepository
             $query->setOrderings($orderings);
         }
         if ($onlyOnline) {
-            $constraints[] = $query->greaterThan('is_online', time() - ($this->settings['timeIntervals']['onlineUser'] ?? 900));
+            $constraints[] = $query->greaterThan('isOnline', time() - ($this->settings['timeIntervals']['onlineUser'] ?? 900));
         }
         if ($uids !== null && count($uids) > 0) {
             $constraints[] = $query->in('uid', $uids);

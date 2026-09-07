@@ -25,18 +25,11 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
  *                                                                      */
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
 class TagRepository extends Repository
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
-    }
 
     public function findOneByName(string $name): ?Tag
     {
@@ -55,7 +48,7 @@ class TagRepository extends Repository
     public function findAllOrderedByCounter(): QueryResultInterface
     {
         $query = $this->createQuery();
-        $query->setOrderings(['topic_count' => 'DESC']);
+        $query->setOrderings(['topicCount' => 'DESC']);
 
         return $query->execute();
     }

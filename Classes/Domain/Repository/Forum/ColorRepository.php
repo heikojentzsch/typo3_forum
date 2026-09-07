@@ -25,10 +25,11 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
  *                                                                      */
 
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
+use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 class ColorRepository extends AbstractRepository
 {
-    public function findAll()
+    public function findAll(): QueryResultInterface
     {
         return $this->createQueryWithFallbackStoragePage()->execute();
     }

@@ -25,8 +25,6 @@ namespace Mittwald\Typo3Forum\Domain\Repository;
  *                                                                      */
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\Generic\QuerySettingsInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
@@ -48,11 +46,6 @@ abstract class AbstractRepository extends Repository
     protected ConfigurationBuilder $configurationBuilder;
     protected array $settings = [];
     protected array $persistenceSettings = [];
-    public function __construct()
-    {
-        parent::__construct();
-        $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
-    }
 
     public function injectConfigurationBuilder(ConfigurationBuilder $configurationBuilder): void
     {
@@ -66,25 +59,30 @@ abstract class AbstractRepository extends Repository
 
         if (isset($this->persistenceSettings['storagePid'])) {
             $this->setDefaultQuerySettings(
-                $this->getQuerySettings()->setStoragePageIds(explode(',', $this->persistenceSettings['storagePid']))
+                $this->getQuerySettings()
+                    ->setRespectStoragePage(true)
+                    ->setStoragePageIds(explode(',', $this->persistenceSettings['storagePid']))
             );
         }
     }
 
     protected function createQueryWithFallbackStoragePage(): QueryInterface
     {
-        $query = $this->createQuery();
+        return $this->addFallbackStoragePage($this->createQuery());
+    }
 
+    protected function addFallbackStoragePage(QueryInterface $query): QueryInterface
+    {
         $storagePageIds = $query->getQuerySettings()->getStoragePageIds();
         $storagePageIds[] = 0;
 
-        $query->getQuerySettings()->setStoragePageIds($storagePageIds);
+        $query->getQuerySettings()->setStoragePageIds(array_values(array_unique($storagePageIds, SORT_REGULAR)));
 
         return $query;
     }
 
     protected function getQuerySettings(): QuerySettingsInterface
     {
-        return GeneralUtility::makeInstance(QuerySettingsInterface::class);
+        return $this->createQuery()->getQuerySettings();
     }
 }

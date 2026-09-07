@@ -29,8 +29,6 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\Generic\Query;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
@@ -39,7 +37,6 @@ class TopicRepository extends AbstractRepository
 {
     public function createQuery(): QueryInterface
     {
-        $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
         $query = parent::createQuery();
 
         // don't add sys_language_uid constraint
@@ -95,7 +92,7 @@ class TopicRepository extends AbstractRepository
                 $query->equals('forum', $forum)
             )
             ->setOrderings(['sticky' => 'DESC',
-                'last_post_crdate' => 'DESC'])
+                'lastPostCrdate' => 'DESC'])
         ;
 
         return $query->execute();
@@ -106,7 +103,7 @@ class TopicRepository extends AbstractRepository
      *
      * @return QueryResultInterface<Topic>
      */
-    public function findQuestions(?int $limit = null, bool $showAnswered = false, FrontendUser $user = null): QueryResultInterface
+    public function findQuestions(?int $limit = null, bool $showAnswered = false, ?FrontendUser $user = null): QueryResultInterface
     {
         $query = $this->createQuery();
 
@@ -246,7 +243,7 @@ class TopicRepository extends AbstractRepository
     {
         $query = $this->createQuery();
         $query->matching($query->equals('forum', $forum))
-            ->setOrderings(['last_post_crdate' => QueryInterface::ORDER_DESCENDING])->setLimit(1);
+            ->setOrderings(['lastPostCrdate' => QueryInterface::ORDER_DESCENDING])->setLimit(1);
         if ($offset !== null) {
             $query->setOffset($offset);
         }
@@ -263,7 +260,7 @@ class TopicRepository extends AbstractRepository
         $query = $this->createQuery();
         $query
             ->matching($query->logicalNot($query->equals('type', 1)))
-            ->setOrderings(['last_post_crdate' => QueryInterface::ORDER_DESCENDING])
+            ->setOrderings(['lastPostCrdate' => QueryInterface::ORDER_DESCENDING])
         ;
         if ($offset !== null) {
             $query->setOffset($offset);

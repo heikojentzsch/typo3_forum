@@ -27,8 +27,7 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Moderation;
 use Mittwald\Typo3Forum\Domain\Model\Moderation\PostReport;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
-use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
+use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 
 /**
  * Repository class for report objects.
@@ -36,16 +35,31 @@ use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 class PostReportRepository extends AbstractRepository
 {
     protected AuthenticationServiceInterface $authenticationService;
+    protected ConfigurationManagerInterface $configurationManager;
 
 
-    public function __construct(AuthenticationServiceInterface $authenticationService, ConfigurationManager $configurationManager)
+    public function __construct(AuthenticationServiceInterface $authenticationService, ConfigurationManagerInterface $configurationManager)
     {
         parent::__construct();
         $this->authenticationService = $authenticationService;
-        $this->setDefaultQuerySettings($this->getQuerySettings()->setRespectStoragePage($configurationManager->getConfiguration(
-            \TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
-        )['persistence']['storagePid']?? false));
+        $this->configurationManager = $configurationManager;
+    }
 
+    public function initializeObject(): void
+    {
+        parent::initializeObject();
+
+        // Explicit extension storage pages take precedence, as in AbstractRepository.
+        if (!isset($this->persistenceSettings['storagePid'])) {
+            $storagePid = $this->configurationManager->getConfiguration(
+                ConfigurationManagerInterface::CONFIGURATION_TYPE_FRAMEWORK
+            )['persistence']['storagePid'] ?? false;
+            $querySettings = $this->getQuerySettings()->setRespectStoragePage((bool)$storagePid);
+            if ($storagePid !== false) {
+                $querySettings->setStoragePageIds(explode(',', (string)$storagePid));
+            }
+            $this->setDefaultQuerySettings($querySettings);
+        }
     }
 
     public function findAllAuthorizedToEdit(): array

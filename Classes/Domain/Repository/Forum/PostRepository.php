@@ -27,17 +27,10 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 class PostRepository extends AbstractRepository
 {
-     public function __construct()
-     {
-         parent::__construct();
-         $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
-     }
     /**
      * @return QueryResultInterface<Post>
      */
@@ -54,10 +47,10 @@ class PostRepository extends AbstractRepository
      * @param int $limit
      * @param array   $orderings
      *
-     * @return Array<\Mittwald\Typo3Forum\Domain\Model\Forum\Post>
+     * @return QueryResultInterface<Post>
      *                               The selected subset of posts
      */
-    public function findByFilter(?int $limit = null, ?array $orderings = null)
+    public function findByFilter(?int $limit = null, ?array $orderings = null): QueryResultInterface
     {
         $query = $this->createQuery();
         if ($limit !== null) {
@@ -71,14 +64,13 @@ class PostRepository extends AbstractRepository
     }
 
     /**
-     * Finds topics for a specific filterset. Page navigation is possible.
+     * Finds posts for a specific filterset. Page navigation is possible.
      *
      * @param array $uids
      *
-     * @return \Mittwald\Typo3Forum\Domain\Model\Forum\Topic[]
-     *                               The selected subset of topcis
+     * @return QueryResultInterface<Post> The selected subset of posts
      */
-    public function findByUids($uids)
+    public function findByUids(array $uids): QueryResultInterface
     {
         $query = $this->createQuery();
         $constraints = [];
@@ -98,11 +90,11 @@ class PostRepository extends AbstractRepository
      * @param \Mittwald\Typo3Forum\Domain\Model\Forum\Topic $topic
      *                               The topic for which the posts are to be loaded.
      *
-     * @return Array<\Mittwald\Typo3Forum\Domain\Model\Forum\Post>
+     * @return QueryResultInterface<Post>
      *                               The selected subset of posts in the specified
      *                               topic.
      */
-    public function findForTopic(\Mittwald\Typo3Forum\Domain\Model\Forum\Topic $topic)
+    public function findForTopic(\Mittwald\Typo3Forum\Domain\Model\Forum\Topic $topic): QueryResultInterface
     {
         $query = $this->createQuery();
         $query->getQuerySettings()->setRespectSysLanguage(false);
@@ -122,10 +114,10 @@ class PostRepository extends AbstractRepository
      * @param int                                            $offset
      *                                If you want to get the next to last post post
      *
-     * @return \Mittwald\Typo3Forum\Domain\Model\Forum\Post
+     * @return Post|null
      *                             The last post of the specified topic.
      */
-    public function findLastByTopic(\Mittwald\Typo3Forum\Domain\Model\Forum\Topic $topic, $offset = 0)
+    public function findLastByTopic(\Mittwald\Typo3Forum\Domain\Model\Forum\Topic $topic, int $offset = 0): ?Post
     {
         $query = $this->createQuery();
         $query->matching($query->equals('topic', $topic))
@@ -145,10 +137,10 @@ class PostRepository extends AbstractRepository
      * @param int                                            $offset
      *                                If you want to get the next to last post post
      *
-     * @return \Mittwald\Typo3Forum\Domain\Model\Forum\Post
+     * @return Post|null
      *                             The last post of the specified forum.
      */
-    public function findLastByForum(\Mittwald\Typo3Forum\Domain\Model\Forum\Forum $forum, $offset = 0)
+    public function findLastByForum(\Mittwald\Typo3Forum\Domain\Model\Forum\Forum $forum, int $offset = 0): ?Post
     {
         $query = $this->createQuery();
         $query->matching($query->equals('topic.forum', $forum))

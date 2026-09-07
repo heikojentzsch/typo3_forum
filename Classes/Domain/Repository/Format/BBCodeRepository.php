@@ -25,8 +25,6 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Format;
  *                                                                      */
 
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 /**
@@ -34,15 +32,9 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
  */
 class BBCodeRepository extends AbstractRepository
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
-    }
 
     public function findAll(): QueryResultInterface
     {
-        $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
         $query = $this->createQueryWithFallbackStoragePage();
         $query->setOrderings(['uid' => 'ASC']);
 

@@ -24,19 +24,8 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Stats;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use Mittwald\Typo3Forum\Domain\Model\Stats\Summary;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
-use TYPO3\CMS\Extbase\Persistence\QueryInterface;
-use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
 class SummaryRepository extends Repository
 {
-    public function __construct()
-    {
-        parent::__construct();
-        $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
-
-    }
 }

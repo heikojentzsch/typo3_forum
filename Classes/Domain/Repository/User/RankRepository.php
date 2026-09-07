@@ -45,8 +45,8 @@ class RankRepository extends AbstractRepository
     public function findOneByPoints(int $points): ?Rank
     {
         $query = $this->createQueryWithFallbackStoragePage();
-        $query->matching($query->greaterThan('point_limit', (int)$points));
-        $query->setOrderings(['point_limit' => 'ASC']);
+        $query->matching($query->greaterThan('pointLimit', (int)$points));
+        $query->setOrderings(['pointLimit' => 'ASC']);
         $query->setLimit(1);
 
         return $query->execute()->getFirst();
