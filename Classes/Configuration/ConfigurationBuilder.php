@@ -1,7 +1,11 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Configuration;
 
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Resource\Exception\InvalidConfigurationException;
+use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 
 /***************************************************************
  *  Copyright (C) 2017 punkt.de GmbH
@@ -23,18 +27,13 @@ use TYPO3\CMS\Core\Resource\Exception\InvalidConfigurationException;
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use TYPO3\CMS\Core\SingletonInterface;
-use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
-use TYPO3\CMS\Core\TypoScript\TypoScriptService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-
 class ConfigurationBuilder implements SingletonInterface
 {
     protected array $settings = [];
     protected array $persistenceSettings = [];
-    public function __construct(
-    ) {
 
+    public function __construct()
+    {
     }
 
     /**
@@ -66,16 +65,43 @@ class ConfigurationBuilder implements SingletonInterface
      */
     protected function loadTypoScript(): void
     {
-        if (empty($GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_typo3forum.'])) {
-            throw new InvalidConfigurationException('The TypoScript configuration for typo3_forum is missing. Include it via a template or a TypoScript file.', 1561441468);
+        $typoScript = $this->getFrontendTypoScript()
+            ->getSetupArray()['plugin.']['tx_typo3forum.'] ?? [];
+
+        if ($typoScript === []) {
+            throw new InvalidConfigurationException(
+                'The TypoScript configuration for typo3_forum is missing. Include it via a template or a TypoScript file.',
+                1561441468
+            );
         }
-        $typoScript = $this->getTypoScriptService()->getSetupArray()['plugin.']['tx_typo3forum.']?? [];
-        $this->settings = $typoScript['settings.'];
-        $this->persistenceSettings = $typoScript['persistence.'];
+
+        $this->settings = $typoScript['settings.'] ?? [];
+        $this->persistenceSettings = $typoScript['persistence.'] ?? [];
     }
 
-    protected function getTypoScriptService(): FrontendTypoScript
+    /**
+     * @throws InvalidConfigurationException
+     */
+    protected function getFrontendTypoScript(): FrontendTypoScript
     {
-        return $GLOBALS['TYPO3_REQUEST']->getAttribute('frontend.typoscript');
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+
+        if (!$request instanceof ServerRequestInterface) {
+            throw new InvalidConfigurationException(
+                'No frontend request is available to read the typo3_forum TypoScript configuration.',
+                1788746401
+            );
+        }
+
+        $frontendTypoScript = $request->getAttribute('frontend.typoscript');
+
+        if (!$frontendTypoScript instanceof FrontendTypoScript) {
+            throw new InvalidConfigurationException(
+                'The frontend TypoScript request attribute is not available.',
+                1788746402
+            );
+        }
+
+        return $frontendTypoScript;
     }
 }

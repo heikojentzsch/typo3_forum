@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\Form;
 
 /*                                                                    - *
@@ -27,12 +28,13 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Form;
 use Mittwald\Typo3Forum\TextParser\Panel\AbstractPanel;
 use Mittwald\Typo3Forum\TextParser\Panel\PanelInterface;
 use Mittwald\Typo3Forum\Utility\TypoScript;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 use TYPO3\CMS\Extbase\Persistence\Generic\Exception\InvalidClassException;
 use TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormFieldViewHelper;
-use TYPO3\CMS\Fluid\ViewHelpers\Form\TextareaViewHelper;
+use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
  * ViewHelper that renders a textarea with additional bb code buttons.
@@ -42,6 +44,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
     protected FrontendInterface $cache;
     protected TypoScript $typoscriptReader;
     protected UriBuilder $uriBuilder;
+
     public function __construct(
         FrontendInterface $cache,
         TypoScript $typoscriptReader,
@@ -56,28 +59,23 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
 
     /**
      * Configuration array. This array is read from the typoscript setup by
-     * the typoscript reader instance (see above).
-     * @var array
+     * the typoscript reader instance.
      */
-    protected $configuration;
+    protected array $configuration = [];
 
     /**
      * Panels that contain bb code buttons.
+     *
      * @var AbstractPanel[]
      */
     protected array $panels = [];
 
-    /**
-     * @var string
-     */
     protected string $javascriptSetup;
 
-    /**
-     * Initializes the view helper arguments.
-     */
     public function initializeArguments(): void
     {
         parent::initializeArguments();
+
         $this->registerArgument(
             'configuration',
             'string',
@@ -85,6 +83,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
             false,
             'plugin.tx_typo3forum.settings.textParsing.editorPanel'
         );
+
         $this->registerArgument(
             'id',
             'int',
@@ -94,74 +93,133 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
     }
 
     /**
-     * Loads the editor configuration
-     * @throws \TYPO3\CMS\Extbase\Object\InvalidClassException
+     * @throws InvalidClassException
      */
-    protected function initializeJavascriptSetupFromConfiguration(string $configurationPath): string
-    {
+    protected function initializeJavascriptSetupFromConfiguration(
+        string $configurationPath
+    ): string {
         // TODO reenable cache of bbcodeeditor
         if (false && $this->cache->has('bbcodeeditor-jsonconfig')) {
             $this->javascriptSetup = $this->cache->get('bbcodeeditor-jsonconfig');
+
             return $this->javascriptSetup;
         }
 
-        $this->configuration = $this->typoscriptReader->loadTyposcriptFromPath($configurationPath);
+        $this->configuration = $this->typoscriptReader
+            ->loadTyposcriptFromPath($configurationPath);
 
         foreach ($this->configuration['panels.'] as $panelConfiguration) {
-            $panel = GeneralUtility::makeInstance($panelConfiguration['className']);
+            $panel = GeneralUtility::makeInstance(
+                $panelConfiguration['className']
+            );
+
             if (!$panel instanceof PanelInterface) {
-                throw new InvalidClassException('Expected an implementation of the ' . PanelInterface::class . ' interface!', 1315835842);
+                throw new InvalidClassException(
+                    'Expected an implementation of the '
+                    . PanelInterface::class
+                    . ' interface!',
+                    1315835842
+                );
             }
+
             $panel->setSettings($panelConfiguration);
             $this->panels[] = $panel;
         }
 
-        $this->javascriptSetup = '<script>' .
-            'var bbcodeSettings = ' .
-            json_encode($this->getPanelSettings()) . ';' .
-            'window.setTimeout(function(){$(document).ready(function() {' .
-            '$(\'#' . $this->arguments['id'] . '\').markItUp(bbcodeSettings);' .
-            '});}, 500);</script>';
-        $this->cache->set('bbcodeeditor-jsonconfig', $this->javascriptSetup);
+        $this->javascriptSetup = '<script>'
+            . 'var bbcodeSettings = '
+            . json_encode($this->getPanelSettings())
+            . ';'
+            . 'window.setTimeout(function(){$(document).ready(function() {'
+            . '$(\'#'
+            . $this->arguments['id']
+            . '\').markItUp(bbcodeSettings);'
+            . '});}, 500);</script>';
+
+        $this->cache->set(
+            'bbcodeeditor-jsonconfig',
+            $this->javascriptSetup
+        );
+
         return $this->javascriptSetup;
     }
 
-    /**
-     * Renders the editor. This method first adds some javascript inclusions to the
-     * page header, then renders the options panel and finally renders the main
-     * textarea using the inherited render() method.
-     */
     public function render(): string
     {
-        $this->initializeJavascriptSetupFromConfiguration($this->arguments['configuration']);
+        $this->initializeJavascriptSetupFromConfiguration(
+            $this->arguments['configuration']
+        );
+
         return $this->javascriptSetup . parent::render();
     }
 
-    /**
-     * getPanelSettings
-     */
     protected function getPanelSettings(): array
     {
         $settings = [];
+
         foreach ($this->panels as $panel) {
             $items = $panel->getItems();
+
             if ($items !== null && count($items) > 0) {
                 $settings = array_merge($settings, $items);
-                $settings[] = ['separator' => '---------------'];
+                $settings[] = [
+                    'separator' => '---------------',
+                ];
             }
         }
 
         $settings[] = [
             'name' => 'Preview',
             'className' => 'preview',
-            'call' => 'preview'
+            'call' => 'preview',
         ];
+
+        if (
+            !$this->renderingContext->hasAttribute(
+                ServerRequestInterface::class
+            )
+        ) {
+            throw new \RuntimeException(
+                'No frontend request is available in the Fluid rendering context.',
+                1788746403
+            );
+        }
+
+        $request = $this->renderingContext->getAttribute(
+            ServerRequestInterface::class
+        );
+
+        if (!$request instanceof ServerRequestInterface) {
+            throw new \RuntimeException(
+                'Invalid request object in the Fluid rendering context.',
+                1788746405
+            );
+        }
+
+        $pageInformation = $request->getAttribute(
+            'frontend.page.information'
+        );
+
+        if (!$pageInformation instanceof PageInformation) {
+            throw new \RuntimeException(
+                'Current frontend page information is not available.',
+                1788746406
+            );
+        }
 
         $uri = $this->uriBuilder
             ->reset()
-            ->setTargetPageUid($GLOBALS['TSFE']->id)
-            ->setArguments(['type' => 43568275])
-            ->uriFor('preview', [], 'Ajax', 'Typo3Forum', 'Ajax');
+            ->setTargetPageUid($pageInformation->getId())
+            ->setArguments([
+                'type' => 43568275,
+            ])
+            ->uriFor(
+                'preview',
+                [],
+                'Ajax',
+                'Typo3Forum',
+                'Ajax'
+            );
 
         $editorSettings = [
             'previewParserPath' => $uri,
@@ -169,8 +227,14 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
             'markupSet' => $settings,
         ];
 
-        if (isset($this->configuration['editorSettings.']) && is_array($this->configuration['editorSettings.'])) {
-            $editorSettings = array_merge($editorSettings, $this->configuration['editorSettings.']);
+        if (
+            isset($this->configuration['editorSettings.'])
+            && is_array($this->configuration['editorSettings.'])
+        ) {
+            $editorSettings = array_merge(
+                $editorSettings,
+                $this->configuration['editorSettings.']
+            );
         }
 
         return $editorSettings;

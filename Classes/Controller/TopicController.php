@@ -43,6 +43,7 @@ use Mittwald\Typo3Forum\Service\AttachmentService;
 use Mittwald\Typo3Forum\Service\TagService;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Http\ResponseFactory;
+use TYPO3\CMS\Core\PageTitle\RecordTitleProvider;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
 use TYPO3\CMS\Extbase\Attribute\Validate;
@@ -59,6 +60,7 @@ class TopicController extends AbstractController
     protected TopicFactory $topicFactory;
     protected TopicRepository $topicRepository;
     protected PersistenceManager $persistenceManager;
+    protected RecordTitleProvider $recordTitleProvider;
 
     public function __construct(
         AttachmentService $attachmentService,
@@ -69,7 +71,8 @@ class TopicController extends AbstractController
         TagService $tagService,
         TopicFactory $topicFactory,
         TopicRepository $topicRepository,
-        PersistenceManager $persistenceManager
+        PersistenceManager $persistenceManager,
+        RecordTitleProvider $recordTitleProvider
     ) {
         $this->attachmentService = $attachmentService;
         $this->forumRepository = $forumRepository;
@@ -80,6 +83,7 @@ class TopicController extends AbstractController
         $this->topicFactory = $topicFactory;
         $this->topicRepository = $topicRepository;
         $this->persistenceManager = $persistenceManager;
+        $this->recordTitleProvider = $recordTitleProvider;
         $this->frontendUserRepository = GeneralUtility::makeInstance(FrontendUserRepository::class);
     }
 
@@ -138,10 +142,13 @@ class TopicController extends AbstractController
         $posts = $this->postRepository->findForTopic($topic);
 
         if ($quote !== null) {
-            $this->view->assign('quote', $this->postFactory->createPostWithQuote($quote));
+            $this->view->assign(
+                'quote',
+                $this->postFactory->createPostWithQuote($quote)
+            );
         }
 
-        $GLOBALS['TSFE']->page['title'] = $topic->getTitle();
+        $this->recordTitleProvider->setTitle($topic->getTitle());
 
         //$this->signalSlotDispatcher->dispatch(Topic::class, 'topicDisplayed', [$topic]);
 
@@ -234,7 +241,11 @@ class TopicController extends AbstractController
             $this->purgeUrl('http://' . $_SERVER['HTTP_HOST'] . '/' . $uri);
         }
 
-        $uri = $this->uriBuilder->uriFor('show', ['topic' => $topic], 'Topic');
+        $uri = $this->uriBuilder->uriFor(
+            'show',
+            ['topic' => $topic],
+            'Topic'
+        );
 
         return $this->responseFactory->createResponse(307)
             ->withHeader('Location', $uri);
@@ -249,14 +260,21 @@ class TopicController extends AbstractController
     public function solutionAction(Post $post): ResponseInterface
     {
         if (!$post->getTopic()->checkSolutionAccess($this->getCurrentUser())) {
-            throw new NoAccessException('Not allowed to set solution by current user.');
+            throw new NoAccessException(
+                'Not allowed to set solution by current user.'
+            );
         }
 
         if ($post->isFirstPost()) {
-            throw new InvalidOperationException('The first post of a topic cannot be its solution.');
+            throw new InvalidOperationException(
+                'The first post of a topic cannot be its solution.'
+            );
         }
 
-        $this->topicFactory->setPostAsSolution($post->getTopic(), $post);
+        $this->topicFactory->setPostAsSolution(
+            $post->getTopic(),
+            $post
+        );
 
         $this->clearCacheForCurrentPage();
 
@@ -279,7 +297,9 @@ class TopicController extends AbstractController
     public function removeSolutionAction(Topic $topic): ResponseInterface
     {
         if (!$topic->checkSolutionAccess($this->getCurrentUser())) {
-            throw new NoAccessException('Not allowed to remove solution by current user.');
+            throw new NoAccessException(
+                'Not allowed to remove solution by current user.'
+            );
         }
 
         $this->topicFactory->setPostAsSolution($topic, null);

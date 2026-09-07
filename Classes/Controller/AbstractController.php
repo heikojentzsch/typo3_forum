@@ -1,7 +1,6 @@
 <?php
-namespace Mittwald\Typo3Forum\Controller;
 
-use Mittwald\Typo3Forum\Domain\Exception\AbstractException;
+namespace Mittwald\Typo3Forum\Controller;
 
 /*                                                                      *
 *  COPYRIGHT NOTICE                                                    *
@@ -33,8 +32,8 @@ use Mittwald\Typo3Forum\Utility\Localization;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
-use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Extbase\Service\CacheService;
+use TYPO3\CMS\Frontend\Page\PageInformation;
 
 abstract class AbstractController extends ActionController
 {
@@ -43,164 +42,142 @@ abstract class AbstractController extends ActionController
     const CONTEXT_CLI = 2;
 
     /**
-    * An authentication service. Handles the authentication mechanism.
-    */
+     * An authentication service. Handles the authentication mechanism.
+     */
     protected AuthenticationServiceInterface $authenticationService;
+
     /**
-    * The non-namespaced class name of this controller (e.g. ForumController
-    * instead of \Mittwald\Typo3Forum\Controller\ForumController).
-    */
+     * The non-namespaced class name of this controller (e.g. ForumController
+     * instead of \Mittwald\Typo3Forum\Controller\ForumController).
+     */
     protected string $className;
+
     protected FrontendUserRepository $frontendUserRepository;
     protected CacheService $cacheService;
 
     /**
-    * The current controller context. This context is necessary to enable
-    * different behaviour of this controller e.g. in web/ajax/cli context.
-    */
+     * The current controller context. This context is necessary to enable
+     * different behaviour of this controller e.g. in web/ajax/cli context.
+     */
     protected int $context = self::CONTEXT_WEB;
 
-    /*
-    * METHODS
-    */
-
-    public function injectFrontendUserRepository(FrontendUserRepository $frontendUserRepository): void
-    {
+    public function injectFrontendUserRepository(
+        FrontendUserRepository $frontendUserRepository
+    ): void {
         $this->frontendUserRepository = $frontendUserRepository;
     }
-    public function injectAuthenticationService(AuthenticationServiceInterface $authenticationService): void
-    {
+
+    public function injectAuthenticationService(
+        AuthenticationServiceInterface $authenticationService
+    ): void {
         $this->authenticationService = $authenticationService;
     }
+
     public function injectCacheService(CacheService $cacheService): void
     {
         $this->cacheService = $cacheService;
     }
 
     /**
-    * Handles an exception. This methods modifies the controller context for the
-    * template view, causing the view class to look in the same directory regardless
-    * of the controller.
-    */
-    // TODO: Test
-    protected function handleError(RequestInterface $request, AbstractException $e)
-    {
-        $controllerContext = $this->buildControllerContext();
-        $controllerContext->getRequest()->setControllerName('Default');
-        $controllerContext->getRequest()->setControllerActionName('error');
-        $this->view->setControllerContext($controllerContext);
-
-        $content = $this->view->assign('exception', $e)->render('error');
-
-        $response = $this->responseFactory->createResponse(400);
-        $response->getBody()->write($content);
-        return $response;
-    }
-
-    /**
-    * Calls a controller action. This method wraps the callActionMethod method of
-    * the parent Tx_Extbase_MVC_Controller_ActionController class. It catches all
-    * Exceptions that might be thrown inside one of the action methods.
-    * This method ONLY catches exceptions that belong to the typo3_forum extension.
-    * All other exceptions are not caught.
-    */
-/*    protected function callActionMethod(RequestInterface $request): ResponseInterface
-    {
-        try {
-            return parent::callActionMethod($request);
-        } catch (AbstractException $e) {
-            return $this->handleError($request, $e);
-        }
-    }*/
-
-/*    protected function initializeAction()
-    {
-        $this->className = array_pop(explode('_', get_class($this)));
-    }*/
-
-    /**
-    * Gets the currently logged in frontend user. This method is     only a convenience
-    * wrapper for the findCurrent-Method of the frontend user repository class.
-    *
-    * @return FrontendUser The frontend user that is currently logged in, or NULL if no user is logged in.
-    */
+     * Gets the currently logged in frontend user.
+     *
+     * @return FrontendUser The frontend user that is currently logged in.
+     */
     protected function getCurrentUser()
     {
         return $this->frontendUserRepository->findCurrent();
     }
 
     /**
-    * Disable default error flash messages (who actually wants to see those?)
-    *
-    * @return bool Always FALSE.
-    */
+     * Disable default error flash messages.
+     */
     protected function getErrorFlashMessage(): string|bool
     {
         return false;
     }
 
     /**
-    * Clears the cache for the current page. Unfortunately, the
-    * "enableAutomaticCacheClearing" feature provided by Extbase does only
-    * clear the cache of the record's storage page, but not of the page the
-    * record is displayed on (see http://forge.typo3.org/issues/35057 for
-    * more information).
-    *
-    * @see    http://forge.typo3.org/issues/35057
-    */
-    protected function clearCacheForCurrentPage()
+     * Clears the cache for the current page.
+     */
+    protected function clearCacheForCurrentPage(): void
     {
-        $this->cacheService->clearPageCache((int)$GLOBALS['TSFE']->id);
+        $pageInformation = $this->request->getAttribute('frontend.page.information');
+
+        if (!$pageInformation instanceof PageInformation) {
+            throw new \RuntimeException(
+                'Current frontend page information is not available.',
+                1788746404
+            );
+        }
+
+        $this->cacheService->clearPageCache($pageInformation->getId());
     }
 
     /**
-    * Adds a localized message to the flash message container. This method is
-    * just a shorthand for
-    *
-    *     this->flashMessageContainer->add(Tx_Extbase_Utility_Localization(...));
-    *
-    * @param string $key The language key that is to be used for the
-    *                                  flash messages.
-    * @param array $arguments Arguments for the flash message.
-    * @param string $titleKey Optional language key for the message's title.
-    * @param int $severity Message severity (see \TYPO3\CMS\Core\Messaging\FlashMessage::*)
-    */
-    protected function addLocalizedFlashmessage($key, array $arguments = [], $titleKey = null, $severity = FlashMessage::OK)
-    {
-        $message = new FlashMessage(Localization::translate($key, 'Typo3Forum', $arguments), Localization::translate($titleKey, 'Typo3Forum'), $severity);
+     * Adds a localized message to the flash message container.
+     *
+     * @param string $key
+     * @param array $arguments
+     * @param string|null $titleKey
+     * @param int $severity
+     */
+    protected function addLocalizedFlashmessage(
+        $key,
+        array $arguments = [],
+        $titleKey = null,
+        $severity = FlashMessage::OK
+    ) {
+        $message = new FlashMessage(
+            Localization::translate($key, 'Typo3Forum', $arguments),
+            Localization::translate($titleKey, 'Typo3Forum'),
+            $severity
+        );
 
         $this->getFlashMessageQueue()->enqueue($message);
     }
 
     /**
-    * @param string $actionName
-    * @param string $controllerName
-    * @param string $extensionName
-    * @param array $arguments
-    * @param int $pageUid
-    * @param int $delay
-    * @param int $statusCode
-    */
-    protected function redirect($actionName, $controllerName = null, $extensionName = null, array $arguments = null, $pageUid = null, $delay = 0, $statusCode = 303): ResponseInterface
-    {
+     * @param string $actionName
+     * @param string|null $controllerName
+     * @param string|null $extensionName
+     * @param array|null $arguments
+     * @param int|null $pageUid
+     * @param int $delay
+     * @param int $statusCode
+     */
+    protected function redirect(
+        $actionName,
+        $controllerName = null,
+        $extensionName = null,
+        array $arguments = null,
+        $pageUid = null,
+        $delay = 0,
+        $statusCode = 303
+    ): ResponseInterface {
         if ($this->context === self::CONTEXT_WEB && $this->request->getFormat() === 'html') {
-            parent::redirect($actionName, $controllerName, $extensionName, $arguments, $pageUid, $delay, $statusCode);
+            parent::redirect(
+                $actionName,
+                $controllerName,
+                $extensionName,
+                $arguments,
+                $pageUid,
+                $delay,
+                $statusCode
+            );
         }
+
         return $this->htmlResponse();
     }
 
-    /**
-    * @param $context
-    */
-    public function setContext($context)
+    public function setContext(int $context): void
     {
         $this->context = $context;
     }
 
     /**
-    * @param string $url
-    * @return mixed
-    */
+     * @param string $url
+     * @return mixed
+     */
     public function purgeUrl($url)
     {
         $curl = curl_init();
@@ -210,19 +187,23 @@ abstract class AbstractController extends ActionController
         curl_setopt($curl, CURLOPT_NOBODY, true);
         curl_setopt($curl, CURLOPT_HTTPHEADER, ['Host:' . $_SERVER['HTTP_HOST']]);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
         $result = curl_exec($curl);
+
         return $result;
     }
 
     /**
-     * Returns true if a referrer was found and redirects to it, otherwise false.
+     * Returns a redirect response if a referrer was found, otherwise false.
      */
     protected function redirectToReferrer(): ResponseInterface|bool
     {
         $referrerUri = $this->request->getServerParams()['HTTP_REFERER'] ?? '';
+
         if ($referrerUri === '') {
             $referrerUri = $this->request->getHeader('referer')[0] ?? '';
         }
+
         if ($referrerUri === '') {
             return false;
         }
