@@ -30,9 +30,9 @@ use Mittwald\Typo3Forum\Domain\Model\NotifiableInterface;
 use Mittwald\Typo3Forum\Domain\Model\User\AnonymousFrontendUser;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException;
-use TYPO3\CMS\Extbase\Annotation\ORM\Cascade;
-use TYPO3\CMS\Extbase\Annotation\ORM\Lazy;
-use TYPO3\CMS\Extbase\Annotation\Validate;
+use TYPO3\CMS\Extbase\Attribute\ORM\Cascade;
+use TYPO3\CMS\Extbase\Attribute\ORM\Lazy;
+use TYPO3\CMS\Extbase\Attribute\Validate;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
@@ -44,8 +44,8 @@ use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 class Post extends AbstractEntity implements AccessibleInterface, NotifiableInterface
 {
     /**
-     * @Validate("NotEmpty")
      */
+    #[Validate(validator: 'NotEmpty')]
     protected string $text = '';
     protected ?FrontendUser $author = null;
     /**
@@ -57,15 +57,15 @@ class Post extends AbstractEntity implements AccessibleInterface, NotifiableInte
 
     /**
      * @var ObjectStorage<FrontendUser>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $supporters;
 
     /**
      * @var ObjectStorage<Attachment>
-     * @Lazy
-     * @Cascade("remove")
      */
+    #[Lazy]
+    #[Cascade('remove')]
     protected ObjectStorage $attachments;
     protected int $helpfulCount = 0;
 

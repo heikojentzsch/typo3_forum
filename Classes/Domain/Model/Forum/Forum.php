@@ -31,9 +31,9 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationService;
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Annotation\ORM\Cascade;
-use TYPO3\CMS\Extbase\Annotation\ORM\Lazy;
-use TYPO3\CMS\Extbase\Annotation\Validate;
+use TYPO3\CMS\Extbase\Attribute\ORM\Cascade;
+use TYPO3\CMS\Extbase\Attribute\ORM\Lazy;
+use TYPO3\CMS\Extbase\Attribute\Validate;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
@@ -52,18 +52,16 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     /**
      * The child forums
      * @var ObjectStorage<Forum>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $children;
     protected string $description = '';
     protected int $displayedPid = 0;
     /**
-     * The parent forum. Ugly type annotations because of @Lazy limitation.
-     * @Lazy
-     * @var Forum|null
-     * @phpstan-var Forum|LazyLoadingProxy|null
+     * The parent forum.
      */
-    protected ?object $forum = null;
+    #[Lazy]
+    protected Forum|LazyLoadingProxy|null $forum = null;
     protected ?Post $lastPost = null;
     protected ?Topic $lastTopic = null;
 
@@ -76,19 +74,19 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * All users who have read this forum.
      *
      * @var ObjectStorage<FrontendUser>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $readers;
 
     /**
      * All subscribers of this forum.
      * @var ObjectStorage<FrontendUser>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $subscribers;
     /**
-     * @Validate("NotEmpty")
      */
+    #[Validate(validator: 'NotEmpty')]
     protected string $title = '';
     protected string $slug = '';
     protected int $topicCount = 0;
@@ -96,9 +94,9 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     /**
      * The topics in this forum.
      * @var ObjectStorage<Topic>
-     * @Lazy
-     * @Cascade("remove")
      */
+    #[Lazy]
+    #[Cascade('remove')]
     protected ObjectStorage $topics;
 
     /**
@@ -106,8 +104,8 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * currently logged in user has read access to.
      *
      * @var ObjectStorage<Forum>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $visibleChildren;
     protected AuthenticationServiceInterface $authenticationService;
     protected int $sorting = 0;

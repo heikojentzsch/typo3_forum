@@ -37,7 +37,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 use TYPO3\CMS\Extbase\Domain\Model\FileReference;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
-use TYPO3\CMS\Extbase\Annotation\ORM\Lazy;
+use TYPO3\CMS\Extbase\Attribute\ORM\Lazy;
 
 class FrontendUser extends AbstractEntity
 {
@@ -619,16 +619,16 @@ class FrontendUser extends AbstractEntity
      * Subscribed topics.
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic>
-     * @Lazy
      */
+    #[Lazy]
     protected ?ObjectStorage $topicSubscriptions = null;
 
     /**
      * Subscribed forums.
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum>
-     * @Lazy
      */
+    #[Lazy]
     protected ?ObjectStorage $forumSubscriptions = null;
 
     /**
@@ -647,24 +647,24 @@ class FrontendUser extends AbstractEntity
      * Read topics.
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic>
-     * @Lazy
      */
+    #[Lazy]
     protected ?ObjectStorage $readTopics = null;
 
     /**
      * Read forum.
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum>
-     * @Lazy
      */
+    #[Lazy]
     protected ?ObjectStorage $readForum  = null;
 
     /**
      * Read topics.
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Post>
-     * @Lazy
      */
+    #[Lazy]
     protected ?ObjectStorage $supportPosts = null;
     protected int $gender = 2;
 

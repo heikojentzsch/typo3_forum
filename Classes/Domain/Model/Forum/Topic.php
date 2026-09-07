@@ -37,9 +37,9 @@ use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
 use Mittwald\Typo3Forum\Utility\Slug;
 use phpDocumentor\Reflection\PseudoTypes\NegativeInteger;
-use TYPO3\CMS\Extbase\Annotation\ORM\Cascade;
-use TYPO3\CMS\Extbase\Annotation\ORM\Lazy;
-use TYPO3\CMS\Extbase\Annotation\Validate;
+use TYPO3\CMS\Extbase\Attribute\ORM\Cascade;
+use TYPO3\CMS\Extbase\Attribute\ORM\Lazy;
+use TYPO3\CMS\Extbase\Attribute\Validate;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
@@ -53,8 +53,8 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
     use ConfigurableEntityTrait;
 
     /**
-     * @Validate("NotEmpty")
      */
+    #[Validate(validator: 'NotEmpty')]
     protected string $subject = '';
 
     protected string $slug = '';
@@ -62,9 +62,9 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
     /**
      * The posts in this topic.
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Post>
-     * @Lazy
-     * @Cascade("remove")
      */
+    #[Lazy]
+    #[Cascade('remove')]
     protected ObjectStorage $posts;
 
     /**
@@ -78,8 +78,8 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
      * All users who have subscribed this topic.
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $subscribers;
 
     /**
@@ -130,16 +130,16 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
      * All users who have read this topic.
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $readers;
 
     /**
      * Get all tags of this topic
      *
      * @var ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Tag>
-     * @Lazy
      */
+    #[Lazy]
     protected ObjectStorage $tags;
 
     protected AuthenticationServiceInterface $authenticationService;

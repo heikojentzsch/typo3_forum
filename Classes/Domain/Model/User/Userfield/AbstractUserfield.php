@@ -24,7 +24,7 @@ namespace Mittwald\Typo3Forum\Domain\Model\User\Userfield;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use TYPO3\CMS\Extbase\Annotation\Validate;
+use TYPO3\CMS\Extbase\Attribute\Validate;
 use TYPO3\CMS\Extbase\DomainObject\AbstractValueObject;
 
 /**
@@ -34,8 +34,8 @@ abstract class AbstractUserfield extends AbstractValueObject
 {
     /**
      * The name of the userfield.
-     * @Validate("NotEmpty")
      */
+    #[Validate(validator: 'NotEmpty')]
     protected string $name;
 
     /**
