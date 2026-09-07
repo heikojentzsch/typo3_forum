@@ -3,7 +3,6 @@
 namespace Mittwald\Typo3Forum\ViewHelpers\Format;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
-use Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository;
 use Mittwald\Typo3Forum\TextParser\TextParserService;
 
 /*                                                                    - *
@@ -37,14 +36,11 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 class TextParserViewHelper extends AbstractViewHelper
 {
     protected TextParserService $textParserService;
-    protected PostRepository $postRepository;
 
     public function __construct(
-        TextParserService $textParserService,
-        PostRepository $postRepository
+        TextParserService $textParserService
     ) {
         $this->textParserService = $textParserService;
-        $this->postRepository = $postRepository;
     }
 
     protected $escapeOutput = false;

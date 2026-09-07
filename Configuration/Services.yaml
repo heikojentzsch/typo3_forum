@@ -149,7 +149,6 @@ services:
         autowire: true
         autoconfigure: true
         arguments:
-            $postRepository: '@Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository'
             $textParserService: '@Mittwald\Typo3Forum\TextParser\TextParserService'
 
     Mittwald\Typo3Forum\TextParser\TextParserService:
