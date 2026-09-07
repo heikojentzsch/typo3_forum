@@ -67,7 +67,7 @@ class ShadowTopic extends Topic
      * Checks if the user has access to this topic. Nobody can post in a shadow topic,
      * so that access always returns false.
      */
-    public function checkAccess(FrontendUser $user = null, $accessType = Access::TYPE_READ): bool
+    public function checkAccess(?FrontendUser $user = null, string $accessType = Access::TYPE_READ): bool
     {
         if ($accessType === Access::TYPE_NEW_POST) {
             return false;
@@ -78,7 +78,7 @@ class ShadowTopic extends Topic
     /**
      * Nobody can post in a shadow topic, so new post access always returns false.
      */
-    public function checkNewPostAccess(FrontendUser $user = null): bool
+    public function checkNewPostAccess(?FrontendUser $user = null): bool
     {
         return false;
     }

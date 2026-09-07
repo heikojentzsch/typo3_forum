@@ -13,7 +13,7 @@ require_once __DIR__ . '/.Build/vendor/autoload.php';
  * The TYPO3 project - inspiring people to share!
  */
 /**
- * This file represents the configuration for Code Sniffing PSR-2-related
+ * This file represents the configuration for Code Sniffing PSR-12-related
  * automatic checks of coding guidelines
  * Install @fabpot's great php-cs-fixer tool via
  *
@@ -21,12 +21,12 @@ require_once __DIR__ . '/.Build/vendor/autoload.php';
  *
  * And then simply run
  *
- *  $ php-cs-fixer fix --config ../Build/.php_cs
+ *  $ php-cs-fixer fix --config .php-cs-fixer.php
  *
  * inside the TYPO3 directory. Warning: This may take up to 10 minutes.
  *
  * For more information read:
- *      https://www.php-fig.org/psr/psr-2/
+ *      https://www.php-fig.org/psr/psr-12/
  *      https://cs.sensiolabs.org
  */
 if (PHP_SAPI !== 'cli') {
@@ -40,7 +40,7 @@ $finder = PhpCsFixer\Finder::create()
     ->exclude(__DIR__ . '/Build')
     ->in(__DIR__ . '/');
 // Return a Code Sniffing configuration using
-// all sniffers needed for PSR-2
+// all sniffers needed for PSR-12
 // and additionally:
 //  - Remove leading slashes in use clauses.
 //  - PHP single-line arrays should not have trailing comma.
@@ -48,18 +48,17 @@ $finder = PhpCsFixer\Finder::create()
 //  - Remove unused use statements in the PHP source code
 //  - Ensure Concatenation to have at least one whitespace around
 //  - Remove trailing whitespace at the end of blank lines.
-return PhpCsFixer\Config::create()
+return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setRules([
-        '@DoctrineAnnotation' => true,
-        '@PSR2' => true,
+        '@PSR12' => true,
         'array_syntax' => ['syntax' => 'short'],
         'cast_spaces' => ['space' => 'none'],
         'concat_space' => ['spacing' => 'one'],
         'declare_equal_normalize' => ['space' => 'single'],
         'dir_constant' => true,
         'function_typehint_space' => true,
-        'hash_to_slash_comment' => true,
+        'single_line_comment_style' => ['comment_types' => ['hash']],
         'lowercase_cast' => true,
         'modernize_types_casting' => true,
         'native_function_casing' => true,
@@ -67,14 +66,14 @@ return PhpCsFixer\Config::create()
         'no_blank_lines_after_phpdoc' => true,
         'no_empty_phpdoc' => true,
         'no_empty_statement' => true,
-        'no_extra_consecutive_blank_lines' => true,
+        'no_extra_blank_lines' => true,
         'no_leading_import_slash' => true,
         'no_leading_namespace_whitespace' => true,
         'no_null_property_initialization' => true,
         'no_short_bool_cast' => true,
         'no_singleline_whitespace_before_semicolons' => true,
         'no_superfluous_elseif' => true,
-        'no_trailing_comma_in_singleline_array' => true,
+        'no_trailing_comma_in_singleline' => true,
         'no_unneeded_control_parentheses' => true,
         'no_unused_imports' => true,
         'no_useless_else' => true,
@@ -91,4 +90,5 @@ return PhpCsFixer\Config::create()
         'single_quote' => true,
         'whitespace_after_comma_in_array' => true,
     ])
+    ->setCacheFile(__DIR__ . '/.Build/php-cs-fixer.cache')
     ->setFinder($finder);

@@ -124,7 +124,8 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     public function initializeObject(): void
     {
         $this->ensureObjectStorages();
-        $this->authenticationService = GeneralUtility::makeInstance(AuthenticationService::class);
+        // Hydrated and manually constructed entities still need a fallback.
+        $this->authenticationService ??= GeneralUtility::makeInstance(AuthenticationService::class);
 
     }
 
@@ -191,7 +192,6 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     public function getChildren(): ObjectStorage
     {
         if ($this->visibleChildren->count() === 0) {
-            //debug($this->getRawChildren());die();
             foreach ($this->getRawChildren() as $child) {
                 if ($this->authenticationService->checkAuthorization($child, Access::TYPE_READ)) {
                     $this->visibleChildren->attach($child);
@@ -389,7 +389,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * @param string $accessType The operation
      * @return bool TRUE, if the user has access to the requested operation, otherwise FALSE.
      */
-    public function checkAccess(FrontendUser $user = null, $accessType = Access::TYPE_READ)
+    public function checkAccess(?FrontendUser $user = null, string $accessType = Access::TYPE_READ): bool
     {
         if ($accessType === Access::TYPE_MODERATE && $user->isInModerationGroup()) {
             return true;
@@ -436,7 +436,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      *
      * @return bool TRUE if the user has read access, otherwise FALSE.
      */
-    public function checkReadAccess(FrontendUser $user = null)
+    public function checkReadAccess(?FrontendUser $user = null): bool
     {
         return $this->checkAccess($user, Access::TYPE_READ);
     }
@@ -448,7 +448,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      *
      * @return bool TRUE if the user has access, otherwise FALSE.
      */
-    public function checkNewPostAccess(FrontendUser $user = null)
+    public function checkNewPostAccess(?FrontendUser $user = null): bool
     {
         return $this->checkAccess($user, Access::TYPE_NEW_POST);
     }
@@ -459,7 +459,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * @param FrontendUser $user The user that is to be checked.
      * @return bool TRUE if the user has access, otherwise FALSE.
      */
-    public function checkNewTopicAccess(FrontendUser $user = null)
+    public function checkNewTopicAccess(?FrontendUser $user = null): bool
     {
         return $this->checkAccess($user, Access::TYPE_NEW_TOPIC);
     }
@@ -471,7 +471,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      *
      * @return bool TRUE if the user has access, otherwise FALSE.
      */
-    public function checkModerationAccess(FrontendUser $user = null)
+    public function checkModerationAccess(?FrontendUser $user = null): bool
     {
         if ($user === null) {
             return false;
@@ -486,7 +486,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      *
      * @return bool TRUE if the user has access, otherwise FALSE.
      */
-    public function checkDeleteTopicAccess(FrontendUser $user = null)
+    public function checkDeleteTopicAccess(?FrontendUser $user = null): bool
     {
         if ($user === null) {
             return false;
@@ -619,7 +619,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      *
      * @param Topic $lastTopic The last topic
      */
-    public function setLastTopic(Topic $lastTopic = null)
+    public function setLastTopic(?Topic $lastTopic = null)
     {
         $this->lastTopic = $lastTopic;
     }
@@ -629,7 +629,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      *
      * @param Post $lastPost The last post.
      */
-    public function setLastPost(Post $lastPost = null)
+    public function setLastPost(?Post $lastPost = null)
     {
         $this->lastPost = $lastPost;
     }

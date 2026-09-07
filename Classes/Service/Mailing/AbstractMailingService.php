@@ -4,7 +4,6 @@ namespace Mittwald\Typo3Forum\Service\Mailing;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
 use Mittwald\Typo3Forum\Service\AbstractService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *
@@ -46,16 +45,10 @@ abstract class AbstractMailingService extends AbstractService implements Mailing
 
     protected string $format = self::MAILING_FORMAT_HTML;
 
-    public function __construct()
+    public function __construct(ConfigurationBuilder $configurationBuilder)
     {
-        $configurationBuilder = GeneralUtility::makeInstance(ConfigurationBuilder::class);
         $this->configurationBuilder = $configurationBuilder;
         $this->settings = $this->configurationBuilder->getSettings();
-    }
-
-    public function injectConfigurationBuilder(ConfigurationBuilder $configurationBuilder): void
-    {
-        $this->configurationBuilder = $configurationBuilder;
     }
 
     public function initializeObject(): void

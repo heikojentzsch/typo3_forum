@@ -174,7 +174,7 @@ class PostController extends AbstractController
             ->withArguments(['post' => $post]);
     }
 
-    public function showAction(Post $post, Post $quote = null): ResponseInterface
+    public function showAction(Post $post, ?Post $quote = null): ResponseInterface
     {
         $this->authenticationService->assertReadAuthorization($post);
 
@@ -220,8 +220,8 @@ class PostController extends AbstractController
     public function newAction(
         Topic $topic,
         #[IgnoreValidation]
-        Post $post = null,
-        Post $quote = null
+        ?Post $post = null,
+        ?Post $quote = null
     ): ResponseInterface {
         $this->authenticationService->assertNewPostAuthorization($topic);
 
@@ -256,7 +256,7 @@ class PostController extends AbstractController
 
         $this->postFactory->assignUserToPost($post);
 
-        if (!empty($attachments)) {
+        if (!empty($newAttachments)) {
             $attachments = $this->attachmentService->initAttachments($newAttachments);
             $post->setAttachments($attachments);
         }
@@ -391,7 +391,7 @@ class PostController extends AbstractController
     {
         $this->authenticationService->assertDeletePostAuthorization($post);
 
-        $this->view->assign('post', $post);#
+        $this->view->assign('post', $post);
         return $this->htmlResponse();
     }
 

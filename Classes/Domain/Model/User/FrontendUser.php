@@ -159,7 +159,7 @@ class FrontendUser extends AbstractEntity
         $this->ensureObjectStorages();
         $this->usergroup = $this->usergroup ?? new ObjectStorage();
         $this->image = $this->image ?? new ObjectStorage();
-        $this->rankRepository = GeneralUtility::makeInstance(RankRepository::class);
+        $this->rankRepository ??= GeneralUtility::makeInstance(RankRepository::class);
     }
 
     /**
@@ -902,7 +902,7 @@ class FrontendUser extends AbstractEntity
      * @param string $accessType
      * @return bool
      */
-    public function checkAccess(FrontendUser $user = null, $accessType = Access::TYPE_MODERATE)
+    public function checkAccess(?FrontendUser $user = null, string $accessType = Access::TYPE_MODERATE): bool
     {
         foreach ($user->getUsergroup() as $group) {
             if ($group->getUserMod()) {

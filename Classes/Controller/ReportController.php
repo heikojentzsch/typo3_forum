@@ -94,7 +94,7 @@ class ReportController extends AbstractController
      */
     public function createUserReportAction(
         FrontendUser $user,
-        ReportComment $firstComment = null
+        ?ReportComment $firstComment = null
     ): ResponseInterface {
         /** @var UserReport $report */
         $report = $this->reportFactory->createUserReport($firstComment);
@@ -113,14 +113,7 @@ class ReportController extends AbstractController
             )
         );
 
-        $this->redirect('show', 'User', null, ['user' => $user], $this->settings['pids.']['UserShow']);
-
-        return (new ForwardResponse('show'))
-            ->withControllerName('User')
-            ->withArguments([
-                'user' => $user,
-                'pid' => $this->settings['pids.']['UserShow'],
-            ]);
+        return $this->redirect('show', 'User', null, ['user' => $user], $this->settings['pids.']['UserShow']);
     }
 
     /**
@@ -128,7 +121,7 @@ class ReportController extends AbstractController
      */
     public function createPostReportAction(
         Post $post,
-        ReportComment $firstComment = null
+        ?ReportComment $firstComment = null
     ): ResponseInterface {
         $this->authenticationService->assertReadAuthorization($post);
 
@@ -148,6 +141,5 @@ class ReportController extends AbstractController
             ->withControllerName('Topic')
             ->withArguments(['topic' => $post->getTopic()]);
 
-        $this->redirect('show', 'Topic', null, ['topic' => $post->getTopic()]);
     }
 }

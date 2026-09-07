@@ -36,7 +36,6 @@ use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
-use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
 use Mittwald\Typo3Forum\Domain\Validator\Forum\AttachmentPlainValidator;
 use Mittwald\Typo3Forum\Domain\Validator\Forum\PostValidator;
 use Mittwald\Typo3Forum\Service\AttachmentService;
@@ -44,7 +43,6 @@ use Mittwald\Typo3Forum\Service\TagService;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Http\ResponseFactory;
 use TYPO3\CMS\Core\PageTitle\RecordTitleProvider;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
 use TYPO3\CMS\Extbase\Attribute\Validate;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
@@ -84,7 +82,6 @@ class TopicController extends AbstractController
         $this->topicRepository = $topicRepository;
         $this->persistenceManager = $persistenceManager;
         $this->recordTitleProvider = $recordTitleProvider;
-        $this->frontendUserRepository = GeneralUtility::makeInstance(FrontendUserRepository::class);
     }
 
     /**
@@ -137,7 +134,7 @@ class TopicController extends AbstractController
     /**
      * Show action. Displays a single topic and all posts contained in this topic.
      */
-    public function showAction(Topic $topic, Post $quote = null, int $page = 1): ResponseInterface
+    public function showAction(Topic $topic, ?Post $quote = null, int $page = 1): ResponseInterface
     {
         $posts = $this->postRepository->findForTopic($topic);
 
@@ -171,7 +168,7 @@ class TopicController extends AbstractController
     public function newAction(
         Forum $forum,
         #[IgnoreValidation]
-        Post $post = null,
+        ?Post $post = null,
         string $subject = ''
     ): ResponseInterface {
         $this->authenticationService->assertNewTopicAuthorization($forum);

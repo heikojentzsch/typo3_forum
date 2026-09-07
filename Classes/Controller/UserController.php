@@ -113,7 +113,7 @@ class UserController extends AbstractController
      *
      * @throws NotLoggedInException
      */
-    public function listPostsAction(FrontendUser $user = null, int $page = 1): ResponseInterface
+    public function listPostsAction(?FrontendUser $user = null, int $page = 1): ResponseInterface
     {
         if ($user === null) {
             $user = $this->getCurrentUser();
@@ -155,7 +155,7 @@ class UserController extends AbstractController
      *
      * @throws NotLoggedInException
      */
-    public function listQuestionsAction(FrontendUser $user = null, int $page = 1): ResponseInterface
+    public function listQuestionsAction(?FrontendUser $user = null, int $page = 1): ResponseInterface
     {
         if ($user === null) {
             $user = $this->getCurrentUser();
@@ -204,7 +204,7 @@ class UserController extends AbstractController
     /**
      * Displays a single user.
      */
-    public function showAction(FrontendUser $user = null): ResponseInterface
+    public function showAction(?FrontendUser $user = null): ResponseInterface
     {
         if ($user === null) {
             return (new ForwardResponse('show'))->withArguments(['user' => $this->getCurrentUser()]);
@@ -243,7 +243,7 @@ class UserController extends AbstractController
      * @throws NotLoggedInException
      * @throws InvalidArgumentValueException
      */
-    public function subscribeAction(Forum $forum = null, Topic $topic = null, bool $unsubscribe = false, bool $prioritizeRefererRedirect = false): ResponseInterface
+    public function subscribeAction(?Forum $forum = null, ?Topic $topic = null, bool $unsubscribe = false, bool $prioritizeRefererRedirect = false): ResponseInterface
     {
         // Validate arguments
         if ($forum === null && $topic === null) {
@@ -271,8 +271,9 @@ class UserController extends AbstractController
         $this->clearCacheForCurrentPage();
 
         if ($prioritizeRefererRedirect){
-            if ($this->redirectToReferrer() instanceof ResponseInterface) {
-                return $this->redirectToReferrer();
+            $response = $this->redirectToReferrer();
+            if ($response instanceof ResponseInterface) {
+                return $response;
             }
         }
         return $this->redirectToSubscriptionObject($object);
@@ -348,7 +349,8 @@ class UserController extends AbstractController
      */
     protected function getSubscriptionFlashMessage(SubscribeableInterface $object, bool $unsubscribe = false): string
     {
-        $type = array_pop(explode('\\', get_class($object)));
+        $classParts = explode('\\', get_class($object));
+        $type = array_pop($classParts);
         $key = 'User_' . ($unsubscribe ? 'Uns' : 'S') . 'ubscribe_' . $type . '_Success';
         return LocalizationUtility::translate($key, 'Typo3Forum', [$object->getTitle()]);
     }

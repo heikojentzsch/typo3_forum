@@ -43,7 +43,6 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
-use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Mvc\Exception\InvalidArgumentValueException;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
@@ -77,7 +76,6 @@ class ModerationController extends AbstractController
         $this->topicFactory = $topicFactory;
         $this->topicRepository = $topicRepository;
         $this->userReportRepository = $userReportRepository;
-        $this->configurationManager = GeneralUtility::makeInstance(ConfigurationManager::class);
     }
 
     public function indexReportAction(int $page = 1): ResponseInterface
@@ -236,7 +234,7 @@ class ModerationController extends AbstractController
      * @param Topic $topic The topic that is be edited.
      * @param Forum $moveTopicTarget The forum to which the topic is to be moved, or null if no movement is desired.
      */
-    public function updateTopicAction(Topic $topic, Forum $moveTopicTarget = null): ResponseInterface
+    public function updateTopicAction(Topic $topic, ?Forum $moveTopicTarget = null): ResponseInterface
     {
         $isQuestion = $topic->getQuestion();
         if ($isQuestion !== $topic->_getCleanProperty('question')) {

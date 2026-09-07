@@ -321,3 +321,7 @@ services:
 
     Mittwald\Typo3Forum\Updates\PostsWithoutAuthorNameUpdate:
         autowire: true
+
+    Mittwald\Typo3Forum\Service\Mailing\:
+        resource: '../Classes/Service/Mailing/*'
+        autowire: true

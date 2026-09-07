@@ -113,6 +113,7 @@ class NotificationService extends AbstractService implements NotificationService
      */
     protected function notifyForumSubscribers(Forum $forum, Topic $topic, Post $post): void
     {
+        $originForum = $forum;
         $subject = Localization::translate('Mail_Subscribe_NewTopic_Subject');
         $messageTemplate = Localization::translate('Mail_Subscribe_NewTopic_Body');
         $postAuthorUid = $post->getAuthor()->getUid();
@@ -123,8 +124,11 @@ class NotificationService extends AbstractService implements NotificationService
             $message = $this->getMessage($forum, $topic, $post, $messageTemplate, $this->getForumUnsubscribeLink($forum));
 
             foreach ($forum->getSubscribers() as $subscriber) {
-                if (count($notifiedSubscribers) !== 0){
-                    if (!$notifiedSubscribers[$subscriber->getUid()] && $forum->checkReadAccess($subscriber) && $subscriber->getUid() !== $postAuthorUid) {
+                if (!isset($notifiedSubscribers[$subscriber->getUid()])) {
+                    if ($subscriber->getUid() !== $postAuthorUid
+                        && $originForum->checkReadAccess($subscriber)
+                        && ($forum === $originForum || $forum->checkReadAccess($subscriber))
+                    ) {
                         $subscriberMessage = nl2br(str_replace('###RECIPIENT###', $subscriber->getUsername(), $message));
                         $this->htmlMailingService->sendMail($subscriber, $subject, $subscriberMessage);
                         $notifiedSubscribers[$subscriber->getUid()] = true;

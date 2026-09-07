@@ -150,13 +150,13 @@ abstract class AbstractController extends ActionController
         $actionName,
         $controllerName = null,
         $extensionName = null,
-        array $arguments = null,
+        ?array $arguments = null,
         $pageUid = null,
         $delay = 0,
         $statusCode = 303
     ): ResponseInterface {
         if ($this->context === self::CONTEXT_WEB && $this->request->getFormat() === 'html') {
-            parent::redirect(
+            return parent::redirect(
                 $actionName,
                 $controllerName,
                 $extensionName,

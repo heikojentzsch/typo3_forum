@@ -40,6 +40,7 @@ class RootForum extends Forum implements SingletonInterface
     public function __construct(
         ForumRepository $forumRepository
     ) {
+        $this->ensureObjectStorages();
         $this->uid = 0;
 
         $this->forumRepository = $forumRepository;
@@ -50,7 +51,7 @@ class RootForum extends Forum implements SingletonInterface
         return $this->forumRepository->findRootForums();
     }
 
-    public function checkAccess(FrontendUser $user = null, $accessType = Access::TYPE_READ)
+    public function checkAccess(?FrontendUser $user = null, string $accessType = Access::TYPE_READ): bool
     {
         return $accessType === Access::TYPE_READ;
     }
