@@ -33,16 +33,9 @@ class TagValidator extends AbstractValidator
 {
     protected TagRepository $tagRepository;
 
-    public function __construct(array $options = [])
+    public function __construct()
     {
         $this->tagRepository = GeneralUtility::makeInstance(TagRepository::class);
-        parent::__construct($options);
-    }
-
-    // @todo: Remove this method when v11 compatibility is dropped.
-    public function setOptions(array $options): void
-    {
-        $this->initializeDefaultOptions($options);
     }
 
     /**
