@@ -20,3 +20,5 @@ typo3temp
 public/typo3/*
 
 !./public/typo3/.htaccess
+
+var/
