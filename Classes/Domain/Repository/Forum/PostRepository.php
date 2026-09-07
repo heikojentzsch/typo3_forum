@@ -24,9 +24,12 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
+use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
+use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
+use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 class PostRepository extends AbstractRepository
 {
@@ -35,6 +38,16 @@ class PostRepository extends AbstractRepository
          parent::__construct();
          $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
      }
+    /**
+     * @return QueryResultInterface<Post>
+     */
+    public function findByAuthor(FrontendUser $user): QueryResultInterface
+    {
+        $query = $this->createQuery();
+
+        return $query->matching($query->equals('author', $user))->execute();
+    }
+
     /**
      * Finds posts for a specific filterset. Page navigation is possible.
      *
@@ -73,7 +86,7 @@ class PostRepository extends AbstractRepository
             $constraints[] = $query->in('uid', $uids);
         }
         if (!empty($constraints)) {
-            $query->matching($query->logicalAnd($constraints));
+            $query->matching($query->logicalAnd(...$constraints));
         }
 
         return $query->execute();

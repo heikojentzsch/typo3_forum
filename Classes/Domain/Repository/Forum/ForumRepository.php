@@ -84,6 +84,19 @@ class ForumRepository extends Repository
         return $this->filterByAccess($result, Access::TYPE_READ);
     }
 
+    /**
+     * Finds the first persisted forum without a parent for the index redirect.
+     */
+    public function findFirstRootForum(): ?Forum
+    {
+        $query = $this->createQuery();
+
+        return $query->matching($query->equals('forum', 0))
+            ->setLimit(1)
+            ->execute()
+            ->getFirst();
+    }
+
     protected function filterByAccess(QueryResultInterface $objects, string $action = Access::TYPE_READ): ObjectStorage
     {
         $result = GeneralUtility::makeInstance(ObjectStorage::class);
@@ -109,7 +122,7 @@ class ForumRepository extends Repository
             $constraints[] = $query->in('uid', $uids);
         }
         if (count($constraints) > 0) {
-            $query->matching($query->logicalAnd($constraints));
+            $query->matching($query->logicalAnd(...$constraints));
         }
 
         return $query->execute();

@@ -67,7 +67,7 @@ class ForumController extends AbstractController
      */
     public function indexAction(int $page = 1):ResponseInterface
     {
-        if (($forum = $this->forumRepository->findOneByForum(0))) {
+        if (($forum = $this->forumRepository->findFirstRootForum())) {
             return (new ForwardResponse('show'))->withArguments(['forum' => $forum])->withControllerName('Forum');
         }
         $this->view->assign('page', $page);
