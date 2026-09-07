@@ -33,7 +33,7 @@ class SmileyRepository extends AbstractRepository
     /**
      * @return QueryResultInterface
      */
-    public function findAll()
+    public function findAll(): QueryResultInterface
     {
         return $this->createQueryWithFallbackStoragePage()->execute();
     }

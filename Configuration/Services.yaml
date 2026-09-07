@@ -7,6 +7,11 @@ services:
     Mittwald\Typo3Forum\:
         resource: '../Classes/*'
 
+    Mittwald\Typo3Forum\Domain\Repository\:
+        resource: '../Classes/Domain/Repository/*'
+        autowire: true
+        public: true
+
     cache.typo3forum_main:
         class: TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
         factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
@@ -227,6 +232,7 @@ services:
 
 
     Mittwald\Typo3Forum\Domain\Repository\User\UserfieldRepository:
+        public: true
         autowire: true
         autoconfigure: true
         arguments:
@@ -248,6 +254,7 @@ services:
 
 
     Mittwald\Typo3Forum\Domain\Repository\Moderation\PostReportRepository:
+        public: true
         autowire: true
         autoconfigure: true
         arguments:
@@ -265,11 +272,11 @@ services:
 
 
     Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository:
+        public: true
         autowire: true
         autoconfigure: true
         arguments:
             $authenticationService: '@Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface'
-            $persistenceManager: '@TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager'
 
 
     Mittwald\Typo3Forum\Service\Notification\SubscriptionListener:

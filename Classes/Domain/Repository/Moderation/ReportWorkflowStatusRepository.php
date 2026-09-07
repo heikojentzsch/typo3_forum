@@ -37,25 +37,19 @@ class ReportWorkflowStatusRepository extends AbstractRepository
     /**
      * Finds the initial status that is to be used for new reports.
      *
-     * @return ReportWorkflowStatus The initial status that is to be used for new reports.
+     * @return ReportWorkflowStatus|null The initial status that is to be used for new reports.
      */
-    public function findInitial()
+    public function findInitial(): ?ReportWorkflowStatus
     {
-        $query = $this->createQueryWithFallbackStoragePage();
+        $query = $this->createQuery();
         return $query->matching($query->equals('initial', true))->setLimit(1)->execute()->getFirst();
     }
 
     /**
      * @return QueryInterface
      */
-    public function createQuery()
+    public function createQuery(): QueryInterface
     {
-        $query = parent::createQuery();
-
-        $storagePageIds = $query->getQuerySettings()->getStoragePageIds();
-        $storagePageIds[] = 0;
-
-        $query->getQuerySettings()->setStoragePageIds($storagePageIds);
-        return $query;
+        return $this->addFallbackStoragePage(parent::createQuery());
     }
 }

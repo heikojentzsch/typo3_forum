@@ -29,7 +29,6 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Forum;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
@@ -42,16 +41,14 @@ class ForumRepository extends Repository
 {
     protected AuthenticationServiceInterface $authenticationService;
 
-    public function __construct(AuthenticationServiceInterface $authenticationService, PersistenceManager $persistenceManager)
+    public function __construct(AuthenticationServiceInterface $authenticationService)
     {
         parent::__construct();
-        $this->persistenceManager = $persistenceManager;
         $this->authenticationService = $authenticationService;
     }
 
     public function createQuery(): QueryInterface
     {
-        $this->persistenceManager = GeneralUtility::makeInstance(PersistenceManager::class);
         $query = parent::createQuery();
 
         // don't add sys_language_uid constraint
