@@ -1,11 +1,13 @@
 <?php
+
 namespace Mittwald\Typo3Forum\TextParser\Service;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository;
-use Mittwald\Typo3Forum\Utility\File;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\View\StandaloneView;
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\View\ViewFactoryData;
+use TYPO3\CMS\Core\View\ViewFactoryInterface;
+use TYPO3\CMS\Core\View\ViewInterface;
 
 /*                                                                      *
  *  COPYRIGHT NOTICE                                                    *
@@ -32,71 +34,84 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class QuoteParserService extends AbstractTextParserService
 {
-    protected PostRepository $postRepository;
-
     public function __construct(
-        PostRepository $postRepository
+        protected PostRepository $postRepository,
+        protected ViewFactoryInterface $viewFactory
     ) {
-        $this->postRepository = $postRepository;
     }
 
-    /**
-     * Renders the parsed text.
-     */
-    public function getParsedText(string $text, ?Post $post = null): string
-    {
+    public function getParsedText(
+        string $text,
+        ?Post $post = null
+    ): string {
         do {
-            $text = preg_replace_callback('/\[quote](.*?)\[\/quote\]\w*/is', [$this, 'replaceSingleCallback'], $text, -1, $c);
-        } while ($c > 0);
+            $text = preg_replace_callback(
+                '/\[quote](.*?)\[\/quote\]\w*/is',
+                [$this, 'replaceSingleCallback'],
+                $text,
+                -1,
+                $count
+            );
+        } while ($count > 0);
+
         do {
-            $text = preg_replace_callback('/\[quote=([0-9]+)\](.*?)\[\/quote\]\w*/is', [$this, 'replaceCallback'], $text, -1, $c);
-        } while ($c > 0);
+            $text = preg_replace_callback(
+                '/\[quote=([0-9]+)\](.*?)\[\/quote\]\w*/is',
+                [$this, 'replaceCallback'],
+                $text,
+                -1,
+                $count
+            );
+        } while ($count > 0);
+
         return $text;
     }
 
-    /**
-     * Callback function for rendering quotes.
-     */
     protected function replaceSingleCallback(array $matches): string
     {
-        /*$view = GeneralUtility::makeInstance(StandaloneView::class);
-        $view->setControllerContext($this->controllerContext);
-        $view->setTemplatePathAndFilename(File::replaceSiteRelPath($this->settings['template']));
-        $view->assign('quote', trim($matches[1]));
-        $view->assign('post', null);*/
+        $view = $this->createQuoteView();
 
-        /** @var \TYPO3\CMS\Fluid\View\StandaloneView $view */
-        $view = GeneralUtility::makeInstance(StandaloneView::class);
-        $view->setFormat('html');
-        $template = GeneralUtility::getFileAbsFileName(
-            'EXT:typo3_forum/Resources/Private/Partials/Bootstrap/Format/Quote.html'
-        );
-        $view->setTemplatePathAndFilename($template);
+        $view->assignMultiple([
+            'post' => null,
+            'quote' => trim($matches[1]),
+        ]);
 
-        return $view->render();
         return $view->render();
     }
 
-    /**
-     * Callback function for rendering quotes.
-     */
     protected function replaceCallback(array $matches): string
     {
-        $view = GeneralUtility::makeInstance(StandaloneView::class);
-        $view->setFormat('html');
-        $template = GeneralUtility::getFileAbsFileName(
-            'EXT:typo3_forum/Resources/Private/Partials/Bootstrap/Format/Quote.html'
+        $view = $this->createQuoteView();
+
+        $post = $this->postRepository->findByUid(
+            (int)$matches[1]
         );
-        $view->setTemplatePathAndFilename($template);
-        $view->setRequest($GLOBALS['TYPO3_REQUEST']);
 
+        $view->assignMultiple([
+            'post' => $post,
+            'quote' => trim($matches[2]),
+        ]);
 
-        $tmp = $this->postRepository->findByUid((int)$matches[1]);
-        if (!empty($tmp)) {
-            $view->assign('post', $tmp);
+        return $view->render();
+    }
+
+    private function createQuoteView(): ViewInterface
+    {
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+
+        if (!$request instanceof ServerRequestInterface) {
+            throw new \RuntimeException(
+                'A frontend request is required to render forum quotes.',
+                1788751001
+            );
         }
 
-        $view->assign('quote', trim($matches[2]));
-        return $view->render();
+        return $this->viewFactory->create(
+            new ViewFactoryData(
+                templatePathAndFilename: 'EXT:typo3_forum/Resources/Private/Partials/Bootstrap/Format/Quote.html',
+                request: $request,
+                format: 'html'
+            )
+        );
     }
 }
