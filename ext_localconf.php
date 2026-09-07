@@ -128,13 +128,3 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clea
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['typo3forum_main']
     ??= [];
-
-// Connect signals to slots.
-// TODO: enable Signal slot in v12
-/* $signalSlotDispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Extbase\SignalSlot\Dispatcher');
- $signalSlotDispatcher->connect('Mittwald\Typo3Forum\Domain\Model\Forum\Post', 'postCreated',
-     'Mittwald\Typo3Forum\Service\Notification\SubscriptionListener', 'onPostCreated');
- $signalSlotDispatcher->connect('Mittwald\Typo3Forum\Domain\Model\Forum\Topic', 'topicCreated',
-     'Mittwald\Typo3Forum\Service\Notification\SubscriptionListener', 'onTopicCreated');
- $signalSlotDispatcher->connect('TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapper',
-     'afterMappingSingleRow', 'Mittwald\Typo3Forum\Service\SettingsHydrator', 'hydrateSettings');*/

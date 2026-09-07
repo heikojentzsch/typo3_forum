@@ -5,6 +5,7 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Format;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository;
 use Mittwald\Typo3Forum\TextParser\TextParserService;
+
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *
  *                                                                      *
@@ -46,40 +47,56 @@ class TextParserViewHelper extends AbstractViewHelper
         $this->postRepository = $postRepository;
     }
 
-    /**
-     * @var bool
-     */
     protected $escapeOutput = false;
 
-    /**
-     * Initialize arguments.
-     */
     public function initializeArguments(): void
     {
         parent::initializeArguments();
-        $this->registerArgument('configuration', 'string', 'The configuration path', false, 'plugin.tx_typo3forum.settings.textParsing');
-        $this->registerArgument('post', Post::class, '', false, null);
-        $this->registerArgument('content', 'string', 'The content to be rendered. If NULL, the node content will be rendered instead.', false, null);
+
+        $this->registerArgument(
+            'configuration',
+            'string',
+            'The configuration path',
+            false,
+            'plugin.tx_typo3forum.settings.textParsing'
+        );
+
+        $this->registerArgument(
+            'post',
+            Post::class,
+            '',
+            false,
+            null
+        );
+
+        $this->registerArgument(
+            'content',
+            'string',
+            'The content to be rendered. If NULL, the node content will be rendered instead.',
+            false,
+            null
+        );
     }
 
-    /**
-     * render.
-     * @return string
-     * @throws \Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception
-     */
-    public function render()
+    public function render(): string
     {
-        //$this->textParserService->setControllerContext($this->renderingContext->getControllerContext());
-        $this->textParserService->loadConfiguration($this->arguments['configuration']);
+        $this->textParserService->loadConfiguration(
+            $this->arguments['configuration']
+        );
 
         /** @var ?Post $post */
         $post = $this->arguments['post'];
+
         if ($post !== null) {
-            $renderedText = $this->textParserService->parseText($post->getText(), $post);
-        } else {
-            $renderedText = $this->textParserService->parseText($this->arguments['content'] ?: trim($this->renderChildren()));
+            return $this->textParserService->parseText(
+                $post->getText(),
+                $post
+            );
         }
 
-        return $renderedText;
+        return $this->textParserService->parseText(
+            $this->arguments['content']
+                ?: trim($this->renderChildren())
+        );
     }
 }
