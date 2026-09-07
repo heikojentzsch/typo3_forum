@@ -66,8 +66,8 @@ class TagValidator extends AbstractValidator
             $result = false;
         }
         $name = ucwords($name);
-        $res = $this->tagRepository->findTagWithSpecificName($name);
-        if ($res[0] != false) {
+        $res = $this->tagRepository->findOneByName($name);
+        if ($res !== null) {
             $this->addError('The tag already exists!.', 1373871960);
             $result = false;
         }

@@ -182,12 +182,16 @@ class TopicRepository extends AbstractRepository
      *
      * @return QueryResultInterface<Topic>
      */
-    public function findBySubscriber(FrontendUser $user): QueryResultInterface
+    public function findBySubscriber(FrontendUser $user, ?int $limit = null): QueryResultInterface
     {
         $query = $this->createQuery();
         $query
             ->matching($query->contains('subscribers', $user))
             ->setOrderings(['lastPost.crdate' => 'ASC']);
+
+        if ($limit !== null) {
+            $query->setLimit($limit);
+        }
 
         return $query->execute();
     }
