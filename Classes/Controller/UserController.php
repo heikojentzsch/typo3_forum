@@ -155,7 +155,7 @@ class UserController extends AbstractController
      *
      * @throws NotLoggedInException
      */
-    public function listQuestionsAction(FrontendUser $user = null, int $page = 1): void
+    public function listQuestionsAction(FrontendUser $user = null, int $page = 1): ResponseInterface
     {
         if ($user === null) {
             $user = $this->getCurrentUser();
@@ -167,6 +167,7 @@ class UserController extends AbstractController
             ->assign('topics', $this->topicRepository->findQuestions(null, true, $user))
             ->assign('page', $page)
             ->assign('user', $user);
+        return $this->htmlResponse();
     }
 
     /**
@@ -175,7 +176,7 @@ class UserController extends AbstractController
      *
      * @throws NotLoggedInException
      */
-    public function listNotificationsAction(int $page = 1): void
+    public function listNotificationsAction(int $page = 1): ResponseInterface
     {
         /** @var FrontendUser $user */
         $user = $this->getCurrentUser();
@@ -197,6 +198,7 @@ class UserController extends AbstractController
             'currentUser' => $user,
             'page' => $page,
         ]);
+        return $this->htmlResponse();
     }
 
     /**

@@ -439,24 +439,16 @@ class PostController extends AbstractController
     /**
      * Downloads an attachment and increase the download counter
      */
-    public function downloadAttachmentAction(Attachment $attachment): void
+    public function downloadAttachmentAction(Attachment $attachment): ResponseInterface
     {
         $attachment->increaseDownloadCount();
         $this->attachmentRepository->update($attachment);
-
-        //Enforce persistence, since it will not happen regularly because of die() at the end
         $this->persistenceManager->persistAll();
 
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        ob_start();
-        header('Content-Type: ' . $attachment->getFileReference()->getOriginalResource()->getType());
-        header('Content-Type: application/download');
-        header('Content-Disposition: attachment; filename="' . $attachment->getName() . '"');
-        echo($attachment->getFileReference()->getOriginalResource()->getContents());
-        ob_flush();
-        exit();
+        $file = $attachment->getFileReference()->getOriginalResource();
+        return $this->responseFactory->createResponse()
+            ->withHeader('Content-Type', $file->getMimeType() ?: 'application/download')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . addcslashes($attachment->getName(), '"\\') . '"')
+            ->withBody($this->streamFactory->createStream($file->getContents()));
     }
 }

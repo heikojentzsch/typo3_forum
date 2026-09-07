@@ -24,128 +24,71 @@
 
 namespace Mittwald\Typo3Forum\Updates;
 
+use TYPO3\CMS\Core\Attribute\UpgradeWizard;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Install\Updates\AbstractUpdate;
+use TYPO3\CMS\Core\Upgrades\DatabaseUpdatedPrerequisite;
+use TYPO3\CMS\Core\Upgrades\RepeatableInterface;
+use TYPO3\CMS\Core\Upgrades\UpgradeWizardInterface;
 
-/**
- * Update wizard to migrate anonymous posts without an authorName to have 'Anonymous' as authorName instead and authorNames with less than 3 chars to have
- * 'Anonymous: ' prepended.
- * This is necessary to avoid validation issues for old posts - the authorName validation was disabled for a longer time and has been re-enabled.
- */
-class PostsWithoutAuthorNameUpdate extends AbstractUpdate
+#[UpgradeWizard('typo3ForumPostsWithoutAuthorName')]
+class PostsWithoutAuthorNameUpdate implements UpgradeWizardInterface, RepeatableInterface
 {
+    public function __construct(private readonly ConnectionPool $connectionPool)
+    {}
 
-    /**
-     * @var string
-     */
-    protected $title = '[typo3_forum]: Migrate anonymous posts to have a valid author_name';
-
-    /**
-     * Checks whether updates are required.
-     *
-     * @param string &$description The description for the update
-     * @return bool Whether an update is required (TRUE) or not (FALSE)
-     */
-    public function checkForUpdate(&$description)
+    public function getTitle(): string
     {
-        if ($this->isWizardDone()) {
-            return false;
-        }
-
-        $description = 'Migrate anonymous posts to have a valid author name with three or more characters by setting "Anonymous" for empty author name and
-         prepending "Anonymous: " to author name if consisting of one or two characters.';
-
-        return $this->hasPostsToUpdate();
+        return '[typo3_forum]: Migrate anonymous posts to have a valid author_name';
     }
 
-    /**
-     * Performs the accordant updates.
-     *
-     * @param array &$databaseQueries Queries done in this update
-     * @param string &$customMessage Custom message
-     * @return bool Whether everything went smoothly or not
-     */
-    public function performUpdate(array &$databaseQueries, &$customMessage): bool
+    public function getDescription(): string
     {
-        $connectionPool = GeneralUtility::makeInstance(ConnectionPool::class);
+        return 'Set Anonymous for empty anonymous author names and prepend Anonymous: to names shorter than three characters.';
+    }
 
-        // Update empty authorNames
-        $queryBuilder = $connectionPool->getQueryBuilderForTable('tx_typo3forum_domain_model_forum_post');
+    public function getPrerequisites(): array
+    {
+        return [DatabaseUpdatedPrerequisite::class];
+    }
+
+    public function executeUpdate(): bool
+    {
+        $table = 'tx_typo3forum_domain_model_forum_post';
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()->removeAll();
-
-        $queryBuilder
-            ->update('tx_typo3forum_domain_model_forum_post')
-            ->where($queryBuilder->expr()->eq('author_name', $queryBuilder->createNamedParameter('', Connection::PARAM_STR)))
-            ->andWhere($queryBuilder->expr()->eq('author', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)))
+        $queryBuilder->update($table)
+            ->where(
+                $queryBuilder->expr()->eq('author_name', $queryBuilder->createNamedParameter('')),
+                $queryBuilder->expr()->eq('author', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
+            )
             ->set('author_name', 'Anonymous')
-            ->execute();
-        $databaseQueries[] = $queryBuilder->getSQL();
+            ->executeStatement();
 
-        // Update short authorNames (fetching and updating is necessary as CONCAT('Anonymous: ', "authorName")) does not work in PostgreSQL
-        $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tx_typo3forum_domain_model_forum_post');
-
-        $queryBuilder = $connectionPool->getQueryBuilderForTable('tx_typo3forum_domain_model_forum_post');
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable($table);
         $queryBuilder->getRestrictions()->removeAll();
-
-        $selectShortAuthorNameStatement = $queryBuilder
-            ->select('uid', 'author_name')
-            ->from('tx_typo3forum_domain_model_forum_post')
+        $result = $queryBuilder->select('uid', 'author_name')->from($table)
             ->where(
-                $queryBuilder->expr()->comparison(
-                    $queryBuilder->expr()->length('author_name'),
-                    ExpressionBuilder::LT,
-                    $queryBuilder->createNamedParameter(3, Connection::PARAM_INT)
-                )
-            )
-            ->andWhere($queryBuilder->expr()->neq('author_name', $queryBuilder->createNamedParameter('', Connection::PARAM_STR)))
-            ->andWhere($queryBuilder->expr()->eq('author', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)))
-            ->execute();
-
-        while ($post = $selectShortAuthorNameStatement->fetchAssociative()) {
-            $connection->update(
-                'tx_typo3forum_domain_model_forum_post',
-                ['author_name' => 'Anonymous: ' . $post['author_name']],
-                ['uid' => (int)$post['uid']],
-                [Connection::PARAM_STR, Connection::PARAM_INT]
-            );
+                $queryBuilder->expr()->comparison($queryBuilder->expr()->length('author_name'), ExpressionBuilder::LT, $queryBuilder->createNamedParameter(3, Connection::PARAM_INT)),
+                $queryBuilder->expr()->neq('author_name', $queryBuilder->createNamedParameter('')),
+                $queryBuilder->expr()->eq('author', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
+            )->executeQuery();
+        $connection = $this->connectionPool->getConnectionForTable($table);
+        foreach ($result->fetchAllAssociative() as $post) {
+            $connection->update($table, ['author_name' => 'Anonymous: ' . $post['author_name']], ['uid' => (int)$post['uid']], [Connection::PARAM_STR, Connection::PARAM_INT]);
         }
-
-        $updateSuccessful = !$this->hasPostsToUpdate();
-
-        if ($updateSuccessful) {
-            $this->markWizardAsDone();
-        }
-
-        return $updateSuccessful;
+        return !$this->updateNecessary();
     }
 
-    /**
-     * Fetch the status whether there are posts to update
-     *
-     * @return bool
-     */
-    private function hasPostsToUpdate()
+    public function updateNecessary(): bool
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable('tx_typo3forum_domain_model_forum_post');
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3forum_domain_model_forum_post');
         $queryBuilder->getRestrictions()->removeAll();
-
-        $numberOfPostsToUpdate = $queryBuilder
-            ->count('*')
-            ->from('tx_typo3forum_domain_model_forum_post')
+        return (int)$queryBuilder->count('*')->from('tx_typo3forum_domain_model_forum_post')
             ->where(
-                $queryBuilder->expr()->comparison(
-                    $queryBuilder->expr()->length('author_name'),
-                    ExpressionBuilder::LT,
-                    $queryBuilder->createNamedParameter(3, Connection::PARAM_INT)
-                )
-            )
-            ->andWhere($queryBuilder->expr()->eq('author', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)))
-            ->execute()
-            ->fetchColumn();
-
-        return (int)$numberOfPostsToUpdate > 0;
+                $queryBuilder->expr()->comparison($queryBuilder->expr()->length('author_name'), ExpressionBuilder::LT, $queryBuilder->createNamedParameter(3, Connection::PARAM_INT)),
+                $queryBuilder->expr()->eq('author', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
+            )->executeQuery()->fetchOne() > 0;
     }
 }

@@ -20,7 +20,7 @@ class StatsUpdateCommand extends AbstractDatabaseBasedCommand
                 $deleteQueryBuilder->expr()->eq('pid', $this->storagePage),
                 $deleteQueryBuilder->expr()->in('type', [Post::class, Topic::class, FrontendUser::class])
             )
-            ->execute()
+            ->executeStatement()
         ;
 
         $results = [];
@@ -32,7 +32,7 @@ class StatsUpdateCommand extends AbstractDatabaseBasedCommand
         );
         $queryBuilder->andWhere($queryBuilder->expr()->eq('post.pid', $this->storagePage));
 
-        $res = $queryBuilder->execute();
+        $res = $queryBuilder->executeQuery();
         $row = $res->fetchAssociative();
 
         $results[Post::class] = (int)$row['counter'];
@@ -44,7 +44,7 @@ class StatsUpdateCommand extends AbstractDatabaseBasedCommand
         );
         $queryBuilder->andWhere($queryBuilder->expr()->eq('topic.pid', $this->storagePage));
 
-        $res = $queryBuilder->execute();
+        $res = $queryBuilder->executeQuery();
         $row = $res->fetchAssociative();
 
         $results[Topic::class] = (int)$row['counter'];
@@ -58,7 +58,7 @@ class StatsUpdateCommand extends AbstractDatabaseBasedCommand
             $queryBuilder->expr()->eq('users.pid', $this->storagePage)
         );
 
-        $res = $queryBuilder->execute();
+        $res = $queryBuilder->executeQuery();
         $row = $res->fetchAssociative();
 
         $results[FrontendUser::class] = (int)$row['counter'];
@@ -74,7 +74,7 @@ class StatsUpdateCommand extends AbstractDatabaseBasedCommand
             $queryBuilder = $this->getQueryBuilder('tx_typo3forum_domain_model_stats_summary');
             $queryBuilder->insert('tx_typo3forum_domain_model_stats_summary');
             $queryBuilder->values($values);
-            $queryBuilder->execute();
+            $queryBuilder->executeStatement();
         }
     }
 }

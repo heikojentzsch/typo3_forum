@@ -68,11 +68,12 @@ class ReportController extends AbstractController
         FrontendUser $user,
         #[IgnoreValidation]
         ?ReportComment $firstComment = null
-    ): void {
+    ): ResponseInterface {
         $this->view->assignMultiple([
             'firstComment' => $firstComment,
             'user' => $user,
         ]);
+        return $this->htmlResponse();
     }
 
     /**

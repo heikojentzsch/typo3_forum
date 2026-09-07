@@ -34,14 +34,14 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->andWhere(
             $queryBuilder->expr()->eq(
                 'post.pid',
-                $queryBuilder->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                $queryBuilder->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
             )
         );
 
         $queryBuilder->addGroupBy('post.topic');
         $queryBuilder->addOrderBy('counter', 'ASC');
 
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $topicCount[$row['topic']] = $row['counter'];
@@ -59,7 +59,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
                 );
                 $updateQueryBuilder->set('post_count', $lastCount);
 
-                $updateQueryBuilder->execute();
+                $updateQueryBuilder->executeStatement();
                 $lastCountArray = [];
             }
             $lastCountArray[] = (int)$topicUid;
@@ -78,11 +78,11 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
             ->where(
                 $queryBuilderTopic->expr()->eq(
                     'pid',
-                    $queryBuilderTopic->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                    $queryBuilderTopic->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                 )
             )
             ->groupBy('forum')
-            ->execute();
+            ->executeQuery();
 
         $postAndTopicCountPerForum = [];
 
@@ -100,10 +100,10 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
             ->where(
                 $queryBuilderForum->expr()->eq(
                     'pid',
-                    $queryBuilderForum->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                    $queryBuilderForum->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                 )
             )
-            ->execute();
+            ->executeQuery();
 
         $updateForumConnection = $this->getConnectionPool()->getConnectionForTable('tx_typo3forum_domain_model_forum_forum');
 
@@ -116,7 +116,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
                     'post_count' => (int)$postAndTopicCountPerForum[$forumUid]['post_count']
                 ],
                 ['uid' => $forumUid],
-                [\PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT]
+                [\TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT]
             );
         }
     }
@@ -134,10 +134,10 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->addSelectLiteral($queryBuilder->expr()->count('post.uid', 'counter'));
         $queryBuilder->andWhere(
             $queryBuilder->expr()->gt('post.author', 0),
-            $queryBuilder->expr()->eq('post.pid', $queryBuilder->createNamedParameter($forumPid, \PDO::PARAM_INT))
+            $queryBuilder->expr()->eq('post.pid', $queryBuilder->createNamedParameter($forumPid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT))
         );
         $queryBuilder->addGroupBy('post.author');
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $userUpdate[$row['author']]['post_count'] = $row['counter'];
@@ -150,10 +150,10 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->addSelectLiteral($queryBuilder->expr()->count('topic.uid', 'counter'));
         $queryBuilder->andWhere(
             $queryBuilder->expr()->gt('topic.author', 0),
-            $queryBuilder->expr()->eq('topic.pid', $queryBuilder->createNamedParameter($forumPid, \PDO::PARAM_INT))
+            $queryBuilder->expr()->eq('topic.pid', $queryBuilder->createNamedParameter($forumPid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT))
         );
         $queryBuilder->addGroupBy('topic.author');
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $userUpdate[$row['author']]['topic_count'] = $row['counter'];
@@ -167,10 +167,10 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->andWhere(
             $queryBuilder->expr()->gt('topic.author', 0),
             $queryBuilder->expr()->eq('topic.question', true),
-            $queryBuilder->expr()->eq('topic.pid', $queryBuilder->createNamedParameter($forumPid, \PDO::PARAM_INT))
+            $queryBuilder->expr()->eq('topic.pid', $queryBuilder->createNamedParameter($forumPid, \TYPO3\CMS\Core\Database\Connection::PARAM_INT))
         );
         $queryBuilder->addGroupBy('topic.author');
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $userUpdate[$row['author']]['question_count'] = $row['counter'];
@@ -188,7 +188,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->select('post.author');
         $queryBuilder->addSelectLiteral($queryBuilder->expr()->count('*', 'counter'));
         $queryBuilder->addGroupBy('post.author');
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $userUpdate[$row['author']]['support_count'] = $row['counter'];
@@ -199,7 +199,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->select('support.uid_local');
         $queryBuilder->addSelectLiteral($queryBuilder->expr()->count('*', 'counter'));
         $queryBuilder->addGroupBy('support.uid_local');
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $userUpdate[$row['uid_local']]['markSupport_count'] = $row['counter'];
@@ -212,10 +212,10 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->andWhere(
             $queryBuilder->expr()->eq(
                 'user.pid',
-                $queryBuilder->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                $queryBuilder->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
             )
         );
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $userUpdate[$row['author']]['rank'] = $row['tx_typo3forum_rank'];
@@ -230,11 +230,11 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->andWhere(
             $queryBuilder->expr()->eq(
                 'rank.pid',
-                $queryBuilder->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                $queryBuilder->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
             )
         );
         $queryBuilder->addOrderBy('point_limit', 'ASC');
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         while ($row = $result->fetchAssociative()) {
             $rankArray[$row['uid']] = $row;
@@ -274,7 +274,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
                     'tx_typo3forum_rank' => (int)$array['rank'],
                 ],
                 ['uid' => (int)$userUid],
-                [\PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT, \PDO::PARAM_INT]
+                [\TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT]
             );
         }
 
@@ -288,11 +288,11 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $queryBuilder->andWhere(
             $queryBuilder->expr()->eq(
                 'user.pid',
-                $queryBuilder->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                $queryBuilder->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
             )
         );
         $queryBuilder->addGroupBy('tx_typo3forum_rank');
-        $result = $queryBuilder->execute();
+        $result = $queryBuilder->executeQuery();
 
         $updateRankConnection = $this->getConnectionPool()->getConnectionForTable('tx_typo3forum_domain_model_user_rank');
         while ($row = $result->fetchAssociative()) {
@@ -300,7 +300,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
                 'tx_typo3forum_domain_model_user_rank',
                 ['user_count' => (int)$row['counter']],
                 ['uid' => (int)$row['tx_typo3forum_rank']],
-                [\PDO::PARAM_INT, \PDO::PARAM_INT]
+                [\TYPO3\CMS\Core\Database\Connection::PARAM_INT, \TYPO3\CMS\Core\Database\Connection::PARAM_INT]
             );
         }
     }
