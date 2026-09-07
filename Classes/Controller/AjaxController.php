@@ -25,16 +25,20 @@ namespace Mittwald\Typo3Forum\Controller;
  *  This copyright notice MUST APPEAR in all copies of the script!
  */
 
+use Psr\Http\Message\ResponseInterface;
+
 class AjaxController extends AbstractController
 {
-    public function previewAction(): void
+    public function previewAction(): ResponseInterface
     {
         $text = '';
 
         if ($this->request->hasArgument('text')) {
-            $text = $this->request->getArgument('text');
+            $text = (string)$this->request->getArgument('text');
         }
 
         $this->view->assign('text', $text);
+
+        return $this->htmlResponse();
     }
 }

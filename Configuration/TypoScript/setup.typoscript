@@ -437,22 +437,9 @@ ajaxCall {
 		no_cache = 1
 	}
 
-	10 = USER
+	10 = EXTBASEPLUGIN
 	10 {
-		userFunc = TYPO3\CMS\Extbase\Core\Bootstrap->run
-		pluginName = Ajax
 		extensionName = Typo3Forum
-		vendorName = Mittwald
-		action = preview
-		controller = Ajax
-		htmlSpecialChars = 1
-		switchableControllerActions {
-			Ajax {
-				1 = preview
-			}
-		}
-
-		view =< plugin.tx_typo3forum.view
-		persistence =< plugin.tx_typo3forum.persistence
+		pluginName = Ajax
 	}
 }
