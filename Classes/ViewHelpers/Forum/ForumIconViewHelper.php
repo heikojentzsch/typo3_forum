@@ -4,6 +4,7 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Forum;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Forum;
 use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
+
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *
  *                                                                      *
@@ -27,8 +28,9 @@ use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
+use Mittwald\Typo3Forum\Service\TypoScriptRenderingService;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\ViewHelpers\CObjectViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
@@ -37,74 +39,94 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 class ForumIconViewHelper extends AbstractViewHelper
 {
     protected $escapeOutput = false;
+
     protected FrontendUserRepository $frontendUserRepository;
 
-    public function __construct(FrontendUserRepository $frontendUserRepository)
-    {
+    public function __construct(
+        FrontendUserRepository $frontendUserRepository
+    ) {
         $this->frontendUserRepository = $frontendUserRepository;
     }
 
     public function initializeArguments(): void
     {
         parent::initializeArguments();
-        $this->registerArgument('forum', Forum::class, 'Current forum', true);
-        $this->registerArgument('width', 'int', 'width', false);
+
+        $this->registerArgument(
+            'forum',
+            Forum::class,
+            'Current forum',
+            true
+        );
+
+        $this->registerArgument(
+            'width',
+            'int',
+            'width',
+            false
+        );
     }
 
-    /**
-     * render.
-     * @return string
-     */
-    public function render()
+    public function render(): string
     {
         $forum = $this->arguments['forum'];
-
         $data = $this->getDataArray($forum);
 
-        $cObjectViewHelper = $this->getCObjectViewHelper();
-        if ($data['new']) {
-            $renderData = [
-                'typoscriptObjectPath' => 'plugin.tx_typo3forum.renderer.icons.forum_new',
-                'data' => $data
-            ];
-        } else {
-            $renderData = [
-                'typoscriptObjectPath' => 'plugin.tx_typo3forum.renderer.icons.forum',
-                'data' => $data
-            ];
-        }
-        $renderData['currentValueKey'] = '';
-        $renderData['table'] = 'tt_content';
+        $typoScriptObjectPath = $data['new']
+            ? 'plugin.tx_typo3forum.renderer.icons.forum_new'
+            : 'plugin.tx_typo3forum.renderer.icons.forum';
 
-        return $cObjectViewHelper::renderStatic($renderData, function () {
-        }, $this->renderingContext);
+        $renderingService = GeneralUtility::makeInstance(
+            TypoScriptRenderingService::class
+        );
+
+        return $renderingService->render(
+            $this->getRequest(),
+            $typoScriptObjectPath,
+            $data,
+            '',
+            'tt_content'
+        );
     }
 
-    /**
-     * Generates a data array that will be passed to the typoscript object for
-     * rendering the icon.
-     * @param \Mittwald\Typo3Forum\Domain\Model\Forum\Forum $forum
-     *                             The topic for which the icon is to be displayed.
-     * @return array               The data array for the typoscript object.
-     */
-    protected function getDataArray(\Mittwald\Typo3Forum\Domain\Model\Forum\Forum $forum = null)
+    protected function getDataArray(?Forum $forum = null): array
     {
         if ($forum === null) {
             return [];
         }
-        $user = &$this->frontendUserRepository->findCurrent();
+
+        $user = $this->frontendUserRepository->findCurrent();
 
         return [
-                'new' => !$forum->hasBeenReadByUser($user),
-                'closed' => !$forum->checkNewPostAccess($user),
-            ];
+            'new' => !$forum->hasBeenReadByUser($user),
+            'closed' => !$forum->checkNewPostAccess($user),
+        ];
     }
 
-    /**
-     * @return CObjectViewHelper
-     */
-    protected function getCObjectViewHelper()
+    private function getRequest(): ServerRequestInterface
     {
-        return GeneralUtility::makeInstance(CObjectViewHelper::class);
+        if (
+            !$this->renderingContext->hasAttribute(
+                ServerRequestInterface::class
+            )
+        ) {
+            throw new \RuntimeException(
+                'Required request not found in Fluid rendering context.',
+                1788750005
+            );
+        }
+
+        $request = $this->renderingContext->getAttribute(
+            ServerRequestInterface::class
+        );
+
+        if (!$request instanceof ServerRequestInterface) {
+            throw new \RuntimeException(
+                'Invalid request in Fluid rendering context.',
+                1788750006
+            );
+        }
+
+        return $request;
     }
 }

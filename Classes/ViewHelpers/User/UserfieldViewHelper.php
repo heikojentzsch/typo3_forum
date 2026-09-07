@@ -28,10 +28,11 @@ namespace Mittwald\Typo3Forum\ViewHelpers\User;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield;
 use Mittwald\Typo3Forum\Domain\Model\User\Userfield\TyposcriptUserfield;
+use Mittwald\Typo3Forum\Service\TypoScriptRenderingService;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Country\CountryProvider;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
-use TYPO3\CMS\Fluid\ViewHelpers\CObjectViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
@@ -42,8 +43,20 @@ class UserfieldViewHelper extends AbstractViewHelper
     public function initializeArguments(): void
     {
         parent::initializeArguments();
-        $this->registerArgument('user', FrontendUser::class, 'Frontend user object', true);
-        $this->registerArgument('userfield', AbstractUserfield::class, 'User field', true);
+
+        $this->registerArgument(
+            'user',
+            FrontendUser::class,
+            'Frontend user object',
+            true
+        );
+
+        $this->registerArgument(
+            'userfield',
+            AbstractUserfield::class,
+            'User field',
+            true
+        );
     }
 
     public function render(): string
@@ -58,28 +71,39 @@ class UserfieldViewHelper extends AbstractViewHelper
             );
         }
 
+        $request = $this->getRequest();
+        $renderingService = GeneralUtility::makeInstance(
+            TypoScriptRenderingService::class
+        );
+
         return implode(
             ', ',
             array_filter(
                 array_map(
-                    function (string $propertyName) use ($userfield, $user): string {
+                    function (string $propertyName) use (
+                        $userfield,
+                        $user,
+                        $request,
+                        $renderingService
+                    ): string {
                         if ($propertyName === 'country') {
-                            return self::renderCountry($user->getCountry());
+                            return self::renderCountry(
+                                $user->getCountry()
+                            );
                         }
 
-                        return CObjectViewHelper::renderStatic(
-                            [
-                                'typoscriptObjectPath' => $userfield->getTyposcriptPath() . '.output',
-                                'currentValueKey' => $propertyName,
-                                'table' => 'fe_users',
-                            ],
-                            function () use ($user) {
-                                return $user;
-                            },
-                            $this->renderingContext
+                        return $renderingService->render(
+                            $request,
+                            $userfield->getTyposcriptPath() . '.output',
+                            $user,
+                            $propertyName,
+                            'fe_users'
                         );
                     },
-                    explode('|', $userfield->getUserObjectPropertyName())
+                    explode(
+                        '|',
+                        $userfield->getUserObjectPropertyName()
+                    )
                 ),
                 static function (string $renderedItem): bool {
                     return $renderedItem !== '';
@@ -88,14 +112,47 @@ class UserfieldViewHelper extends AbstractViewHelper
         );
     }
 
-    private static function renderCountry(string $alpha3IsoCode): string
+    private function getRequest(): ServerRequestInterface
     {
+        if (
+            !$this->renderingContext->hasAttribute(
+                ServerRequestInterface::class
+            )
+        ) {
+            throw new \RuntimeException(
+                'Required request not found in Fluid rendering context.',
+                1788750003
+            );
+        }
+
+        $request = $this->renderingContext->getAttribute(
+            ServerRequestInterface::class
+        );
+
+        if (!$request instanceof ServerRequestInterface) {
+            throw new \RuntimeException(
+                'Invalid request in Fluid rendering context.',
+                1788750004
+            );
+        }
+
+        return $request;
+    }
+
+    private static function renderCountry(
+        string $alpha3IsoCode
+    ): string {
         if ($alpha3IsoCode === '') {
             return '';
         }
 
-        $countryProvider = GeneralUtility::makeInstance(CountryProvider::class);
-        $country = $countryProvider->getByAlpha3IsoCode($alpha3IsoCode);
+        $countryProvider = GeneralUtility::makeInstance(
+            CountryProvider::class
+        );
+
+        $country = $countryProvider->getByAlpha3IsoCode(
+            $alpha3IsoCode
+        );
 
         if ($country === null) {
             return $alpha3IsoCode;

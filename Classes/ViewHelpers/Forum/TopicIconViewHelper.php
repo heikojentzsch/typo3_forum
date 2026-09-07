@@ -29,8 +29,9 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\ShadowTopic;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
 use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
+use Mittwald\Typo3Forum\Service\TypoScriptRenderingService;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Fluid\ViewHelpers\CObjectViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
@@ -38,23 +39,20 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 class TopicIconViewHelper extends AbstractViewHelper
 {
-    /**
-     * @var bool
-     */
     protected $escapeOutput = false;
 
     protected FrontendUserRepository $frontendUserRepository;
 
-    public function __construct(FrontendUserRepository $frontendUserRepository)
-    {
+    public function __construct(
+        FrontendUserRepository $frontendUserRepository
+    ) {
         $this->frontendUserRepository = $frontendUserRepository;
     }
 
-    /**
-     * Initializes the view helper arguments.
-     */
     public function initializeArguments(): void
     {
+        parent::initializeArguments();
+
         $this->registerArgument(
             'important',
             'integer',
@@ -62,59 +60,95 @@ class TopicIconViewHelper extends AbstractViewHelper
             false,
             15
         );
-        $this->registerArgument('topic', Topic::class, 'Current topic', true);
-        $this->registerArgument('width', 'int', 'Width', false);
-    }
 
-    /**
-     * Renders the topic icon.
-     *
-     * @return string The rendered icon.
-     */
-    public function render()
-    {
-        $topic = $this->arguments['topic'];
+        $this->registerArgument(
+            'topic',
+            Topic::class,
+            'Current topic',
+            true
+        );
 
-        $data = $this->getDataArray($topic);
-        $renderData = [];
-        $renderData['currentValueKey'] = '';
-        $renderData['table'] = 'tt_content';
-
-        if ($data['new']) {
-            $renderData['typoscriptObjectPath'] = 'plugin.tx_typo3forum.renderer.icons.topic_new';
-        } else {
-            $renderData['typoscriptObjectPath'] = 'plugin.tx_typo3forum.renderer.icons.topic';
-        }
-        return CObjectViewHelper::renderStatic(
-            $renderData,
-            function () use ($data): array {return $data;},
-            $this->renderingContext
+        $this->registerArgument(
+            'width',
+            'int',
+            'Width',
+            false
         );
     }
 
-    /**
-     * Generates a data array that will be passed to the typoscript object for
-     * rendering the icon.
-     * @param Topic $topic The topic for which the icon is to be displayed.
-     * @return array The data array for the typoscript object.
-     */
-    protected function getDataArray(Topic $topic = null): array
+    public function render(): string
+    {
+        $topic = $this->arguments['topic'];
+        $data = $this->getDataArray($topic);
+
+        $typoScriptObjectPath = $data['new'] ?? false
+            ? 'plugin.tx_typo3forum.renderer.icons.topic_new'
+            : 'plugin.tx_typo3forum.renderer.icons.topic';
+
+        $renderingService = GeneralUtility::makeInstance(
+            TypoScriptRenderingService::class
+        );
+
+        return $renderingService->render(
+            $this->getRequest(),
+            $typoScriptObjectPath,
+            $data,
+            '',
+            'tt_content'
+        );
+    }
+
+    protected function getDataArray(?Topic $topic = null): array
     {
         if ($topic === null) {
             return [];
         }
+
         if ($topic instanceof ShadowTopic) {
-            return ['moved' => true];
+            return [
+                'moved' => true,
+            ];
         }
-        $isImportant = $topic->getPostCount() >= $this->arguments['important'];
+
+        $isImportant = $topic->getPostCount()
+            >= $this->arguments['important'];
 
         return [
             'important' => $isImportant,
-            'new' => !$topic->hasBeenReadByUser($this->frontendUserRepository->findCurrent()),
+            'new' => !$topic->hasBeenReadByUser(
+                $this->frontendUserRepository->findCurrent()
+            ),
             'closed' => $topic->isClosed(),
             'sticky' => $topic->isSticky(),
             'solved' => $topic->isSolved(),
             'question' => $topic->isQuestion(),
         ];
+    }
+
+    private function getRequest(): ServerRequestInterface
+    {
+        if (
+            !$this->renderingContext->hasAttribute(
+                ServerRequestInterface::class
+            )
+        ) {
+            throw new \RuntimeException(
+                'Required request not found in Fluid rendering context.',
+                1788750007
+            );
+        }
+
+        $request = $this->renderingContext->getAttribute(
+            ServerRequestInterface::class
+        );
+
+        if (!$request instanceof ServerRequestInterface) {
+            throw new \RuntimeException(
+                'Invalid request in Fluid rendering context.',
+                1788750008
+            );
+        }
+
+        return $request;
     }
 }
