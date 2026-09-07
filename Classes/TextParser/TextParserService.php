@@ -1,11 +1,13 @@
 <?php
+
 namespace Mittwald\Typo3Forum\TextParser;
 
-use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Service\AbstractService;
+use Mittwald\Typo3Forum\TextParser\Service\AbstractTextParserService;
 use Mittwald\Typo3Forum\Utility\TypoScript;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *
  *                                                                      *
@@ -29,27 +31,16 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext;
-
-/**
- * Service class for parsing text values for display. This service handles
- * for example the rendering of bb codes, smileys, etc.
- */
 class TextParserService extends AbstractService
 {
     protected array $settings = [];
+
     /**
-     * An array of the parsing services that are to be used to render text input.
-     * @var \Mittwald\Typo3Forum\TextParser\Service\AbstractTextParserService[]
+     * @var AbstractTextParserService[]
      */
     protected array $parsingServices = [];
 
-    /**
-     * An instance of the typo3_forum typoscript reader. Is used to read the
-     * text parser's typoscript configuration.
-     */
     protected TypoScript $typoscriptReader;
-    protected ControllerContext $controllerContext;
 
     public function __construct(
         TypoScript $typoScriptReader
@@ -57,60 +48,48 @@ class TextParserService extends AbstractService
         $this->typoscriptReader = $typoScriptReader;
     }
 
-    /**
-     * Sets the current Extbase controller context.
-     */
-    public function setControllerContext(ControllerContext $controllerContext): self
-    {
-        $this->controllerContext = $controllerContext;
-
-        return $this;
-    }
-
-    /**
-     * Loads the text parser configuration from a certain configuration path.
-     *
-     * @throws \Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception
-     */
-    public function loadConfiguration(string $configurationPath = 'plugin.tx_typo3forum.settings.textParsing'): void
-    {
+    public function loadConfiguration(
+        string $configurationPath = 'plugin.tx_typo3forum.settings.textParsing'
+    ): void {
         if (count($this->settings) > 0) {
             return;
         }
 
-        $this->settings = $this->typoscriptReader->loadTyposcriptFromPath($configurationPath);
+        $this->settings = $this->typoscriptReader
+            ->loadTyposcriptFromPath($configurationPath);
+
         foreach ($this->settings['enabledServices.'] as $key => $className) {
             if (substr($key, -1, 1) === '.') {
                 continue;
             }
 
-            /** @var \Mittwald\Typo3Forum\TextParser\Service\AbstractTextParserService $newService */
             $newService = GeneralUtility::makeInstance($className);
-            if ($newService instanceof \Mittwald\Typo3Forum\TextParser\Service\AbstractTextParserService) {
-                $newService->setSettings((array)$this->settings['enabledServices.'][$key ]);
-                //TODO: Controller Context
-                //$newService->setControllerContext($this->controllerContext);
-                $this->parsingServices[] = $newService;
-            } else {
-                throw new \Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception('Invalid class; expected an instance of \Mittwald\Typo3Forum\TextParser\Service\AbstractTextParserService!', 1315916625);
+
+            if (!$newService instanceof AbstractTextParserService) {
+                throw new \Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception(
+                    'Invalid class; expected an instance of '
+                    . AbstractTextParserService::class
+                    . '!',
+                    1315916625
+                );
             }
+
+            $newService->setSettings(
+                (array)$this->settings['enabledServices.'][$key]
+            );
+
+            $this->parsingServices[] = $newService;
         }
     }
 
-    /**
-     * Parses a certain input text.
-     * @throws \Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception
-     */
-    public function parseText(string $text, ?Post $post = null): string
-    {
-        if ($this->settings === null) {
-            throw new \Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception('The textparser is not configured!', 1284730639);
-        }
-
-        foreach ($this->parsingServices as &$parsingService) {
-            /** @var $parsingService \Mittwald\Typo3Forum\TextParser\Service\AbstractTextParserService */
+    public function parseText(
+        string $text,
+        ?Post $post = null
+    ): string {
+        foreach ($this->parsingServices as $parsingService) {
             $text = $parsingService->getParsedText($text, $post);
         }
+
         return $text;
     }
 }

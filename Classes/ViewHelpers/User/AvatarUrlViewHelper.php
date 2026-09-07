@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\User;
 
 use Mittwald\Typo3Forum\Domain\Model\User\AnonymousFrontendUser;
@@ -29,8 +30,6 @@ use Mittwald\Typo3Forum\Domain\Model\User\AnonymousFrontendUser;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
-use TYPO3\CMS\Extbase\SignalSlot\Dispatcher;
-use TYPO3\CMS\Fluid\ViewHelpers\CObjectViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
@@ -38,40 +37,25 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 class AvatarUrlViewHelper extends AbstractViewHelper
 {
-    protected Dispatcher $slots;
-
-    public function __construct(
-        Dispatcher $slots
-    ) {
-        $this->slots = $slots;
-    }
-
-    /**
-     * Initializes the view helper's arguments.
-     */
     public function initializeArguments(): void
     {
         parent::initializeArguments();
     }
 
-    /**
-     * Renders the avatar.
-     *
-     * @param FrontendUser $user
-     * @return string
-     */
-    public function render(FrontendUser $user = null)
+    public function render(?FrontendUser $user = null): string
     {
-        // if user ist not set
         $avatarFilename = null;
 
-        if (($user !== null) && !($user instanceof AnonymousFrontendUser)) {
+        if ($user !== null && !$user instanceof AnonymousFrontendUser) {
             $avatarFilename = $user->getImagePath();
         }
 
         if ($avatarFilename === null) {
-            $avatarFilename = PathUtility::stripPathSitePrefix(ExtensionManagementUtility::extPath('typo3_forum')) . 'Resources/Public/Images/Icons/AvatarEmpty.png';
+            $avatarFilename = PathUtility::stripPathSitePrefix(
+                ExtensionManagementUtility::extPath('typo3_forum')
+            ) . 'Resources/Public/Images/Icons/AvatarEmpty.png';
         }
+
         return $avatarFilename;
     }
 }

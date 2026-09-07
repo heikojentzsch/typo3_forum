@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\TextParser\Service;
 
 /*                                                                      *
@@ -26,7 +27,6 @@ namespace Mittwald\Typo3Forum\TextParser\Service;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Service\AbstractService;
-use TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext;
 
 /**
  * Abstract base class for all kinds of text parsing services.
@@ -34,7 +34,6 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ControllerContext;
 abstract class AbstractTextParserService extends AbstractService
 {
     protected array $settings = [];
-    protected ControllerContext $controllerContext;
 
     public function setSettings(array $settings): self
     {
@@ -43,15 +42,5 @@ abstract class AbstractTextParserService extends AbstractService
         return $this;
     }
 
-    public function setControllerContext(ControllerContext $controllerContext): self
-    {
-        $this->controllerContext = $controllerContext;
-
-        return $this;
-    }
-
-    /**
-     * Renders the parsed text.
-     */
     abstract public function getParsedText(string $text, ?Post $post = null): string;
 }
