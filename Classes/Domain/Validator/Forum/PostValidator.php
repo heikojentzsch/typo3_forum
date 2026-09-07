@@ -25,17 +25,15 @@ namespace Mittwald\Typo3Forum\Domain\Validator\Forum;
 *                                                                      */
 
 use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator;
 
 class PostValidator extends AbstractValidator
 {
     protected FrontendUserRepository $frontendUserRepository;
 
-    public function __construct(array $options = [])
+    public function __construct(FrontendUserRepository $frontendUserRepository)
     {
-        $this->options = $options;
-        $this->frontendUserRepository = GeneralUtility::makeInstance(FrontendUserRepository::class);
+        $this->frontendUserRepository = $frontendUserRepository;
     }
 
     /**
@@ -47,20 +45,15 @@ class PostValidator extends AbstractValidator
     */
     protected function isValid($post):void
     {
-        $result = true;
-
         if (trim($post->getText()) === '') {
             $this->addError('The post can\'t be empty!.', 1221560718);
-            $result = false;
         }
 
         if ($this->frontendUserRepository->findCurrent()->isAnonymous()) {
             if (empty($post->getAuthorName())) {
                 $this->addError('Author name must be present when post is created by anonymous user.', 1335106565);
-                $result = false;
             } elseif (strlen($post->getAuthorName()) < 3) {
                 $this->addError('Author name must be at least three characters long.', 1335106566);
-                $result = false;
             }
         }
     }

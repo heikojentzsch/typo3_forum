@@ -29,12 +29,20 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
+use TYPO3\CMS\Core\Database\{Connection, ConnectionPool};
 use TYPO3\CMS\Extbase\Persistence\Generic\Query;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 class TopicRepository extends AbstractRepository
 {
+    protected ConnectionPool $connectionPool;
+
+    public function injectConnectionPool(ConnectionPool $connectionPool): void
+    {
+        $this->connectionPool = $connectionPool;
+    }
+
     public function createQuery(): QueryInterface
     {
         $query = parent::createQuery();
@@ -277,14 +285,24 @@ class TopicRepository extends AbstractRepository
      */
     public function getUnreadTopics(Forum $forum, FrontendUser $user): array
     {
-        $sql = 'SELECT t.uid
-               FROM tx_typo3forum_domain_model_forum_topic AS t
-               LEFT JOIN tx_typo3forum_domain_model_user_readtopic AS rt
-                       ON rt.uid_foreign = t.uid AND rt.uid_local = ' . (int)$user->getUid() . '
-               WHERE rt.uid_local IS NULL AND t.forum=' . (int)$forum->getUid();
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable('tx_typo3forum_domain_model_forum_topic');
+        // Preserve the original custom statement's unfiltered storage/language/visibility
+        // scope. Select full rows so Extbase can hydrate the returned Topic entities.
+        $queryBuilder->getRestrictions()->removeAll();
+        $queryBuilder->select('t.*')->from('tx_typo3forum_domain_model_forum_topic', 't')
+            ->leftJoin('t', 'tx_typo3forum_domain_model_user_readtopic', 'rt',
+                $queryBuilder->expr()->and(
+                    $queryBuilder->expr()->eq('rt.uid_foreign', $queryBuilder->quoteIdentifier('t.uid')),
+                    $queryBuilder->expr()->eq('rt.uid_local', $queryBuilder->createNamedParameter((int)$user->getUid(), Connection::PARAM_INT))
+                )
+            )
+            ->where(
+                $queryBuilder->expr()->isNull('rt.uid_local'),
+                $queryBuilder->expr()->eq('t.forum', $queryBuilder->createNamedParameter((int)$forum->getUid(), Connection::PARAM_INT))
+            );
         /** @var Query $query */
         $query = $this->createQuery();
-        $query->statement($sql);
+        $query->statement($queryBuilder);
         return $query->execute()->toArray();
     }
 }

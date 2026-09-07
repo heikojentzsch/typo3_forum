@@ -17,9 +17,9 @@ return [
             \Mittwald\Typo3Forum\Domain\Model\User\Userfield\TextUserfield::class
         ]
     ],
-    \Mittwald\Typo3Forum\Domain\Model\Moderation\AbstractReport::class => [
+    \Mittwald\Typo3Forum\Domain\Model\Moderation\Report::class => [
         'tableName' => 'tx_typo3forum_domain_model_moderation_report',
-        'recordType' => \Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield::class,
+        'recordType' => '1',
         'subclasses' => [
             \Mittwald\Typo3Forum\Domain\Model\Moderation\UserReport::class,
             \Mittwald\Typo3Forum\Domain\Model\Moderation\PostReport::class

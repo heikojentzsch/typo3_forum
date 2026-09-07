@@ -7,24 +7,23 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use TYPO3\CMS\Core\Site\SiteFinder;
-use TYPO3\CMS\Core\TypoScript\TemplateService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\RootlineUtility;
+use TYPO3\CMS\Extbase\Configuration\BackendConfigurationManager;
+use TYPO3\CMS\Core\Http\ServerRequest;
 
 abstract class AbstractSiteBasedTypoScriptCommand extends Command
 {
     protected SiteFinder $siteFinder;
-    protected TemplateService $templateService;
+    protected BackendConfigurationManager $typoScriptConfiguration;
 
     protected array $settings = [];
     protected int $storagePage = 0;
 
     public function injectTyposcriptHelpers(
         SiteFinder $siteFinder,
-        TemplateService $templateService
+        BackendConfigurationManager $typoScriptConfiguration
     ): void {
         $this->siteFinder = $siteFinder;
-        $this->templateService = $templateService;
+        $this->typoScriptConfiguration = $typoScriptConfiguration;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -32,14 +31,8 @@ abstract class AbstractSiteBasedTypoScriptCommand extends Command
         foreach ($this->siteFinder->getAllSites() as $site) {
             $this->settings = [];
 
-            $rootline = GeneralUtility::makeInstance(
-                RootlineUtility::class,
-                $site->getRootPageId()
-            )->get();
-            $this->templateService->runThroughTemplates($rootline);
-            $this->templateService->generateConfig();
-
-            $rawTyposcript = $this->templateService->setup['plugin.']['tx_typo3forum.'] ?? [];
+            $setup = $this->getSetupForSite($site);
+            $rawTyposcript = $setup['plugin.']['tx_typo3forum.'] ?? [];
             $this->settings = $rawTyposcript['settings.'] ?? [];
 
             if (count($this->settings) > 0) {
@@ -52,6 +45,17 @@ abstract class AbstractSiteBasedTypoScriptCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    protected function getSetupForSite(SiteInterface $site): array
+    {
+        // The core's backend setup reader also supports evaluation without a frontend
+        // lifecycle: supply the site and root page explicitly for this CLI invocation.
+        $request = (new ServerRequest((string)$site->getBase()))
+            ->withQueryParams(['id' => $site->getRootPageId()])
+            ->withAttribute('site', $site)
+            ->withAttribute('language', $site->getDefaultLanguage());
+        return $this->typoScriptConfiguration->getTypoScriptSetup($request);
     }
 
     /**

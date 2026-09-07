@@ -89,7 +89,7 @@ class Access extends AbstractValueObject
      */
     protected $affectedGroup;
 
-    public function __construct($operation = null, $level = null, \Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup $group = null)
+    public function __construct($operation = null, $level = null, ?\Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup $group = null)
     {
         $this->operation = $operation;
         $this->loginLevel = $level;
@@ -167,7 +167,7 @@ class Access extends AbstractValueObject
      * @param FrontendUser $user The user to be matched. Can also be NULL (for anonymous  users).
      * @return bool TRUE if this access rule matches the given user, otherwise FALSE. This result may be negated using the "negate" property.
      */
-    public function matches(FrontendUser $user = null)
+    public function matches(?FrontendUser $user = null)
     {
         $result = false;
         if ($this->loginLevel === self::LOGIN_LEVEL_EVERYONE) {

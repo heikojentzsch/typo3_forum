@@ -40,7 +40,6 @@ class AttachmentPlainValidator extends AbstractValidator
     */
     public function isValid($value):void
     {
-        $result = true;
         $attachmentObj = GeneralUtility::makeInstance(Attachment::class);
         foreach ($value as $attachment) {
             if (empty($attachment['name'])) {
@@ -48,11 +47,9 @@ class AttachmentPlainValidator extends AbstractValidator
             }
             if (!in_array($attachment['type'], $attachmentObj->getAllowedMimeTypes())) {
                 $this->addError('The submitted mime-type is not allowed!.', 1371041777);
-                $result = false;
             }
             if ($attachment['size'] > $attachmentObj->getAllowedMaxSize()) {
                 $this->addError('The submitted file is to big!.', 1371041888);
-                $result = false;
             }
         }
     }

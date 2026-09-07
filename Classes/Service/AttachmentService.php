@@ -14,7 +14,7 @@ use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 class AttachmentService implements SingletonInterface
 {
-    protected $storage;
+    protected ?ResourceStorage $storage;
 
     public function __construct(
         ResourceFactory $resourceFactory
@@ -27,7 +27,7 @@ class AttachmentService implements SingletonInterface
      * @param array $attachments
      * @return ObjectStorage
      */
-    public function initAttachments(array $uploadedAttachments)
+    public function initAttachments(array $uploadedAttachments): ObjectStorage
     {
         /* @var \Mittwald\Typo3Forum\Domain\Model\Forum\Attachment */
         $attachmentStorage = new ObjectStorage();
@@ -44,10 +44,13 @@ class AttachmentService implements SingletonInterface
                 $this->storage->createFolder($folderIdentifier);
             }
 
+            // Retain the old extensionless-name behavior as well as dotted filenames.
+            $nameParts = explode('.', $attachmentData['name']);
+            $extension = end($nameParts);
             $falFile = $this->storage->addUploadedFile(
                 $attachmentData,
                 $this->storage->getFolder($folderIdentifier),
-                sha1($attachmentData['name'] . time()) . '.' . end(explode('.', $attachmentData['name'])),
+                sha1($attachmentData['name'] . time()) . '.' . $extension,
                 DuplicationBehavior::REPLACE
             );
 

@@ -4,7 +4,6 @@ namespace Mittwald\Typo3Forum\Service\Mailing;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
 use Mittwald\Typo3Forum\Service\AbstractService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *
@@ -46,16 +45,10 @@ abstract class AbstractMailingService extends AbstractService implements Mailing
 
     protected string $format = self::MAILING_FORMAT_HTML;
 
-    public function __construct()
+    public function __construct(ConfigurationBuilder $configurationBuilder)
     {
-        $configurationBuilder = GeneralUtility::makeInstance(ConfigurationBuilder::class);
         $this->configurationBuilder = $configurationBuilder;
         $this->settings = $this->configurationBuilder->getSettings();
-    }
-
-    public function injectConfigurationBuilder(ConfigurationBuilder $configurationBuilder): void
-    {
-        $this->configurationBuilder = $configurationBuilder;
     }
 
     public function initializeObject(): void
@@ -99,22 +92,4 @@ abstract class AbstractMailingService extends AbstractService implements Mailing
         );
     }
 
-    /**
-     * Gets the default sender. This is composed of the default sender name and the
-     * default sender address.
-     *
-     * @return string The default sender.
-     */
-    protected function getDefaultSender(): string
-    {
-        return $this->getDefaultSenderName() . ' <' . $this->getDefaultSenderAddress() . '>';
-    }
-
-    /**
-     * Gets the preferred character set for sent mails.
-     */
-    protected function getCharset(): string
-    {
-        return 'utf-8';
-    }
 }

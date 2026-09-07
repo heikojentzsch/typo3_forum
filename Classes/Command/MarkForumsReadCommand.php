@@ -30,22 +30,22 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
                 'forum',
                 'tx_typo3forum_domain_model_forum_topic',
                 'topic',
-                $forumQueryBuilder->expr()->andX(
+                $forumQueryBuilder->expr()->and(
                     $forumQueryBuilder->expr()->eq(
                         'forum.uid',
                         $forumQueryBuilder->quoteIdentifier('topic.forum')
                     ),
                     $forumQueryBuilder->expr()->eq(
                         'topic.pid',
-                        $forumQueryBuilder->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                        $forumQueryBuilder->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                     ),
                     $forumQueryBuilder->expr()->eq(
                         'topic.deleted',
-                        $forumQueryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                        $forumQueryBuilder->createNamedParameter(0, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                     ),
                     $forumQueryBuilder->expr()->eq(
                         'topic.hidden',
-                        $forumQueryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                        $forumQueryBuilder->createNamedParameter(0, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                     ),
                     $forumQueryBuilder->expr()->neq(
                         'topic.type',
@@ -56,23 +56,23 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
             ->where(
                 $forumQueryBuilder->expr()->eq(
                     'forum.pid',
-                    $forumQueryBuilder->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                    $forumQueryBuilder->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                 )
             )
             ->andWhere(
                 $forumQueryBuilder->expr()->eq(
                     'forum.deleted',
-                    $forumQueryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                    $forumQueryBuilder->createNamedParameter(0, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                 )
             )
             ->andWhere(
                 $forumQueryBuilder->expr()->eq(
                     'forum.hidden',
-                    $forumQueryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+                    $forumQueryBuilder->createNamedParameter(0, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                 )
             )
             ->addGroupBy('forum.uid')
-            ->execute();
+            ->executeQuery();
 
         while ($forumRow = $result->fetchAssociative()) {
             $topicQueryBuilder = $this->getQueryBuilder('tx_typo3forum_domain_model_forum_topic');
@@ -82,14 +82,14 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
                 ->where(
                     $topicQueryBuilder->expr()->eq(
                         'topic.forum',
-                        $topicQueryBuilder->createNamedParameter($forumRow['forum'], \PDO::PARAM_INT)
+                        $topicQueryBuilder->createNamedParameter($forumRow['forum'], \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                     ),
                     $topicQueryBuilder->expr()->neq(
                         'topic.type',
                         '1'
                     )
                 )
-                ->execute()
+                ->executeQuery()
                 ->fetchFirstColumn();
 
             $userQueryBuilder = $this->getQueryBuilder('fe_users');
@@ -106,7 +106,7 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
                         'users',
                         'tx_typo3forum_domain_model_user_readtopic',
                         'read',
-                        $userQueryBuilder->expr()->andX()->addMultiple(
+                        $userQueryBuilder->expr()->and(...
                             [
                                 $userQueryBuilder->expr()->eq('read.uid_local', 'users.uid'),
                                 $userQueryBuilder->expr()->in('read.uid_foreign', $topics)
@@ -119,12 +119,12 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
                 ->andWhere(
                     $userQueryBuilder->expr()->eq(
                         'users.pid',
-                        $userQueryBuilder->createNamedParameter($this->storagePage, \PDO::PARAM_INT)
+                        $userQueryBuilder->createNamedParameter($this->storagePage, \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                     ),
                     $userQueryBuilder->expr()->gt('users.lastlogin', (time() - $limit))
                 )
                 ->addGroupBy('users.uid')
-                ->execute();
+                ->executeQuery();
 
             while ($userRow = $userResult->fetchAssociative()) {
                 $deleteQueryBuilder = $this->getQueryBuilder('tx_typo3forum_domain_model_user_readforum');
@@ -132,15 +132,15 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
                 $deleteQueryBuilder->andWhere(
                     $deleteQueryBuilder->expr()->eq(
                         'uid_local',
-                        $deleteQueryBuilder->createNamedParameter($userRow['uid'], \PDO::PARAM_INT)
+                        $deleteQueryBuilder->createNamedParameter($userRow['uid'], \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                     ),
                     $deleteQueryBuilder->expr()->eq(
                         'uid_foreign',
-                        $deleteQueryBuilder->createNamedParameter($forumRow['forum'], \PDO::PARAM_INT)
+                        $deleteQueryBuilder->createNamedParameter($forumRow['forum'], \TYPO3\CMS\Core\Database\Connection::PARAM_INT)
                     )
                 );
 
-                $deleteQueryBuilder->execute();
+                $deleteQueryBuilder->executeStatement();
 
                 if ($forumRow['topic_amount'] == 0 || $forumRow['topic_amount'] == $userRow['read_amount']) {
                     $insert = [
@@ -150,7 +150,7 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
 
                     $insertQueryBuilder = $this->getQueryBuilder('tx_typo3forum_domain_model_user_readforum');
                     $insertQueryBuilder->insert('tx_typo3forum_domain_model_user_readforum');
-                    $insertQueryBuilder->values($insert)->execute();
+                    $insertQueryBuilder->values($insert)->executeStatement();
                 }
             }
         }

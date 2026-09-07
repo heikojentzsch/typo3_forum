@@ -31,6 +31,7 @@ use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
 use Mittwald\Typo3Forum\Utility\Localization;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Service\CacheService;
 use TYPO3\CMS\Frontend\Page\PageInformation;
@@ -125,7 +126,7 @@ abstract class AbstractController extends ActionController
         $key,
         array $arguments = [],
         $titleKey = null,
-        $severity = FlashMessage::OK
+        $severity = ContextualFeedbackSeverity::OK
     ) {
         $message = new FlashMessage(
             Localization::translate($key, 'Typo3Forum', $arguments),
@@ -149,13 +150,13 @@ abstract class AbstractController extends ActionController
         $actionName,
         $controllerName = null,
         $extensionName = null,
-        array $arguments = null,
+        ?array $arguments = null,
         $pageUid = null,
         $delay = 0,
         $statusCode = 303
     ): ResponseInterface {
         if ($this->context === self::CONTEXT_WEB && $this->request->getFormat() === 'html') {
-            parent::redirect(
+            return parent::redirect(
                 $actionName,
                 $controllerName,
                 $extensionName,

@@ -36,7 +36,6 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
 use Mittwald\Typo3Forum\Utility\Slug;
-use phpDocumentor\Reflection\PseudoTypes\NegativeInteger;
 use TYPO3\CMS\Extbase\Attribute\ORM\Cascade;
 use TYPO3\CMS\Extbase\Attribute\ORM\Lazy;
 use TYPO3\CMS\Extbase\Attribute\Validate;
@@ -445,7 +444,7 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
      * Checks if a user may perform a certain operation (read, answer...) with this
      * topic.
      */
-    public function checkAccess(?FrontendUser $user = null, $accessType = Access::TYPE_READ): bool
+    public function checkAccess(?FrontendUser $user = null, string $accessType = Access::TYPE_READ): bool
     {
         switch ($accessType) {
             case Access::TYPE_NEW_POST:
@@ -477,7 +476,7 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
     /**
      * Checks if a user has moderative access to this topic.
      */
-    public function checkModerationAccess(FrontendUser $user = null): bool
+    public function checkModerationAccess(?FrontendUser $user = null): bool
     {
         return ($user === null) ? false : $this->getForum()->checkModerationAccess($user);
     }

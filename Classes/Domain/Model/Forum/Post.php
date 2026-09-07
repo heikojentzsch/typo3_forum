@@ -224,7 +224,7 @@ class Post extends AbstractEntity implements AccessibleInterface, NotifiableInte
     /**
      * Performs an access check for this post.
      */
-    public function checkAccess(?FrontendUser $user = null, $accessType = Access::TYPE_READ): bool
+    public function checkAccess(?FrontendUser $user = null, string $accessType = Access::TYPE_READ): bool
     {
         switch ($accessType) {
             case Access::TYPE_EDIT_POST:

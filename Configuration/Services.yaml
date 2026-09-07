@@ -29,6 +29,7 @@ services:
 
 
     Mittwald\Typo3Forum\Command\CounterUpdateCommand:
+        autowire: true
         public: true
         tags:
           - name: console.command
@@ -36,6 +37,7 @@ services:
             description: 'Updates counters (post count, topic count, user count etc.).'
 
     Mittwald\Typo3Forum\Command\MarkForumsReadCommand:
+        autowire: true
         public: true
         tags:
           - name: console.command
@@ -43,6 +45,7 @@ services:
             description: 'Update forum read status for all users.'
 
     Mittwald\Typo3Forum\Command\StatsUpdateCommand:
+        autowire: true
         public: true
         tags:
           - name: console.command
@@ -315,3 +318,23 @@ services:
         autoconfigure: true
         arguments:
             $summaryRepository: '@Mittwald\Typo3Forum\Domain\Repository\Stats\SummaryRepository'
+
+    Mittwald\Typo3Forum\Updates\PostsWithoutAuthorNameUpdate:
+        autowire: true
+
+    Mittwald\Typo3Forum\Service\Mailing\:
+        resource: '../Classes/Service/Mailing/*'
+        autowire: true
+
+    Mittwald\Typo3Forum\Domain\Validator\Forum\PostValidator:
+        autowire: true
+        public: true
+        shared: false
+
+    Mittwald\Typo3Forum\Domain\Validator\Forum\TagValidator:
+        autowire: true
+        public: true
+        shared: false
+
+    Mittwald\Typo3Forum\Utility\UserUtility:
+        autowire: true

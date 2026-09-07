@@ -52,16 +52,6 @@ class ForumController extends AbstractController
         $this->rootForum = $rootForum;
     }
 
-    public function injectRepositories(
-        ForumRepository $forumRepository,
-        TopicRepository $topicRepository,
-        RootForum $rootForum
-    ) {
-        $this->forumRepository = $forumRepository;
-        $this->topicRepository = $topicRepository;
-        $this->rootForum = $rootForum;
-    }
-
     /**
      * Index action. Displays the first two levels of the forum tree.
      */

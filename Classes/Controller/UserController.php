@@ -113,7 +113,7 @@ class UserController extends AbstractController
      *
      * @throws NotLoggedInException
      */
-    public function listPostsAction(FrontendUser $user = null, int $page = 1): ResponseInterface
+    public function listPostsAction(?FrontendUser $user = null, int $page = 1): ResponseInterface
     {
         if ($user === null) {
             $user = $this->getCurrentUser();
@@ -155,7 +155,7 @@ class UserController extends AbstractController
      *
      * @throws NotLoggedInException
      */
-    public function listQuestionsAction(FrontendUser $user = null, int $page = 1): void
+    public function listQuestionsAction(?FrontendUser $user = null, int $page = 1): ResponseInterface
     {
         if ($user === null) {
             $user = $this->getCurrentUser();
@@ -167,6 +167,7 @@ class UserController extends AbstractController
             ->assign('topics', $this->topicRepository->findQuestions(null, true, $user))
             ->assign('page', $page)
             ->assign('user', $user);
+        return $this->htmlResponse();
     }
 
     /**
@@ -175,7 +176,7 @@ class UserController extends AbstractController
      *
      * @throws NotLoggedInException
      */
-    public function listNotificationsAction(int $page = 1): void
+    public function listNotificationsAction(int $page = 1): ResponseInterface
     {
         /** @var FrontendUser $user */
         $user = $this->getCurrentUser();
@@ -197,12 +198,13 @@ class UserController extends AbstractController
             'currentUser' => $user,
             'page' => $page,
         ]);
+        return $this->htmlResponse();
     }
 
     /**
      * Displays a single user.
      */
-    public function showAction(FrontendUser $user = null): ResponseInterface
+    public function showAction(?FrontendUser $user = null): ResponseInterface
     {
         if ($user === null) {
             return (new ForwardResponse('show'))->withArguments(['user' => $this->getCurrentUser()]);
@@ -241,7 +243,7 @@ class UserController extends AbstractController
      * @throws NotLoggedInException
      * @throws InvalidArgumentValueException
      */
-    public function subscribeAction(Forum $forum = null, Topic $topic = null, bool $unsubscribe = false, bool $prioritizeRefererRedirect = false): ResponseInterface
+    public function subscribeAction(?Forum $forum = null, ?Topic $topic = null, bool $unsubscribe = false, bool $prioritizeRefererRedirect = false): ResponseInterface
     {
         // Validate arguments
         if ($forum === null && $topic === null) {
@@ -269,8 +271,9 @@ class UserController extends AbstractController
         $this->clearCacheForCurrentPage();
 
         if ($prioritizeRefererRedirect){
-            if ($this->redirectToReferrer() instanceof ResponseInterface) {
-                return $this->redirectToReferrer();
+            $response = $this->redirectToReferrer();
+            if ($response instanceof ResponseInterface) {
+                return $response;
             }
         }
         return $this->redirectToSubscriptionObject($object);
@@ -346,7 +349,8 @@ class UserController extends AbstractController
      */
     protected function getSubscriptionFlashMessage(SubscribeableInterface $object, bool $unsubscribe = false): string
     {
-        $type = array_pop(explode('\\', get_class($object)));
+        $classParts = explode('\\', get_class($object));
+        $type = array_pop($classParts);
         $key = 'User_' . ($unsubscribe ? 'Uns' : 'S') . 'ubscribe_' . $type . '_Success';
         return LocalizationUtility::translate($key, 'Typo3Forum', [$object->getTitle()]);
     }

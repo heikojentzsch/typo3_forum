@@ -82,7 +82,7 @@ class PostFactory extends AbstractFactory
      * @throws NotLoggedInException
      * @throws \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException
      */
-    public function assignUserToPost(Post $post, FrontendUser $user = null)
+    public function assignUserToPost(Post $post, ?FrontendUser $user = null)
     {
         // If no user is set, use current user is set.
         if ($user === null) {

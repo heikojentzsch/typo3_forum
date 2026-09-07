@@ -26,16 +26,15 @@ namespace Mittwald\Typo3Forum\Domain\Validator\Forum;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator;
 
 class TagValidator extends AbstractValidator
 {
     protected TagRepository $tagRepository;
 
-    public function __construct()
+    public function __construct(TagRepository $tagRepository)
     {
-        $this->tagRepository = GeneralUtility::makeInstance(TagRepository::class);
+        $this->tagRepository = $tagRepository;
     }
 
     /**
@@ -47,22 +46,14 @@ class TagValidator extends AbstractValidator
     */
     protected function isValid($tag):void
     {
-        if (!$tag instanceof Tag) {
-            //return false;
-        }
-
-        $result = true;
-
         $name = $tag->getName();
         if (trim($name) === '') {
             $this->addError('The name can\'t be empty!.', 1373871955);
-            $result = false;
         }
         $name = ucwords($name);
         $res = $this->tagRepository->findOneByName($name);
         if ($res !== null) {
             $this->addError('The tag already exists!.', 1373871960);
-            $result = false;
         }
     }
 }

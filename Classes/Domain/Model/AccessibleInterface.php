@@ -40,5 +40,5 @@ interface AccessibleInterface
      * @param string $accessType
      * @return bool
      */
-    public function checkAccess(User\FrontendUser $user = null, $accessType = Access::TYPE_READ);
+    public function checkAccess(?User\FrontendUser $user = null, string $accessType = Access::TYPE_READ): bool;
 }
