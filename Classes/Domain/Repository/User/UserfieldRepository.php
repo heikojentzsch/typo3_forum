@@ -79,7 +79,7 @@ class UserfieldRepository extends AbstractRepository
      * @return array|\Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield
      *     The core userfields that are generated from the
      *     typoscript configuration.
-     * @throws \TYPO3\CMS\Extbase\Object\UnknownClassException
+     * @throws \UnexpectedValueException
      */
     protected function findCoreUserfields()
     {
@@ -90,13 +90,13 @@ class UserfieldRepository extends AbstractRepository
             foreach ($conf['settings']['userfields']['core_fields'] as $coreFieldKey => $coreFieldValues) {
                 $className = $coreFieldValues['class'];
                 if (!class_exists($className)) {
-                    throw new \TYPO3\CMS\Extbase\Object\UnknownClassException("The class $className does not exist!", 1287756385);
+                    throw new \UnexpectedValueException("The class $className does not exist!", 1287756385);
                 }
 
                 $object = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($className);
 
                 if (!$object instanceof \Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield) {
-                    throw new \TYPO3\CMS\Extbase\Object\UnknownClassException("The class $className is not a subclass of \Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield", 1287756386);
+                    throw new \UnexpectedValueException("The class $className is not a subclass of \Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield", 1287756386);
                 }
 
                 foreach ($coreFieldValues['properties'] as $propertyName => $propertyValue) {
