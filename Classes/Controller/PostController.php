@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Controller;
 
 /*                                                                      *
@@ -36,13 +37,15 @@ use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
+use Mittwald\Typo3Forum\Domain\Validator\Forum\AttachmentPlainValidator;
+use Mittwald\Typo3Forum\Domain\Validator\Forum\PostValidator;
 use Mittwald\Typo3Forum\Service\AttachmentService;
 use Mittwald\Typo3Forum\Service\TagService;
 use Mittwald\Typo3Forum\Utility\Localization;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Extbase\Annotation\IgnoreValidation;
-use TYPO3\CMS\Extbase\Annotation\Validate;
+use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
+use TYPO3\CMS\Extbase\Attribute\Validate;
 use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 
@@ -85,8 +88,8 @@ class PostController extends AbstractController
 
     public function listAction(int $page = 1): ResponseInterface
     {
-
         $showPaginate = false;
+
         switch ($this->settings['listPosts']) {
             case '2':
                 $posts = $this->postRepository->findByFilter(
@@ -94,6 +97,7 @@ class PostController extends AbstractController
                     ['crdate' => 'DESC']
                 );
                 break;
+
             default:
                 $posts = $this->postRepository->findByFilter(
                     $this->settings['maxItems'] ?? null,
@@ -102,9 +106,11 @@ class PostController extends AbstractController
                 $showPaginate = true;
                 break;
         }
+
         $this->view->assign('showPaginate', $showPaginate);
         $this->view->assign('posts', $posts);
         $this->view->assign('page', $page);
+
         return $this->htmlResponse();
     }
 
@@ -113,12 +119,16 @@ class PostController extends AbstractController
         /** @var FrontendUser $currentUser */
         $currentUser = $this->authenticationService->getUser();
 
-        // Return if User not logged in or user is post author or user has already supported the post
-        if ($currentUser === null || $currentUser->isAnonymous() || $post->hasBeenSupportedByUser($currentUser)) {
-            return (new ForwardResponse('show'))->withControllerName('Post')->withArguments(['post' => $post]);
+        if (
+            $currentUser === null
+            || $currentUser->isAnonymous()
+            || $post->hasBeenSupportedByUser($currentUser)
+        ) {
+            return (new ForwardResponse('show'))
+                ->withControllerName('Post')
+                ->withArguments(['post' => $post]);
         }
 
-        // Set helpfulCount for Author
         $post->addSupporter($currentUser);
         $this->postRepository->update($post);
 
@@ -130,7 +140,10 @@ class PostController extends AbstractController
         $this->frontendUserRepository->update($currentUser);
 
         $this->clearCacheForCurrentPage();
-        return (new ForwardResponse('show'))->withControllerName('Post')->withArguments(['post' => $post]);
+
+        return (new ForwardResponse('show'))
+            ->withControllerName('Post')
+            ->withArguments(['post' => $post]);
     }
 
     public function unsupportAction(Post $post): ResponseInterface
@@ -139,48 +152,54 @@ class PostController extends AbstractController
         $currentUser = $this->authenticationService->getUser();
 
         if (!$post->hasBeenSupportedByUser($currentUser)) {
-            return (new ForwardResponse('show'))->withControllerName('Post')->withArguments(['post' => $post]);
-
+            return (new ForwardResponse('show'))
+                ->withControllerName('Post')
+                ->withArguments(['post' => $post]);
         }
 
-        // Set helpfulCount for Author
         $post->removeSupporter($currentUser);
         $this->postRepository->update($post);
 
         $post->getAuthor()->setHelpfulCount($post->getAuthor()->getHelpfulCount() - 1);
         $post->getAuthor()->decreasePoints((int)$this->settings['rankScore']['gotHelpful']);
         $this->frontendUserRepository->update($post->getAuthor());
+
         $currentUser->decreasePoints((int)$this->settings['rankScore']['markHelpful']);
         $this->frontendUserRepository->update($currentUser);
 
         $this->clearCacheForCurrentPage();
 
-        return (new ForwardResponse('show'))->withControllerName('Post')->withArguments(['post' => $post]);
+        return (new ForwardResponse('show'))
+            ->withControllerName('Post')
+            ->withArguments(['post' => $post]);
     }
 
     public function showAction(Post $post, Post $quote = null): ResponseInterface
     {
-        // Assert authentication
         $this->authenticationService->assertReadAuthorization($post);
 
-        // Get correct page for post.
         $topic = $post->getTopic();
         $pageWithPost = 1;
+
         if ($topic->getPageCount() > 1) {
-            $postOffsetInTopic = array_search($post, $topic->getPosts()->toArray(), true);
+            $postOffsetInTopic = array_search(
+                $post,
+                $topic->getPosts()->toArray(),
+                true
+            );
 
             $pageWithPost = intdiv(
                 $postOffsetInTopic,
                 (int)($topic->getSettings()['pagebrowser']['topicShow']['itemsPerPage'] ?? 10)
             ) + 1;
+
             $pageWithPost = max(1, $pageWithPost);
         }
 
-        // Create target URL.
         $sectionWrap = $this->settings['topicController']['show']['postIdWrap'] ?? 'post-|';
+
         $targetUrl = $this->uriBuilder
             ->reset()
-
             ->setSection(str_replace('|', $post->getUid(), $sectionWrap))
             ->uriFor(
                 'show',
@@ -190,25 +209,26 @@ class PostController extends AbstractController
                     'page' => $pageWithPost,
                 ],
                 'Topic',
-            )
-        ;
+            );
+
         return $this->redirectToUri($targetUrl);
     }
 
     /**
      * Displays the form for creating a new post.
-     *
-     * @IgnoreValidation("post")
      */
-    public function newAction(Topic $topic, Post $post = null, Post $quote = null): ResponseInterface
-    {
-        // Assert authorization
+    public function newAction(
+        Topic $topic,
+        #[IgnoreValidation]
+        Post $post = null,
+        Post $quote = null
+    ): ResponseInterface {
         $this->authenticationService->assertNewPostAuthorization($topic);
 
-        // If no post is specified, create an optionally pre-filled post (if a
-        // quoted post was specified).
         if ($post === null) {
-            $post = ($quote !== null) ? $this->postFactory->createPostWithQuote($quote) : $this->postFactory->createEmptyPost();
+            $post = ($quote !== null)
+                ? $this->postFactory->createPostWithQuote($quote)
+                : $this->postFactory->createEmptyPost();
         } else {
             $this->authenticationService->assertEditPostAuthorization($post);
         }
@@ -216,23 +236,24 @@ class PostController extends AbstractController
         $this->view->assignMultiple([
             'topic' => $topic,
             'post' => $post,
-            'currentUser' => $this->frontendUserRepository->findCurrent()
+            'currentUser' => $this->frontendUserRepository->findCurrent(),
         ]);
+
         return $this->htmlResponse();
     }
 
     /**
      * Creates a new post.
-     *
-     * @Validate("\Mittwald\Typo3Forum\Domain\Validator\Forum\PostValidator", param="post")
-     * @Validate("\Mittwald\Typo3Forum\Domain\Validator\Forum\AttachmentPlainValidator", param="newAttachments")
      */
-    public function createAction(Topic $topic, Post $post, array $newAttachments = []): ForwardResponse
-    {
-        // Assert authorization
+    public function createAction(
+        Topic $topic,
+        #[Validate(validator: PostValidator::class)]
+        Post $post,
+        #[Validate(validator: AttachmentPlainValidator::class)]
+        array $newAttachments = []
+    ): ForwardResponse {
         $this->authenticationService->assertNewPostAuthorization($topic);
 
-        // Create new post, add the new post to the topic and persist the topic.
         $this->postFactory->assignUserToPost($post);
 
         if (!empty($attachments)) {
@@ -243,18 +264,16 @@ class PostController extends AbstractController
         $topic->addPost($post);
         $this->topicRepository->update($topic);
 
-        // Persist early so we can redirect to the post properly.
         $this->persistenceManager->persistAll();
 
-        // All potential listeners
         //TODO: signal slot to event psr14
         $this->eventDispatcher->dispatch($post);
         //$this->signalSlotDispatcher->dispatch(Post::class, 'postCreated', [$post]);
 
-        // Display flash message and redirect to topic->show action.
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(Localization::translate('Post_Create_Success'))
         );
+
         $this->clearCacheForCurrentPage();
 
         return (new ForwardResponse('show'))
@@ -264,33 +283,46 @@ class PostController extends AbstractController
 
     /**
      * Displays a form for editing a post.
-     *
-     * @IgnoreValidation("post")
      */
-    public function editAction(Post $post): ResponseInterface
-    {
-        if ($post->getAuthor() != $this->authenticationService->getUser() || $post->getTopic()->getLastPost()->getAuthor() != $post->getAuthor()) {
-            $this->authenticationService->assertModerationAuthorization($post->getTopic()->getForum());
+    public function editAction(
+        #[IgnoreValidation]
+        Post $post
+    ): ResponseInterface {
+        if (
+            $post->getAuthor() != $this->authenticationService->getUser()
+            || $post->getTopic()->getLastPost()->getAuthor() != $post->getAuthor()
+        ) {
+            $this->authenticationService->assertModerationAuthorization(
+                $post->getTopic()->getForum()
+            );
         }
+
         $this->view->assign('post', $post);
         $this->view->assign('availableTags', $this->tagRepository->findAll());
+
         return $this->htmlResponse();
     }
 
     /**
      * Updates a post and its containing topic (if this is a first post).
      */
-    public function updateAction(Post $post, array $newAttachments = [], array $keepAttachments = [], array $tags = []):  ResponseInterface
-    {
+    public function updateAction(
+        Post $post,
+        array $newAttachments = [],
+        array $keepAttachments = [],
+        array $tags = []
+    ): ResponseInterface {
         if (
             $post->getAuthor()->getUid() != $this->getCurrentUser()->getUid()
             || $post->getTopic()->getLastPost()->getAuthor() != $post->getAuthor()
         ) {
-            $this->authenticationService->assertModerationAuthorization($post->getTopic()->getForum());
+            $this->authenticationService->assertModerationAuthorization(
+                $post->getTopic()->getForum()
+            );
         }
 
-        // Manage new and deleted attachments.
         $keepAttachments = array_map('intval', $keepAttachments);
+
         foreach ($post->getAttachments()->toArray() as $existingAttachment) {
             if (!in_array($existingAttachment->getUid(), $keepAttachments)) {
                 $post->removeAttachment($existingAttachment);
@@ -299,17 +331,19 @@ class PostController extends AbstractController
 
         if (count($newAttachments) > 0) {
             $newAttachments = $this->attachmentService->initAttachments($newAttachments);
+
             foreach ($newAttachments as $newAttachment) {
                 $post->addAttachments($newAttachment);
             }
         }
 
-        // If a first post was being edited, update tags and tag topic counts.
         $topic = $post->getTopic();
+
         if ($post->isFirstPost()) {
             $tags = $this->tagService->hydrateTags($tags);
 
             $existingTags = $topic->getTags();
+
             foreach ($existingTags->toArray() as $existingTag) {
                 /** @var Tag $existingTag */
                 $existingTag->decreaseTopicCount();
@@ -324,9 +358,11 @@ class PostController extends AbstractController
             }
         }
 
-        // If a first post was being edited, make sure that the topic is marked as
-        // unsolved when the question flag is unset.
-        if ($post->isFirstPost() && !$topic->isQuestion() && $topic->isSolved()) {
+        if (
+            $post->isFirstPost()
+            && !$topic->isQuestion()
+            && $topic->isSolved()
+        ) {
             $this->topicFactory->setPostAsSolution($topic, null);
         }
 
@@ -335,11 +371,16 @@ class PostController extends AbstractController
         //TODO: Change to Dispatch
         $this->eventDispatcher->dispatch($post);
         //$this->signalSlotDispatcher->dispatch(Post::class, 'postUpdated', [$post]);
+
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(Localization::translate('Post_Update_Success'))
         );
+
         $this->clearCacheForCurrentPage();
-        return (new ForwardResponse('show'))->withControllerName('Post')->withArguments(['post' => $post]);
+
+        return (new ForwardResponse('show'))
+            ->withControllerName('Post')
+            ->withArguments(['post' => $post]);
     }
 
     /**
@@ -359,34 +400,40 @@ class PostController extends AbstractController
      */
     public function deleteAction(Post $post): ResponseInterface
     {
-        // Assert authorization
         $this->authenticationService->assertDeletePostAuthorization($post);
 
-        // Delete the post.
         $postCount = $post->getTopic()->getPostCount();
         $this->postFactory->deletePost($post);
+
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(Localization::translate('Post_Delete_Success'))
         );
 
-        // Notify observers and clear cache.
         //TODO: enable dispatch
         $this->eventDispatcher->dispatch($post);
         //$this->signalSlotDispatcher->dispatch(Post::class, 'postDeleted', [$post]);
+
         $this->clearCacheForCurrentPage();
 
-        // If there is still on post left in the topic, redirect to the topic
-        // view. If we have deleted the last post of a topic (i.e. the topic
-        // itself), redirect to the forum view instead.
         if ($postCount > 1) {
-            $uri = $this->uriBuilder->uriFor('show', ['topic' => $post->getTopic()], 'Topic');
-            return $this->responseFactory->createResponse(307)
-                ->withHeader('Location', $uri);
-        } else {
-            $uri = $this->uriBuilder->uriFor('show', ['forum' => $post->getForum()], 'Forum');
+            $uri = $this->uriBuilder->uriFor(
+                'show',
+                ['topic' => $post->getTopic()],
+                'Topic'
+            );
+
             return $this->responseFactory->createResponse(307)
                 ->withHeader('Location', $uri);
         }
+
+        $uri = $this->uriBuilder->uriFor(
+            'show',
+            ['forum' => $post->getForum()],
+            'Forum'
+        );
+
+        return $this->responseFactory->createResponse(307)
+            ->withHeader('Location', $uri);
     }
 
     /**
@@ -400,9 +447,10 @@ class PostController extends AbstractController
         //Enforce persistence, since it will not happen regularly because of die() at the end
         $this->persistenceManager->persistAll();
 
-        while(ob_get_level() > 0) {
+        while (ob_get_level() > 0) {
             ob_end_clean();
         }
+
         ob_start();
         header('Content-Type: ' . $attachment->getFileReference()->getOriginalResource()->getType());
         header('Content-Type: application/download');

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Controller;
 
 /*                                                                      *
@@ -30,11 +31,12 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ColorRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
+use Mittwald\Typo3Forum\Domain\Validator\Forum\TagValidator;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Http\ResponseFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Annotation\IgnoreValidation;
-use TYPO3\CMS\Extbase\Annotation\Validate;
+use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
+use TYPO3\CMS\Extbase\Attribute\Validate;
 
 class TagController extends AbstractController
 {
@@ -63,11 +65,13 @@ class TagController extends AbstractController
             'tags' => $tags,
             'page' => $page,
         ]);
+
         return $this->htmlResponse();
     }
 
     /**
      * Show all topics of a given tag
+     *
      * @param Tag $tag
      */
     public function showAction(Tag $tag, int $page = 1): ResponseInterface
@@ -75,39 +79,49 @@ class TagController extends AbstractController
         $this->view->assign('tag', $tag);
         $this->view->assign('topics', $this->topicRepository->findByTag($tag));
         $this->view->assign('page', $page);
+
         return $this->htmlResponse();
     }
 
     /**
      * @throws NotLoggedInException
-     *
-     * @IgnoreValidation("tag")
      */
-    public function newAction(?Tag $tag = null): ResponseInterface
-    {
+    public function newAction(
+        #[IgnoreValidation]
+        ?Tag $tag = null
+    ): ResponseInterface {
         $user = $this->getCurrentUser();
+
         if ($user->isAnonymous()) {
             throw new NotLoggedInException('You need to be logged in.', 1288084981);
         }
+
         if (!$user->canCreateTags()) {
             throw new NoAccessException('You cannot create tags.', 1683144970);
         }
 
-        $this->view->assign('tag', $tag ?? GeneralUtility::makeInstance(Tag::class));
+        $this->view->assign(
+            'tag',
+            $tag ?? GeneralUtility::makeInstance(Tag::class)
+        );
         $this->view->assign('colors', $this->colorRepository->findAll());
+
         return $this->htmlResponse();
     }
 
     /**
-     * @Validate("\Mittwald\Typo3Forum\Domain\Validator\Forum\TagValidator", param="tag")
      * @throws NotLoggedInException
      */
-    public function createAction(Tag $tag): ResponseInterface
-    {
+    public function createAction(
+        #[Validate(validator: TagValidator::class)]
+        Tag $tag
+    ): ResponseInterface {
         $user = $this->getCurrentUser();
+
         if ($user->isAnonymous()) {
             throw new NotLoggedInException('You need to be logged in.', 1288084981);
         }
+
         if (!$user->canCreateTags()) {
             throw new NoAccessException('You cannot create tags.', 1683144970);
         }
@@ -116,6 +130,7 @@ class TagController extends AbstractController
         $this->tagRepository->add($tag);
 
         $uri = $this->uriBuilder->uriFor('list');
+
         return $this->responseFactory->createResponse(307)
             ->withHeader('Location', $uri);
     }

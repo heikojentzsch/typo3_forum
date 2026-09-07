@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Controller;
 
 /*                                                                      *
@@ -41,7 +42,7 @@ use Mittwald\Typo3Forum\Utility\Localization;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Annotation\IgnoreValidation;
+use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManager;
 use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Mvc\Exception\InvalidArgumentValueException;
@@ -77,7 +78,6 @@ class ModerationController extends AbstractController
         $this->topicRepository = $topicRepository;
         $this->userReportRepository = $userReportRepository;
         $this->configurationManager = GeneralUtility::makeInstance(ConfigurationManager::class);
-
     }
 
     public function indexReportAction(int $page = 1): ResponseInterface
@@ -93,12 +93,12 @@ class ModerationController extends AbstractController
      */
     public function editReportAction(?UserReport $userReport = null, ?PostReport $postReport = null): ResponseInterface
     {
-
         $this->persistenceManager->persistAll();
-        // Validate arguments
+
         if ($userReport === null && $postReport === null) {
             throw new InvalidArgumentValueException('You need to select a user report or post report!', 1285059341);
         }
+
         if ($postReport) {
             $report = $postReport;
             $type = 'Post';
@@ -118,7 +118,6 @@ class ModerationController extends AbstractController
 
     public function createUserReportCommentAction(UserReport $report, ReportComment $comment): ResponseInterface
     {
-        // Validate arguments
         if ($report === null) {
             throw new InvalidArgumentValueException('You need to comment a user report!', 1285059341);
         }
@@ -141,7 +140,6 @@ class ModerationController extends AbstractController
      */
     public function createPostReportCommentAction(PostReport $report, ReportComment $comment): ResponseInterface
     {
-        // Assert authorization
         $this->authenticationService->assertModerationAuthorization($report->getTopic()->getForum());
 
         $comment->setAuthor($this->authenticationService->getUser());
@@ -167,12 +165,13 @@ class ModerationController extends AbstractController
      *
      * @throws \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException
      */
-    public function updateUserReportStatusAction(UserReport $report, ReportWorkflowStatus $status, $redirect = 'indexReport'): ResponseInterface
-    {
-
-        // Set status and update the report. Add a comment to the report that
-        // documents the status change.
+    public function updateUserReportStatusAction(
+        UserReport $report,
+        ReportWorkflowStatus $status,
+        $redirect = 'indexReport'
+    ): ResponseInterface {
         $report->setWorkflowStatus($status);
+
         /** @var ReportComment $comment */
         $comment = GeneralUtility::makeInstance(ReportComment::class);
         $comment->setAuthor($this->getCurrentUser());
@@ -180,7 +179,6 @@ class ModerationController extends AbstractController
         $report->addComment($comment);
         $this->reportRepository->update($report);
 
-        // Add flash message and clear cache.
         $this->addLocalizedFlashmessage('Report_UpdateStatus_Success', [$report->getUid(), $status->getName()]);
         $this->clearCacheForCurrentPage();
 
@@ -192,14 +190,14 @@ class ModerationController extends AbstractController
     /**
      * Sets the workflow status of a report.
      */
-    public function updatePostReportStatusAction(PostReport $report, ReportWorkflowStatus $status): ResponseInterface
-    {
-        // Assert authorization
+    public function updatePostReportStatusAction(
+        PostReport $report,
+        ReportWorkflowStatus $status
+    ): ResponseInterface {
         $this->authenticationService->assertModerationAuthorization($report->getTopic()->getForum());
 
-        // Set status and update the report. Add a comment to the report that
-        // documents the status change.
         $report->setWorkflowStatus($status);
+
         /** @var ReportComment $comment */
         $comment = GeneralUtility::makeInstance(ReportComment::class);
         $comment->setAuthor($this->getCurrentUser());
@@ -222,10 +220,11 @@ class ModerationController extends AbstractController
      * Displays a form for editing a topic with special moderator-powers!
      *
      * @param Topic $topic The topic that is to be edited.
-     * @IgnoreValidation("topic")
      */
-    public function editTopicAction(Topic $topic): ResponseInterface
-    {
+    public function editTopicAction(
+        #[IgnoreValidation]
+        Topic $topic
+    ): ResponseInterface {
         $this->authenticationService->assertModerationAuthorization($topic->getForum());
         $this->view->assign('topic', $topic);
         return $this->htmlResponse();
@@ -247,9 +246,11 @@ class ModerationController extends AbstractController
 
         $this->authenticationService->assertModerationAuthorization($topic->getForum());
         $this->topicRepository->update($topic);
+
         if ($moveTopicTarget !== null && $moveTopicTarget !== $topic->getForum()) {
             $this->topicFactory->moveTopic($topic, $moveTopicTarget);
         }
+
         $this->persistenceManager->persistAll();
 
         $this->getFlashMessageQueue()->enqueue(
@@ -257,8 +258,9 @@ class ModerationController extends AbstractController
         );
         $this->clearCacheForCurrentPage();
 
-
-        return (new ForwardResponse('show'))->withControllerName('Topic')->withArguments(['topic' => $topic]);
+        return (new ForwardResponse('show'))
+            ->withControllerName('Topic')
+            ->withArguments(['topic' => $topic]);
     }
 
     public function confirmDeleteTopicAction(Topic $topic): ResponseInterface
@@ -282,6 +284,8 @@ class ModerationController extends AbstractController
         );
         $this->clearCacheForCurrentPage();
 
-        return (new ForwardResponse('show'))->withControllerName('Forum')->withArguments(['forum' => $topic->getForum()]);
+        return (new ForwardResponse('show'))
+            ->withControllerName('Forum')
+            ->withArguments(['forum' => $topic->getForum()]);
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Controller;
 
 /*                                                                      *
@@ -37,7 +38,7 @@ use Mittwald\Typo3Forum\Domain\Repository\Moderation\UserReportRepository;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Http\ResponseFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Extbase\Annotation\IgnoreValidation;
+use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
 use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
@@ -62,11 +63,12 @@ class ReportController extends AbstractController
 
     /**
      * Displays a form for creating a new post report.
-     *
-     * @IgnoreValidation("firstComment")
      */
-    public function newUserReportAction(FrontendUser $user, ReportComment $firstComment = null): void
-    {
+    public function newUserReportAction(
+        FrontendUser $user,
+        #[IgnoreValidation]
+        ?ReportComment $firstComment = null
+    ): void {
         $this->view->assignMultiple([
             'firstComment' => $firstComment,
             'user' => $user,
@@ -75,11 +77,12 @@ class ReportController extends AbstractController
 
     /**
      * Displays a form for creating a new post report.
-     *
-     * @IgnoreValidation("firstComment")
      */
-    public function newPostReportAction(Post $post, ReportComment $firstComment = null): ResponseInterface
-    {
+    public function newPostReportAction(
+        Post $post,
+        #[IgnoreValidation]
+        ?ReportComment $firstComment = null
+    ): ResponseInterface {
         $this->authenticationService->assertReadAuthorization($post);
         $this->view->assign('firstComment', $firstComment)->assign('post', $post);
         return $this->htmlResponse();
@@ -88,32 +91,44 @@ class ReportController extends AbstractController
     /**
      * Creates a new post report and stores it into the database.
      */
-    public function createUserReportAction(FrontendUser $user, ReportComment $firstComment = null): ResponseInterface
-    {
-
+    public function createUserReportAction(
+        FrontendUser $user,
+        ReportComment $firstComment = null
+    ): ResponseInterface {
         /** @var UserReport $report */
         $report = $this->reportFactory->createUserReport($firstComment);
         $report->setUser($user);
         $this->userReportRepository->add($report);
 
-        // Notify observers.
         $this->eventDispatcher->dispatch($report);
         //$this->signalSlotDispatcher->dispatch(Report::class, 'reportCreated', [$report]);
 
-        // Display success message and redirect to topic->show action.
         $this->getFlashMessageQueue()->enqueue(
-            new FlashMessage(LocalizationUtility::translate('LLL:EXT:Typo3Forum/Resources/Private/Language/locallang.xlf:Report_New_Success', 'Typo3Forum'))
+            new FlashMessage(
+                LocalizationUtility::translate(
+                    'LLL:EXT:Typo3Forum/Resources/Private/Language/locallang.xlf:Report_New_Success',
+                    'Typo3Forum'
+                )
+            )
         );
+
         $this->redirect('show', 'User', null, ['user' => $user], $this->settings['pids.']['UserShow']);
-        return (new ForwardResponse('show'))->withControllerName('User')->withArguments(['user' => $user, 'pid' => $this->settings['pids.']['UserShow']]);
+
+        return (new ForwardResponse('show'))
+            ->withControllerName('User')
+            ->withArguments([
+                'user' => $user,
+                'pid' => $this->settings['pids.']['UserShow'],
+            ]);
     }
 
     /**
      * Creates a new post report and stores it into the database.
      */
-    public function createPostReportAction(Post $post, ReportComment $firstComment = null): ResponseInterface
-    {
-        // Assert authorization;
+    public function createPostReportAction(
+        Post $post,
+        ReportComment $firstComment = null
+    ): ResponseInterface {
         $this->authenticationService->assertReadAuthorization($post);
 
         /** @var PostReport $report */
@@ -121,15 +136,17 @@ class ReportController extends AbstractController
         $report->setPost($post);
         $this->postReportRepository->add($report);
 
-        // Notify observers.
         //TODO: enable with events PSR 14
         //$this->signalSlotDispatcher->dispatch(Report::class, 'reportCreated', [$report]);
 
-        // Display success message and redirect to topic->show action.
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(LocalizationUtility::translate('Report_New_Success', 'Typo3Forum'))
         );
-        return (new ForwardResponse('show'))->withControllerName('Topic')->withArguments(['topic' => $post->getTopic()]);
+
+        return (new ForwardResponse('show'))
+            ->withControllerName('Topic')
+            ->withArguments(['topic' => $post->getTopic()]);
+
         $this->redirect('show', 'Topic', null, ['topic' => $post->getTopic()]);
     }
 }
