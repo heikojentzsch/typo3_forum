@@ -9,6 +9,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class UserUtility
 {
+    public function __construct(private readonly FrontendUserRepository $frontendUserRepository)
+    {}
 
     public static function isUserLoggedIn(): bool
     {
@@ -21,15 +23,10 @@ class UserUtility
         return $context->getPropertyFromAspect('frontend.user', 'id');
     }
 
-    public function getLoggedInUser()
+    public function getLoggedInUser(): ?FrontendUser
     {
-        /**
-         * @var FrontendUserRepository $frontendUserRepository
-         */
         $userId = self::getLoggedInUserId();
-        $frontendUserRepository = GeneralUtility::makeInstance(FrontendUserRepository::class);
-
-        return $frontendUserRepository->findByUid($userId);
+        return $this->frontendUserRepository->findByUid($userId);
     }
 
 }

@@ -325,3 +325,16 @@ services:
     Mittwald\Typo3Forum\Service\Mailing\:
         resource: '../Classes/Service/Mailing/*'
         autowire: true
+
+    Mittwald\Typo3Forum\Domain\Validator\Forum\PostValidator:
+        autowire: true
+        public: true
+        shared: false
+
+    Mittwald\Typo3Forum\Domain\Validator\Forum\TagValidator:
+        autowire: true
+        public: true
+        shared: false
+
+    Mittwald\Typo3Forum\Utility\UserUtility:
+        autowire: true

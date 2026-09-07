@@ -28,9 +28,8 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
 
 /**
- * Listener class for modifications. This class uses Extbase's Signal-/Slot
- * mechanism to "listen" for new posts and topics and notifies the subscribers
- * of the regarding objects.
+ * PSR-14 listener for newly created posts and topics. Notifies subscribers
+ * of the respective topic or forum.
  */
 final class SubscriptionListener
 {
@@ -46,11 +45,9 @@ final class SubscriptionListener
      *
      * @param Post $post Event data.
      */
-    public function onPostCreated(Post $post)
+    public function onPostCreated(Post $post): void
     {
-        if ($post instanceof Post) {
-            $this->notificationService->notifySubscribers($post->getTopic(), $post);
-        }
+        $this->notificationService->notifySubscribers($post->getTopic(), $post);
     }
 
     /**
@@ -58,10 +55,8 @@ final class SubscriptionListener
      *
      * @param Topic $topic Event data.
      */
-    public function onTopicCreated(Topic $topic)
+    public function onTopicCreated(Topic $topic): void
     {
-        if ($topic instanceof Topic) {
-            $this->notificationService->notifySubscribers($topic->getForum(), $topic);
-        }
+        $this->notificationService->notifySubscribers($topic->getForum(), $topic);
     }
 }

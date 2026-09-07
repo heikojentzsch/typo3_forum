@@ -92,22 +92,4 @@ abstract class AbstractMailingService extends AbstractService implements Mailing
         );
     }
 
-    /**
-     * Gets the default sender. This is composed of the default sender name and the
-     * default sender address.
-     *
-     * @return string The default sender.
-     */
-    protected function getDefaultSender(): string
-    {
-        return $this->getDefaultSenderName() . ' <' . $this->getDefaultSenderAddress() . '>';
-    }
-
-    /**
-     * Gets the preferred character set for sent mails.
-     */
-    protected function getCharset(): string
-    {
-        return 'utf-8';
-    }
 }

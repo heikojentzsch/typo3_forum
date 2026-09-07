@@ -56,23 +56,4 @@ class PlainMailingService extends AbstractMailingService
         }
     }
 
-    /**
-     * Generates the e-mail headers for a certain recipient, subject and bodytext.
-     *
-     * @return string The mail headers.
-     */
-    protected function getHeaders(): string
-    {
-        $headerArray = [
-            'From' => $this->getDefaultSender(),
-            'Content-Type' => 'text/plain; charset=' . $this->getCharset(),
-        ];
-        $headerString = '';
-
-        foreach ($headerArray as $headerKey => $headerValue) {
-            $headerString .= $headerKey . ':' . $headerValue . "\r\n";
-        }
-
-        return $headerString;
-    }
 }
