@@ -147,7 +147,6 @@ class TopicController extends AbstractController
 
         $this->recordTitleProvider->setTitle($topic->getTitle());
 
-        //$this->signalSlotDispatcher->dispatch(Topic::class, 'topicDisplayed', [$topic]);
 
         $this->authenticationService->assertReadAuthorization($topic);
         $this->markTopicRead($topic);

@@ -38,10 +38,6 @@ use TYPO3\CMS\Frontend\Page\PageInformation;
 
 abstract class AbstractController extends ActionController
 {
-    const CONTEXT_WEB = 0;
-    const CONTEXT_AJAX = 1;
-    const CONTEXT_CLI = 2;
-
     /**
      * An authentication service. Handles the authentication mechanism.
      */
@@ -55,12 +51,6 @@ abstract class AbstractController extends ActionController
 
     protected FrontendUserRepository $frontendUserRepository;
     protected CacheService $cacheService;
-
-    /**
-     * The current controller context. This context is necessary to enable
-     * different behaviour of this controller e.g. in web/ajax/cli context.
-     */
-    protected int $context = self::CONTEXT_WEB;
 
     public function injectFrontendUserRepository(
         FrontendUserRepository $frontendUserRepository
@@ -155,7 +145,7 @@ abstract class AbstractController extends ActionController
         $delay = 0,
         $statusCode = 303
     ): ResponseInterface {
-        if ($this->context === self::CONTEXT_WEB && $this->request->getFormat() === 'html') {
+        if ($this->request->getFormat() === 'html') {
             return parent::redirect(
                 $actionName,
                 $controllerName,
@@ -168,11 +158,6 @@ abstract class AbstractController extends ActionController
         }
 
         return $this->htmlResponse();
-    }
-
-    public function setContext(int $context): void
-    {
-        $this->context = $context;
     }
 
     /**

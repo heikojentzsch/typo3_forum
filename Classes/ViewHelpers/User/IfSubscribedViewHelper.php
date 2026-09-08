@@ -27,10 +27,7 @@ namespace Mittwald\Typo3Forum\ViewHelpers\User;
 
 use Mittwald\Typo3Forum\Domain\Model\SubscribeableInterface;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
-use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
-use TYPO3\CMS\Core\Utility\GeneralUtility;;
-use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper;
 
 /**
@@ -39,17 +36,9 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper;
  */
 class IfSubscribedViewHelper extends AbstractConditionViewHelper
 {
-
-    /**
-     * @var FrontendUserRepository
-     */
-    protected $frontendUserRepository;
-
-    /**
-     * @var ForumRepository
-     */
-    protected $forumRepository;
-
+    public function __construct(protected FrontendUserRepository $frontendUserRepository)
+    {
+    }
 
     public function initializeArguments(): void
     {
@@ -58,36 +47,24 @@ class IfSubscribedViewHelper extends AbstractConditionViewHelper
         $this->registerArgument('user', FrontendUser::class, 'className which object has to be', false, null);
     }
 
-    /**
-     * evaluateCondition.
-     * @todo get rid of foreach loop
-     * @param null $arguments
-     * @return bool
-     */
-    public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
+    public function render(): mixed
     {
-        $user = $arguments['user'];
-        $object = $arguments['object'];
+        $user = $this->arguments['user'];
+        $object = $this->arguments['object'];
 
-        if (!($object instanceof SubscribeableInterface) || !($user instanceof FrontendUser) && !($user = self::getFrontendUserRepository()->findCurrent())) {
-            return false;
+        if (!($object instanceof SubscribeableInterface)) {
+            return $this->renderElseChild();
+        }
+        if (!($user instanceof FrontendUser)) {
+            $user = $this->frontendUserRepository->findCurrent();
         }
 
         foreach ($object->getSubscribers() as $subscriber) {
-            if (($subscriber === $user)) {
-                return true;
+            if ($subscriber === $user) {
+                return $this->renderThenChild();
             }
         }
 
-        return false;
+        return $this->renderElseChild();
     }
-
-    /**
-     * @return FrontendUserRepository
-     */
-    public static function getFrontendUserRepository(): FrontendUserRepository
-    {
-        return GeneralUtility::makeInstance(FrontendUserRepository::class);
-    }
-
 }

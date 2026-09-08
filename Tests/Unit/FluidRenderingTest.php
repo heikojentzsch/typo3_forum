@@ -40,6 +40,10 @@ final class FluidRenderingTest extends TestCase
             $arguments = [];
             foreach ($reflection->getConstructor()?->getParameters() ?? [] as $parameter) {
                 if ($parameter->getType() instanceof \ReflectionNamedType && !$parameter->getType()->isBuiltin()) {
+                    if (isset($this->services[$parameter->getType()->getName()])) {
+                        $arguments[] = $this->services[$parameter->getType()->getName()];
+                        continue;
+                    }
                     $dependency = new \ReflectionClass($parameter->getType()->getName());
                     $arguments[] = $dependency->isFinal()
                         ? $dependency->newInstanceWithoutConstructor()
@@ -117,6 +121,35 @@ final class FluidRenderingTest extends TestCase
         $source = '<mmf:user.ifSubscribed object="{topic}" user="{user}"><f:then>yes</f:then><f:else>no</f:else></mmf:user.ifSubscribed>';
         $this->renderBoth($source, ['topic' => $topic, 'user' => $user], 'yes');
         $this->renderBoth($source, ['topic' => $topic, 'user' => $other], 'no');
+    }
+
+    public function testSubscriptionUsesInjectedCurrentUserInParsedAndCompiledTemplates(): void
+    {
+        $user = $this->createStub(FrontendUser::class);
+        $repository = $this->createMock(\Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository::class);
+        $repository->expects(self::exactly(4))->method('findCurrent')->willReturn($user);
+        $this->services[\Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository::class] = $repository;
+        $topic = $this->createStub(Topic::class);
+        $storage = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+        $storage->attach($user);
+        $topic->method('getSubscribers')->willReturn($storage);
+        $source = '<mmf:user.ifSubscribed object="{topic}" then="yes" else="no" />';
+        $this->renderBoth($source, ['topic' => $topic], 'yes');
+        $storage->detach($user);
+        $this->renderBoth($source, ['topic' => $topic], 'no');
+    }
+
+    public function testExplicitSubscriptionUserDoesNotQueryRepository(): void
+    {
+        $user = $this->createStub(FrontendUser::class);
+        $repository = $this->createMock(\Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository::class);
+        $repository->expects(self::never())->method('findCurrent');
+        $this->services[\Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository::class] = $repository;
+        $topic = $this->createStub(Topic::class);
+        $storage = new \TYPO3\CMS\Extbase\Persistence\ObjectStorage();
+        $storage->attach($user);
+        $topic->method('getSubscribers')->willReturn($storage);
+        $this->renderBoth('<mmf:user.ifSubscribed object="{topic}" user="{user}">yes</mmf:user.ifSubscribed>', ['topic' => $topic, 'user' => $user], 'yes');
     }
 
     public function testInstanceConditionInParsedAndCompiledTemplates(): void

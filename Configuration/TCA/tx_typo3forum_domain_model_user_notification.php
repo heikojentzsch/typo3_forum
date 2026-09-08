@@ -11,7 +11,7 @@ return [
         'delete' => 'deleted',
         'default_sortby' => 'ORDER BY crdate DESC',
         'hideTable' => true,
-        'iconfile' => 'EXT:typo3_forum/Resources/Public/Icons/User/notification.png',
+        'iconfile' => 'EXT:core/Resources/Public/Icons/T3Icons/svgs/content/content-message.svg',
     ],
     'types' => [
         '1' => ['showitem' => 'feuser,post,tag,user_read,type,crdate'],
