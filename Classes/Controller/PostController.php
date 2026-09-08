@@ -366,7 +366,6 @@ class PostController extends AbstractController
 
         $this->postRepository->update($post);
 
-        //TODO: Change to Dispatch
         $this->eventDispatcher->dispatch($post);
 
         $this->getFlashMessageQueue()->enqueue(
@@ -406,7 +405,6 @@ class PostController extends AbstractController
             new FlashMessage(Localization::translate('Post_Delete_Success'))
         );
 
-        //TODO: enable dispatch
         $this->eventDispatcher->dispatch($post);
 
         $this->clearCacheForCurrentPage();
