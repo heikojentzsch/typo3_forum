@@ -9,7 +9,7 @@ return [
         'tstamp' => 'tstamp',
         'default_sortby' => 'ORDER BY tstamp DESC',
         'hideTable' => true,
-        'iconfile' => 'EXT:typo3_forum/Resources/Public/Icons/Stats/summary.png',
+        'iconfile' => 'EXT:core/Resources/Public/Icons/T3Icons/svgs/content/content-widget-chart.svg',
     ],
     'types' => [
         '1' => ['showitem' => 'type,amount,tstamp'],
