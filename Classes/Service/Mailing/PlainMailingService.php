@@ -51,8 +51,8 @@ class PlainMailingService extends AbstractMailingService
             $mail->setTo([$recipient->getEmail()])
                 ->setFrom($this->getDefaultSenderAddress(), $this->getDefaultSenderName())
                 ->setSubject($subject)
-                ->text($bodyText)
-                ->send();
+                ->text($bodyText);
+            $this->mailer->send($mail);
         }
     }
 

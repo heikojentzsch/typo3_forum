@@ -48,8 +48,8 @@ class HTMLMailingService extends AbstractMailingService
             )
                 ->setTo($recipient->getEmail())
                 ->setSubject($subject)
-                ->html($bodyText)
-                ->send();
+                ->html($bodyText);
+            $this->mailer->send($typo3Mail);
         }
     }
 }
