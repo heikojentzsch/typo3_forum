@@ -38,6 +38,10 @@ class AttachmentService implements SingletonInterface
                 continue;
             }
 
+            if ($this->storage === null) {
+                throw new \RuntimeException('Cannot initialize forum attachments: no default FAL storage is configured.', 1788880001);
+            }
+
             $filename = $attachmentData->getClientFilename() ?? '';
 
             // Build extbase file reference object to the uploaded file.
