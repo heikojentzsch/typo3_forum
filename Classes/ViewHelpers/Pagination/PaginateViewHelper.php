@@ -24,6 +24,8 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Pagination;
 use Mittwald\Typo3Forum\Helpers\Pagination;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
+use TYPO3Fluid\Fluid\Core\Variables\ScopedVariableProvider;
+use TYPO3Fluid\Fluid\Core\Variables\StandardVariableProvider;
 
 class PaginateViewHelper extends AbstractViewHelper
 {
@@ -32,7 +34,7 @@ class PaginateViewHelper extends AbstractViewHelper
     public function initializeArguments(): void
     {
         parent::initializeArguments();
-        $this->registerArgument('objects', 'array', 'The array of objects to paginate.', true);
+        $this->registerArgument('objects', 'iterable', 'The array of objects to paginate.', true);
         $this->registerArgument('as', 'string', 'Variable name to export the object slice as.', true);
         $this->registerArgument('page', 'int', 'Page of objects to display.', true);
         $this->registerArgument('configuration', 'array', 'Pagination configuration.', false, []);
@@ -49,10 +51,8 @@ class PaginateViewHelper extends AbstractViewHelper
     {
         $objects = $this->arguments['objects'];
 
-        if (is_object($objects) || is_string($objects)) {
-            if (method_exists($objects, 'toArray')) {
-                $objects = $objects->toArray();
-            }
+        if ($objects instanceof \Traversable) {
+            $objects = iterator_to_array($objects);
         }
 
         /** @var Pagination $pagination */
@@ -66,20 +66,20 @@ class PaginateViewHelper extends AbstractViewHelper
         $configName = $this->arguments['configAs'];
 
         $variables = $this->renderingContext->getVariableProvider();
-        $variables->add($this->arguments['as'], $pagination->fetchPage());
+        $scopedVariables = [$this->arguments['as'] => $pagination->fetchPage()];
 
         if (!empty($configName)) {
-            $variables->add($configName, $pagination);
+            $scopedVariables[$configName] = $pagination;
         }
 
-        $output = $this->renderChildren();
-
-        if (!empty($configName)) {
-            $variables->remove($configName);
+        $this->renderingContext->setVariableProvider(new ScopedVariableProvider(
+            $variables,
+            new StandardVariableProvider($scopedVariables)
+        ));
+        try {
+            return $this->renderChildren();
+        } finally {
+            $this->renderingContext->setVariableProvider($variables);
         }
-
-        $variables->remove($this->arguments['as']);
-
-        return $output;
     }
 }

@@ -64,7 +64,7 @@
 			<f:if condition="{pagination.maxPage} != {pagination.currentPage}">
 				<f:then>
 					<li class="page-item" title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:next')}">
-						<f:link.action class="page-link" action="listSubscriptions" arguments="{forumPage: '{pagination.currentPage + 1}, topicPage: topicPage'}">
+						<f:link.action class="page-link" action="listSubscriptions" arguments="{forumPage: '{pagination.currentPage + 1}', topicPage: topicPage}">
 							<span class="sr-only">
 								<f:translate key="LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:next" />
 							</span>

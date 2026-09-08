@@ -40,20 +40,20 @@ class AvatarUrlViewHelper extends AbstractViewHelper
     public function initializeArguments(): void
     {
         parent::initializeArguments();
+        $this->registerArgument('user', FrontendUser::class, 'User', false, null);
     }
 
-    public function render(?FrontendUser $user = null): string
+    public function render(): string
     {
+        $user = $this->arguments['user'];
         $avatarFilename = null;
 
         if ($user !== null && !$user instanceof AnonymousFrontendUser) {
             $avatarFilename = $user->getImagePath();
         }
 
-        if ($avatarFilename === null) {
-            $avatarFilename = PathUtility::stripPathSitePrefix(
-                ExtensionManagementUtility::extPath('typo3_forum')
-            ) . 'Resources/Public/Images/Icons/AvatarEmpty.png';
+        if ($avatarFilename === null || $avatarFilename === false) {
+            $avatarFilename = PathUtility::getPublicResourceWebPath('EXT:typo3_forum/Resources/Public/Images/Icons/AvatarEmpty.png');
         }
 
         return $avatarFilename;

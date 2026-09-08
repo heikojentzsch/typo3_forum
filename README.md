@@ -55,6 +55,7 @@ The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP
 - [x] Resolve identified P1 runtime/code issues, including controller responses, redirects, attachment handling, nullability, DI and subscriber notification behavior.
 - [x] Resolve identified P2 legacy-code issues, including validators, unread-topic SQL, service usage and dead utilities.
 - [x] Remove confirmed dead code and obsolete assets, including old SCEditor files, obsolete CSH files/templates and unused dependencies.
+- [x] Complete the TYPO3 14.3 Fluid/rendering graph audit and implement the demonstrated rendering compatibility fixes (see scope and verification limits below).
 
 ### Deliberate TYPO3 v14 decisions
 
@@ -64,33 +65,34 @@ The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP
 - TYPO3 v14-specific APIs are preferred over backwards-compatibility shims.
 - Refactors and unrelated latent bug fixes are kept separate from migration work whenever possible.
 
+## Completed Fluid / frontend-rendering audit
+
+The audit covered all **65 existing Fluid files** (33 templates, 31 partials, one layout), all **24 custom ViewHelpers**, every registered plugin/action, controller view assignments, TypoScript view paths, manual quote views, mail rendering, AJAX preview, forms, links, pagination and local resource references.
+
+The shipped graph now contains **59 Fluid files**: 28 templates, 30 partials and one layout. The missing `Report/NewUserReport` template was added. Seven proven dead files were removed: the backend `Update/Form` scaffold, `User/New`, `User/Edit`, `User/ListOnlineUsers`, `Post/Preview`, `Default/Error` and its exclusive `Exception` partial. All public custom ViewHelpers were retained.
+
+Implemented fixes include:
+
+- current Fluid condition, argument and variable-provider APIs; safe pagination variable scopes;
+- avatar dimensions/resource URLs and escaped user/rootline links using the correct plugin targets;
+- core textarea/select rendering from the custom form ViewHelpers, including Extbase field names, selection and form-token registration;
+- the existing markItUp editor and AJAX preview contract, including empty/zero text handling;
+- missing user-report rendering, type-specific moderation forms, tag validation feedback and broken profile/tag/subscription/pagination links;
+- quote ViewFactory settings and configured template paths, preserving intentionally parsed HTML;
+- PSR-7 upload objects through validation and FAL, the v14 storage repository and duplication enum;
+- the stale report-icon path, now referencing the existing icon.
+
+No frontend redesign, Bootstrap upgrade, pagination redesign, repository/domain refactor or LazyLoadingProxy migration was performed. Mail subjects/bodies use language strings and mailing services, not separate Fluid mail templates.
+
+`clearCachePostProc` was **reviewed for v14**. TYPO3 14.3 still invokes this hook; **no migration is needed unless a specific integration issue is found**. Its implementation and cache behavior remain unchanged.
+
+This completes the repository-level Fluid audit, **not real-site acceptance testing**. The full file inventory and reachability evidence accompany the Fluid PR.
+
 ## Remaining migration plan
 
 The following work is still open. The order reflects the current migration plan.
 
-### 1. Fluid templates and frontend rendering – next
-
-Perform a complete audit of the current Fluid layer:
-
-- all templates, partials and layouts,
-- controller action to template mapping,
-- Fluid namespaces and ViewHelpers,
-- form/link/URI generation,
-- asset/resource ViewHelpers,
-- argument contracts and nullable values,
-- obsolete or unreferenced Fluid files,
-- TYPO3 v14 / Fluid compatibility,
-- runtime-sensitive frontend rendering paths.
-
-The result should classify findings as **must change**, **should change**, **can remove** or **keep as-is** before modifications are made.
-
-### 2. Cache-clear hook migration
-
-The extension still registers the legacy `clearCachePostProc` hook in `ext_localconf.php`.
-
-This must be reviewed and migrated to the appropriate TYPO3 v14 event / PSR-14 mechanism while preserving the existing `typo3forum_main` cache behavior.
-
-### 3. Broader TYPO3 v14 legacy/deprecation scan
+### 1. Broader TYPO3 v14 legacy/deprecation scan
 
 Run a repository-wide audit for remaining migration-relevant APIs and patterns, including:
 
@@ -102,7 +104,7 @@ Run a repository-wide audit for remaining migration-relevant APIs and patterns, 
 - obsolete configuration conventions,
 - PHP 8.4 deprecations that are worth cleaning up without changing behavior.
 
-### 4. v12 -> v14 content-type upgrade wizard – release blocker
+### 2. v12 -> v14 content-type upgrade wizard – release blocker
 
 Existing installations can contain TYPO3 Forum plugins stored as legacy `list_type` records. The `v14` branch uses dedicated content types:
 
@@ -122,7 +124,7 @@ Because installations must execute the conversion **before** running the TYPO3 v
 
 This is a **release blocker**.
 
-### 5. Real upgrade and integration testing – release blocker
+### 3. Real upgrade and integration testing – release blocker
 
 Static checks, unit tests and TYPO3 CLI boot tests do not prove that a real upgraded installation works end-to-end.
 
@@ -145,7 +147,7 @@ Before releasing the v14 branch, test at least:
 
 This is a **release blocker**.
 
-### 6. Composer, CI and release tooling
+### 4. Composer, CI and release tooling
 
 Modernize the remaining project tooling after runtime compatibility is stable:
 
@@ -155,7 +157,7 @@ Modernize the remaining project tooling after runtime compatibility is stable:
 - modernize the release/build process,
 - review DDEV / local TYPO3 v14 development setup if it is to be maintained in this repository.
 
-### 7. Final cleanup
+### 5. Final cleanup
 
 After compatibility and integration testing:
 
@@ -165,7 +167,7 @@ After compatibility and integration testing:
 - review icons and language resources,
 - clean remaining non-functional migration leftovers.
 
-### 8. Separate refactors / latent bug fixes
+### 6. Separate refactors / latent bug fixes
 
 Architecture improvements and unrelated behavioral fixes should remain separate from the v14 compatibility migration unless they block runtime operation. Known candidates should be handled in focused commits after the migration baseline is stable.
 
@@ -183,7 +185,18 @@ composer php-lint
 git diff --check
 ```
 
-After the latest dead-code/asset cleanup, the local PHPUnit run reported **40 tests / 376 assertions**, with **2 expected skips when `pdo_sqlite` is not available**. The SQLite-backed tests run normally in environments providing that extension.
+After the Fluid audit, the local PHPUnit run reported **57 tests / 724 assertions**, with **no skips** (`pdo_sqlite` was available). The 17 new tests exercise actual Fluid parsing/compilation and focused rendering contracts. Database, routing, translation and FAL boundaries are isolated where a real site is required; these tests are not full frontend integration tests.
+
+`composer validate`, `composer php-lint`, TYPO3 command listing, asset publication and diff checks passed. On Windows, the Composer lint script requires the Git for Windows Unix utilities (`find`/`xargs`) on `PATH`.
+
+Fluid verification used the installed TYPO3 14.3.6 / Fluid code:
+
+- `fluid:analyze --help` and `fluid:namespaces` were checked.
+- Since automatic discovery only considers `*.fluid.*`, each of the 59 `.html` files was supplied individually to `fluid:analyze --stdin --json`. **43 passed** without errors/deprecations; **16 were blocked** by the local failsafe CLI container (missing frontend TypoScript request, `typo3forum_main` cache or `FlexFormTools`). JSON-mode exit status alone is not evidence of success.
+- The same `TemplateValidator` and actual Fluid compiler successfully checked **all 59 files**, with constructor collaborators isolated from site/database state. Behavioral tests also cover compiled conditions and pagination.
+- `fluid:cache:warmup` was attempted but failed in the local failsafe bootstrap: `ImportMapFactory::__construct()` received zero arguments instead of six. The command also only discovers `*.fluid.*`; no site/database configuration was fabricated to force it through.
+
+Remaining integration risks include real configured routes/page IDs, FAL uploads/downloads and storage permissions, markItUp in the browser, frontend TypoScript overrides, moderation authorization and mail delivery. Existing user-report follow-up issues (listing/access policy and redirect settings) are outside this rendering change. Two pre-existing missing backend TCA icons (`Icons/Stats/summary.png` and `Icons/User/notification.png`) were recorded without changing backend configuration. All literal local resources in the frontend rendering graph resolve.
 
 The TypoScript lint currently has four pre-existing style warnings in unchanged configuration sections; no migration-related TypoScript syntax error is known.
 

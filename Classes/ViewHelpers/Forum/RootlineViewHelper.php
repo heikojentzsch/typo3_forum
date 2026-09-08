@@ -25,8 +25,7 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Forum;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Fluid\ViewHelpers\Uri\ActionViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
 
 /**
@@ -51,7 +50,6 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
     public function initializeArguments(): void
     {
         parent::initializeArguments();
-        $this->registerUniversalTagAttributes();
         $this->registerArgument('ulClass', 'string', 'CSS class for rootline container', false, 'breadcrumb');
         $this->registerArgument('liClass', 'string', 'CSS class for each rootline element', false, 'breadcrumb-item');
         $this->registerArgument('rootline', 'array', 'Array of rootline elements', true);
@@ -66,7 +64,7 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
     public function initialize(): void
     {
         parent::initialize();
-        $this->settings = $this->templateVariableContainer->get('settings');
+        $this->settings = $this->renderingContext->getVariableProvider()->get('settings') ?? [];
     }
 
     /**
@@ -109,8 +107,6 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
      */
     protected function renderNavigationNode($object, bool $isCurrentNode)
     {
-        $extensionName = 'typo3forum';
-        $pluginName = 'forum';
         if ($object instanceof \Mittwald\Typo3Forum\Domain\Model\Forum\Forum) {
             $controller = 'Forum';
             $arguments = ['forum' => $object];
@@ -122,36 +118,31 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
         }
         $fullTitle = htmlspecialchars($object->getTitle());
         $limit = (int)($this->settings['cutBreadcrumbOnChar']??0);
-        if ($limit == 0 || strlen($fullTitle) < $limit) {
+        if ($limit == 0 || mb_strlen($object->getTitle()) < $limit) {
             $title = $fullTitle;
         } else {
-            $title = substr($fullTitle, 0, $limit) . '...';
+            $title = htmlspecialchars(mb_substr($object->getTitle(), 0, $limit)) . '...';
         }
 
-        $uriBuilder = $this->getUriBuilder();
-        $uri = $uriBuilder->reset()->setTargetPageUid((int)$this->settings['pids']['Forum'])
-            ->uriFor('show', $arguments, $controller, $extensionName, $pluginName);
+        $uri = $this->renderingContext->getViewHelperInvoker()->invoke(
+            ActionViewHelper::class,
+            ['pageUid' => (int)($this->settings['pids']['Forum'] ?? 0),
+                'extensionName' => 'Typo3Forum', 'pluginName' => 'Forum',
+                'controller' => $controller, 'action' => 'show',
+                'arguments' => array_map(static fn($node) => $node->getUid(), $arguments)],
+            $this->renderingContext,
+            static fn() => ''
+        );
+        $uri = htmlspecialchars($uri);
 
         $liClass = '';
         if ($this->hasArgument('liClass')) {
             $liClass = $this->arguments['liClass'];
         }
 
-        $icon = empty($icon) ? '' : '<i class="' . $icon . '"></i>';
+        $icon = empty($icon) ? '' : '<i class="' . htmlspecialchars($icon) . '"></i>';
 
         return '<span class="divider">&nbsp;&nbsp;▶&nbsp;&nbsp;</span><a href="' . $uri . '" title="' . $fullTitle . '">' . $icon . $title . '</a> ';
     }
 
-    /**
-     * getUriBuilder.
-     * @return UriBuilder
-     */
-    private function getUriBuilder()
-    {
-        /**
-         * @var UriBuilder $uriBuilder
-         */
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        return $uriBuilder;
-    }
 }

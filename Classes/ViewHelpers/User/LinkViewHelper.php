@@ -27,8 +27,7 @@ namespace Mittwald\Typo3Forum\ViewHelpers\User;
 
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use TYPO3\CMS\Fluid\ViewHelpers\Uri\ActionViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 class LinkViewHelper extends AbstractViewHelper
@@ -48,7 +47,7 @@ class LinkViewHelper extends AbstractViewHelper
     public function initialize(): void
     {
         parent::initialize();
-        $this->settings = $this->templateVariableContainer->get('settings');
+        $this->settings = $this->renderingContext->getVariableProvider()->get('settings') ?? [];
     }
 
     /**
@@ -78,35 +77,38 @@ class LinkViewHelper extends AbstractViewHelper
 
         // if user anonymous: show only the username
         if ($user->isAnonymous()) {
-            return $user->getUsername();
+            return htmlspecialchars($user->getUsername());
         }
 
-        $uriBuilder = $this->getUriBuilder();
-        $uri = $uriBuilder->setTargetPageUid($this->settings['pids']['UserShow'])->setArguments([
-            'tx_typo3forum_userprofile[user]' => $user->getUid(),
-            'tx_typo3forum_userprofile[controller]' => 'User',
-            'tx_typo3forum_userprofile[action]' => 'show'
-        ])->build();
+        $uri = $this->renderingContext->getViewHelperInvoker()->invoke(
+            ActionViewHelper::class,
+            ['pageUid' => (int)($this->settings['pids']['UserShow'] ?? 0),
+                'extensionName' => 'Typo3Forum', 'pluginName' => 'UserProfile',
+                'controller' => 'User', 'action' => 'show', 'arguments' => ['user' => $user->getUid()]],
+            $this->renderingContext,
+            static fn() => ''
+        );
+        $uri = htmlspecialchars($uri);
 
         $class = '';
 
         if ($this->hasArgument('class')) {
-            $class = $this->arguments['class'];
+            $class = htmlspecialchars($this->arguments['class']);
         }
 
         $fullUsername = htmlspecialchars($user->getUsername());
-        $limit = (int)$this->settings['cutUsernameOnChar'];
-        if ($limit == 0 || strlen($fullUsername) <= $limit) {
+        $limit = (int)($this->settings['cutUsernameOnChar'] ?? 0);
+        if ($limit == 0 || mb_strlen($user->getUsername()) <= $limit) {
             $username = $fullUsername;
         } else {
-            $username = substr($fullUsername, 0, $limit) . '...';
+            $username = htmlspecialchars(mb_substr($user->getUsername(), 0, $limit)) . '...';
         }
         $moderatorMark = '';
         if (isset($this->settings['moderatorMark']['image'])) {
             /** @var FrontendUserGroup $group */
             foreach ($user->getUsergroup() as $group) {
                 if ($group->getUserMod()) {
-                    $moderatorMark = '<img src="' . $this->settings['moderatorMark']['image'] . '" title="' . $this->settings['moderatorMark']['title'] . '" />';
+                    $moderatorMark = '<img src="' . htmlspecialchars($this->settings['moderatorMark']['image']) . '" title="' . htmlspecialchars($this->settings['moderatorMark']['title'] ?? '') . '" />';
                     break;
                 }
             }
@@ -126,16 +128,4 @@ class LinkViewHelper extends AbstractViewHelper
         return $link;
     }
 
-    /**
-     * getUriBuilder.
-     * @return UriBuilder
-     */
-    private function getUriBuilder()
-    {
-        /**
-         * @var UriBuilder $uriBuilder
-         */
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        return $uriBuilder;
-    }
 }

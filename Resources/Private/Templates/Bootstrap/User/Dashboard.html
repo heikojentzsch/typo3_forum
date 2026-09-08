@@ -23,7 +23,7 @@
 					<td style="text-align: right;">
 						<f:translate key="User_Index_Posts" />
 					</td><td>
-						<f:link.action pageUid="{settings.pids.UserShow}" controller="User" action="listPosts">{user.postCount}</f:link.action>
+						<f:link.action pageUid="{settings.pids.UserShow}" pluginName="UserProfile" controller="User" action="listPosts">{user.postCount}</f:link.action>
 					</td>
 
 					<td style="text-align: right;">
@@ -37,13 +37,13 @@
 					<td style="text-align: right;">
 						<f:translate key="User_Index_Topics" />
 					</td><td>
-						<f:link.action pageUid="{settings.pids.Dashboard}" controller="User" action="listTopics">{user.topicCount}</f:link.action>
+						<f:link.action pageUid="{settings.pids.UserShow}" pluginName="UserProfile" controller="User" action="listTopics">{user.topicCount}</f:link.action>
 					</td>
 
 					<td style="text-align: right;">
 						<f:translate key="User_Index_Questions" />
 					</td><td>
-						<f:link.action pageUid="{settings.pids.Dashboard}" controller="User" action="listQuestions">{user.questionCount}</f:link.action>
+						<f:link.action pageUid="{settings.pids.UserShow}" pluginName="UserProfile" controller="User" action="listQuestions">{user.questionCount}</f:link.action>
 					</td>
 				</tr>
 
@@ -89,7 +89,7 @@
 			<f:translate key="User_Index_MyTopics"/>
 		</legend>
 		<f:render partial="Topic/List" arguments="{topics: topics}"/>
-		<f:link.action pageUid="{settings.pids.UserShow}" controller="User" action="listTopics" arguments="{user: user}" class="btn btn-primary">
+		<f:link.action pageUid="{settings.pids.UserShow}" pluginName="UserProfile" controller="User" action="listTopics" arguments="{user: user}" class="btn btn-primary">
 			<f:translate key="Generic_More"/>
 		</f:link.action>
 	</div>

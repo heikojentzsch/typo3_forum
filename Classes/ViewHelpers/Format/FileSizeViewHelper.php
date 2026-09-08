@@ -53,8 +53,19 @@ class FileSizeViewHelper extends AbstractViewHelper
      *
      * @return string
      */
-    public function render($decimals = 2, $decimalSeparator = ',', $thousandsSeparator = '.')
+    public function initializeArguments(): void
     {
+        parent::initializeArguments();
+        $this->registerArgument('decimals', 'int', 'Decimal places', false, 2);
+        $this->registerArgument('decimalSeparator', 'string', 'Decimal separator', false, ',');
+        $this->registerArgument('thousandsSeparator', 'string', 'Thousands separator', false, '.');
+    }
+
+    public function render(): string
+    {
+        $decimals = $this->arguments['decimals'];
+        $decimalSeparator = $this->arguments['decimalSeparator'];
+        $thousandsSeparator = $this->arguments['thousandsSeparator'];
         $fileSize = $this->renderChildren();
         if ($fileSize === null) {
             $fileSize = 0.00;

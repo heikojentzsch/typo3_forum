@@ -164,6 +164,7 @@ class UserController extends AbstractController
             throw new NotLoggedInException('You need to be logged in to view your own posts.', 1288084981);
         }
         $this->view
+            ->assign('showPaginate', true)
             ->assign('topics', $this->topicRepository->findQuestions(null, true, $user))
             ->assign('page', $page)
             ->assign('user', $user);

@@ -35,9 +35,10 @@ class ButtonViewHelper extends AbstractTagBasedViewHelper {
     public function initializeArguments(): void
     {
 
+        parent::initializeArguments();
         $this->registerArgument('controller', 'string', 'Controller Name', TRUE);
         $this->registerArgument('action', 'string', 'action Name', TRUE);
-        $this->registerArgument('arguments', 'string', 'arguments Name', FALSE);
+        $this->registerArgument('arguments', 'array', 'arguments Name', FALSE);
         $this->registerArgument('primary', 'boolean', 'Primary button', FALSE, FALSE);
         $this->registerArgument('label', 'string', 'Button label', TRUE);
         $this->registerArgument('icon', 'string', 'Icon', FALSE, NULL);
@@ -55,9 +56,22 @@ class ButtonViewHelper extends AbstractTagBasedViewHelper {
         $this->tag->addAttribute('class', $class);
     }
 
+    public function render(): string
+    {
+        $arguments = array_merge($this->arguments, $this->additionalArguments);
+        unset($arguments['primary'], $arguments['label'], $arguments['icon']);
+        $arguments['class'] = $this->arguments['primary'] ? 'btn btn-primary' : 'btn';
+        return $this->renderingContext->getViewHelperInvoker()->invoke(
+            ActionViewHelper::class,
+            $arguments,
+            $this->renderingContext,
+            fn() => $this->renderChildren()
+        );
+    }
+
     public function renderChildren(): mixed {
         if ($this->arguments['icon']) {
-            $content = '<i class="tx-typo3forum-icon-16-' . $this->arguments['icon'] . '"></i> ';
+            $content = '<i class="tx-typo3forum-icon-16-' . htmlspecialchars($this->arguments['icon']) . '"></i> ';
         } else {
             $content = '';
         }

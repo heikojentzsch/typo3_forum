@@ -92,7 +92,7 @@ class TextParserViewHelper extends AbstractViewHelper
 
         return $this->textParserService->parseText(
             $this->arguments['content']
-                ?: trim($this->renderChildren())
+                ?? trim((string)$this->renderChildren())
         );
     }
 }

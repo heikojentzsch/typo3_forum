@@ -98,15 +98,9 @@ class RowViewHelper extends AbstractTagBasedViewHelper
         }
 
         if ($this->arguments['error']) {
-            $propertyPath = explode('.', $this->arguments['error']);
-            $errors = [];
-
-            foreach ($propertyPath as $currentPropertyName) {
-                $errors = array_merge(
-                    $errors,
-                    $this->getErrorsForProperty($currentPropertyName, [])
-                );
-            }
+            $request = $this->renderingContext->getAttribute(\Psr\Http\Message\ServerRequestInterface::class);
+            $results = $request->getAttribute('extbase')?->getOriginalRequestMappingResults();
+            $errors = $results?->forProperty($this->arguments['error'])->getErrors() ?? [];
 
             if (!empty($errors)) {
                 $class .= ' error';
@@ -125,7 +119,7 @@ class RowViewHelper extends AbstractTagBasedViewHelper
                     }
 
                     $errorContent .= '<p class="invalid-feedback help-block">'
-                        . $errorText
+                        . htmlspecialchars($errorText)
                         . '</p>';
                 }
             }
@@ -133,10 +127,10 @@ class RowViewHelper extends AbstractTagBasedViewHelper
 
         $label = '<label'
             . ($this->arguments['labelFor']
-                ? ' for="' . $this->arguments['labelFor'] . '"'
+                ? ' for="' . htmlspecialchars($this->arguments['labelFor']) . '"'
                 : '')
             . '>'
-            . $label
+            . htmlspecialchars((string)$label)
             . '</label>';
 
         $content = '<div>'
