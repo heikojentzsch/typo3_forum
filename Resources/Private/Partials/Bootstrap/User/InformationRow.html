@@ -1,7 +1,7 @@
 {namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
 <div class="text-center">
 	<div class="card-title mb-0">
-		<f:link.action controller="User"
+		<f:link.action controller="User" pluginName="UserProfile"
 			action="show"
 			arguments="{user: user}"
 			pageUid="{settings.pids.UserShow}"

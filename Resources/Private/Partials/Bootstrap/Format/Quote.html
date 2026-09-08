@@ -2,11 +2,11 @@
 	<div class="card-header py-2 px-3">
 		<f:if condition="{post}">
 			<f:then>
-				<f:translate key="Post_Show_QuoteBy" extensionName="typo3_forum"/>
-				<f:link.action controller="User" action="show" extensionName="typo3_forum" pluginName="Forum" arguments="{user: post.author}" pageUid="{settings.pids.UserShow}">{post.author.username}</f:link.action>
+				<f:translate key="Post_Show_QuoteBy" extensionName="Typo3Forum"/>
+				<f:link.action controller="User" action="show" extensionName="Typo3Forum" pluginName="UserProfile" arguments="{user: post.author.uid}" pageUid="{settings.pids.UserShow}">{post.author.username}</f:link.action>
 			</f:then>
 			<f:else>
-				<f:translate key="Post_Show_Quote" extensionName="typo3_forum"/>
+				<f:translate key="Post_Show_Quote" extensionName="Typo3Forum"/>
 			</f:else>
 		</f:if>
 	</div>

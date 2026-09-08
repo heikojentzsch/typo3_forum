@@ -42,13 +42,17 @@ class AttachmentPlainValidator extends AbstractValidator
     {
         $attachmentObj = GeneralUtility::makeInstance(Attachment::class);
         foreach ($value as $attachment) {
-            if (empty($attachment['name'])) {
+            if ($attachment->getError() === UPLOAD_ERR_NO_FILE) {
                 continue;
             }
-            if (!in_array($attachment['type'], $attachmentObj->getAllowedMimeTypes())) {
+            if ($attachment->getError() !== UPLOAD_ERR_OK) {
+                $this->addError('The file upload failed.', 1371041777);
+                continue;
+            }
+            if (!in_array($attachment->getClientMediaType(), $attachmentObj->getAllowedMimeTypes())) {
                 $this->addError('The submitted mime-type is not allowed!.', 1371041777);
             }
-            if ($attachment['size'] > $attachmentObj->getAllowedMaxSize()) {
+            if ($attachment->getSize() > $attachmentObj->getAllowedMaxSize()) {
                 $this->addError('The submitted file is to big!.', 1371041888);
             }
         }

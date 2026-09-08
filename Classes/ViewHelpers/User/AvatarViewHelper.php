@@ -69,15 +69,7 @@ class AvatarViewHelper extends AbstractTagBasedViewHelper
             $avatarFilename = PathUtility::getPublicResourceWebPath('EXT:typo3_forum/Resources/Public/Images/Icons/AvatarEmpty.png');
         }
 
-        $this->arguments['src'] = $avatarFilename;
         $this->tag->addAttribute('src', $avatarFilename);
-        if (array_key_exists('height', $this->arguments)) {
-            $this->arguments['height'] = $this->arguments['width'];
-            $this->tag->addAttribute('height', $avatarFilename);
-        }
-        $this->tag->addAttribute('width', $avatarFilename);
-
-
 
         return parent::render();
     }

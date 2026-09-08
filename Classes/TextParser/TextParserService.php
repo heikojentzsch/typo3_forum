@@ -75,7 +75,7 @@ class TextParserService extends AbstractService
             }
 
             $newService->setSettings(
-                (array)$this->settings['enabledServices.'][$key]
+                (array)($this->settings['enabledServices.'][$key . '.'] ?? [])
             );
 
             $this->parsingServices[] = $newService;

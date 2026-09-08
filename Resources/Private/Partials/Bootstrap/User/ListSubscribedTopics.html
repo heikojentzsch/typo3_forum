@@ -51,6 +51,7 @@
 							<div class="btn-group">
 								<f:link.action
 									controller="User"
+									pluginName="Forum"
 									action="subscribe"
 									arguments="{topic: topic, unsubscribe: 1, prioritizeRefererRedirect: 1}"
 									pageUid="{settings.pids.Forum}"
@@ -60,6 +61,7 @@
 								</f:link.action>
 								<f:link.action
 									controller="Topic"
+									pluginName="Forum"
 									action="show"
 									arguments="{topic: topic}"
 									pageUid="{settings.pids.Forum}"

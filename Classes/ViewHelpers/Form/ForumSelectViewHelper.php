@@ -28,6 +28,7 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Forum;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormFieldViewHelper;
 use TYPO3\CMS\Fluid\ViewHelpers\Form\SelectViewHelper;
+use TYPO3\CMS\Fluid\ViewHelpers\Form\Select\OptionViewHelper;
 
 /**
  * ViewHelper that renders a selectbox with a hierarchical list of all forums.
@@ -46,12 +47,19 @@ class ForumSelectViewHelper extends AbstractFormFieldViewHelper
 
     public function initializeArguments(): void
     {
-        AbstractFormFieldViewHelper::initializeArguments();
-        $this->registerUniversalTagAttributes();
-        $this->registerTagAttribute('multiple', 'string', 'if set, multiple select field');
-        $this->registerTagAttribute('size', 'string', 'Size of input field');
-        $this->registerTagAttribute('disabled', 'string', 'Specifies that the input element should be disabled when the page loads');
-        $this->registerArgument('errorClass', 'string', 'CSS class to set if there are errors for this view helper', false, 'f3-form-error');
+        parent::initializeArguments();
+        $this->registerArgument('multiple', 'bool', 'Allow multiple selected forums', false, false);
+        $this->registerArgument('errorClass', 'string', 'Validation error CSS class', false, 'f3-form-error');
+    }
+
+    public function render(): string
+    {
+        return $this->renderingContext->getViewHelperInvoker()->invoke(
+            SelectViewHelper::class,
+            array_merge($this->arguments, $this->additionalArguments),
+            $this->renderingContext,
+            fn() => $this->renderOptionTags($this->getOptions())
+        );
     }
 
     protected function getOptions(): array
@@ -98,10 +106,14 @@ class ForumSelectViewHelper extends AbstractFormFieldViewHelper
                 $content .= $this->renderOptionTags($option['_children'], $nestingLevel + 1);
                 $content .= '</optgroup>';
             } else {
-                $isSelected = $this->isSelected($option['uid']);
                 $indent = ($nestingLevel - 1) * 20;
                 $style = 'padding-left: ' . $indent . 'px;';
-                $content .= '<option style="' . $style . '" value="' . $option['uid'] . '" ' . ($isSelected ? 'selected="selected"' : '') . '>' . htmlspecialchars($option['name']) . '</option>' . chr(10);
+                $content .= $this->renderingContext->getViewHelperInvoker()->invoke(
+                    OptionViewHelper::class,
+                    ['value' => (string)$option['uid'], 'style' => $style],
+                    $this->renderingContext,
+                    static fn() => htmlspecialchars($option['name'])
+                ) . chr(10);
                 $content .= $this->renderOptionTags($option['_children'], $nestingLevel + 1);
             }
         }

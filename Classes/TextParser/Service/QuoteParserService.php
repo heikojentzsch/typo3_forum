@@ -5,6 +5,7 @@ namespace Mittwald\Typo3Forum\TextParser\Service;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository;
 use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\View\ViewFactoryData;
 use TYPO3\CMS\Core\View\ViewFactoryInterface;
 use TYPO3\CMS\Core\View\ViewInterface;
@@ -106,12 +107,18 @@ class QuoteParserService extends AbstractTextParserService
             );
         }
 
-        return $this->viewFactory->create(
+        $frontendTypoScript = $request->getAttribute('frontend.typoscript');
+        $settings = $frontendTypoScript?->getSetupArray()['plugin.']['tx_typo3forum.']['settings.'] ?? [];
+        $settings = (new TypoScriptService())->convertTypoScriptArrayToPlainArray($settings);
+
+        $view = $this->viewFactory->create(
             new ViewFactoryData(
-                templatePathAndFilename: 'EXT:typo3_forum/Resources/Private/Partials/Bootstrap/Format/Quote.html',
+                templatePathAndFilename: $this->settings['template'] ?? 'EXT:typo3_forum/Resources/Private/Partials/Bootstrap/Format/Quote.html',
                 request: $request,
                 format: 'html'
             )
         );
+        $view->assign('settings', $settings);
+        return $view;
     }
 }

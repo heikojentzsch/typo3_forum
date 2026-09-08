@@ -30,6 +30,7 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;;
+use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper;
 
 /**
@@ -63,7 +64,7 @@ class IfSubscribedViewHelper extends AbstractConditionViewHelper
      * @param null $arguments
      * @return bool
      */
-    protected static function evaluateCondition($arguments = null): bool
+    public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
     {
         $user = $arguments['user'];
         $object = $arguments['object'];

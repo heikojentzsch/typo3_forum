@@ -3,9 +3,10 @@
 namespace Mittwald\Typo3Forum\Service;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Attachment;
-use TYPO3\CMS\Core\Resource\DuplicationBehavior;
+use Psr\Http\Message\UploadedFileInterface;
+use TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior;
 use TYPO3\CMS\Core\Resource\FileReference as CoreFileReference;
-use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -17,14 +18,14 @@ class AttachmentService implements SingletonInterface
     protected ?ResourceStorage $storage;
 
     public function __construct(
-        ResourceFactory $resourceFactory
+        StorageRepository $storageRepository
     ) {
-        $this->storage = $resourceFactory->getDefaultStorage();
+        $this->storage = $storageRepository->getDefaultStorage();
     }
 
     /**
-     * Converts HTML-array to an object
-     * @param array $attachments
+     * Converts uploaded files to attachment objects.
+     * @param list<UploadedFileInterface> $uploadedAttachments
      * @return ObjectStorage
      */
     public function initAttachments(array $uploadedAttachments): ObjectStorage
@@ -33,9 +34,11 @@ class AttachmentService implements SingletonInterface
         $attachmentStorage = new ObjectStorage();
 
         foreach ($uploadedAttachments as $attachmentData) {
-            if (!isset($attachmentData['name']) || $attachmentData['name'] == '') {
+            if ($attachmentData->getError() === UPLOAD_ERR_NO_FILE) {
                 continue;
             }
+
+            $filename = $attachmentData->getClientFilename() ?? '';
 
             // Build extbase file reference object to the uploaded file.
             // TODO: Figure out where to grab the folder name from
@@ -45,12 +48,12 @@ class AttachmentService implements SingletonInterface
             }
 
             // Retain the old extensionless-name behavior as well as dotted filenames.
-            $nameParts = explode('.', $attachmentData['name']);
+            $nameParts = explode('.', $filename);
             $extension = end($nameParts);
             $falFile = $this->storage->addUploadedFile(
                 $attachmentData,
                 $this->storage->getFolder($folderIdentifier),
-                sha1($attachmentData['name'] . time()) . '.' . $extension,
+                sha1($filename . time()) . '.' . $extension,
                 DuplicationBehavior::REPLACE
             );
 
@@ -72,7 +75,7 @@ class AttachmentService implements SingletonInterface
 
             $attachment
                 ->setFileReference($extbaseFileReference)
-                ->setName($attachmentData['name'])
+                ->setName($filename)
             ;
 
             $attachmentStorage->attach($attachment);

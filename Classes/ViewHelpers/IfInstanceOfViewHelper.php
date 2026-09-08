@@ -25,6 +25,7 @@ namespace Mittwald\Typo3Forum\ViewHelpers;
  *                                                                      */
 
 use TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject;
+use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\ViewHelpers\IfViewHelper;
 
 /**
@@ -45,11 +46,11 @@ class IfInstanceOfViewHelper extends IfViewHelper
      *
      * @return string
      */
-    public function render(): mixed
+    public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
     {
-        $object = $this->arguments['object'];
-        $className = $this->arguments['className'];
+        $object = $arguments['object'];
+        $className = $arguments['className'];
 
-        return $object instanceof $className ? $this->renderThenChild() : $this->renderElseChild();
+        return $object instanceof $className;
     }
 }

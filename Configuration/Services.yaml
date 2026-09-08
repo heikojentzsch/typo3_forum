@@ -110,7 +110,7 @@ services:
         public: false
         autoconfigure: true
         arguments:
-            $resourceFactory: '@TYPO3\CMS\Core\Resource\ResourceFactory'
+            $storageRepository: '@TYPO3\CMS\Core\Resource\StorageRepository'
 
 
     Mittwald\Typo3Forum\Domain\Factory\Forum\PostFactory:

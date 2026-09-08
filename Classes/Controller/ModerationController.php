@@ -109,6 +109,7 @@ class ModerationController extends AbstractController
         $this->view->assignMultiple([
             'report' => $report,
             'type' => $type,
+            'reportTitle' => $postReport ? $postReport->getTopic()->getSubject() : $userReport->getUser()->getUsername(),
         ]);
 
         return $this->htmlResponse();

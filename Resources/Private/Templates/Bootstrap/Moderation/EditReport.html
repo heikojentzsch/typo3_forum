@@ -8,7 +8,7 @@
 	<f:flashMessages />
 
 	<h2>
-		<f:translate key="Report_Edit" arguments="{0: report.topic.subject}" />
+		<f:translate key="Report_Edit" arguments="{0: reportTitle}" />
 	</h2>
 	<div class="row">
 		<div class="col-12">
@@ -43,7 +43,7 @@
 					>
 						<option>{report.workflowStatus.name}</option>
 						<f:for each="{report.workflowStatus.followupStatus}" as="followupStatus">
-							<option data-url="{f:uri.action(action: 'updatePostReportStatus', arguments: {report: report, status: followupStatus})}">
+							<option data-url="{f:uri.action(action: 'update{type}ReportStatus', arguments: {report: report, status: followupStatus})}">
 								<f:translate key="Report_Edit_SetStatus" arguments="{0: followupStatus.name}" />
 							</option>
 						</f:for>
@@ -55,21 +55,26 @@
 	<div class="row mt-4">
 		<div class="col-12">
 			<legend>
-				<f:translate key="Report_Edit_Post" />
+				<f:translate key="Report_Edit_{type}" />
 			</legend>
-			<f:if condition="{report.post}">
-				<f:then>
-					<mmf:forum.rootline rootline="{report.topic.rootline}" forumicon="far fa-folder-open me-2" topicicon="far fa-comments me-2" />
-					<f:render partial="Post/Single" arguments="{post: report.post}" />
-				</f:then>
-				<f:else>
-					<div class="card card-body bg-lighter border-0  d-flex flex-row align-items-center">
-						<i class="fas fa-trash-can fa-lg me-3"></i>
-						<span class="fw-normal h4 m-0">
-							<f:translate key="Moderation_Edit_Report_Post_Missing" />
-						</span>
-					</div>
-				</f:else>
+			<f:if condition="{report.user}">
+				<f:render partial="User/InformationRow" arguments="{user: report.user}" />
+			</f:if>
+			<f:if condition="{type} == 'Post'">
+				<f:if condition="{report.post}">
+					<f:then>
+						<mmf:forum.rootline rootline="{report.topic.rootline}" forumicon="far fa-folder-open me-2" topicicon="far fa-comments me-2" />
+						<f:render partial="Post/Single" arguments="{post: report.post}" />
+					</f:then>
+					<f:else>
+						<div class="card card-body bg-lighter border-0  d-flex flex-row align-items-center">
+							<i class="fas fa-trash-can fa-lg me-3"></i>
+							<span class="fw-normal h4 m-0">
+								<f:translate key="Moderation_Edit_Report_Post_Missing" />
+							</span>
+						</div>
+					</f:else>
+				</f:if>
 			</f:if>
 		</div>
 	</div>
@@ -113,7 +118,7 @@
 				</tbody>
 			</table>
 
-			<f:form controller="Moderation" action="createPostReportComment">
+			<f:form controller="Moderation" action="create{type}ReportComment">
 				<div class="card">
 					<div class="card-header">
 						<h2>

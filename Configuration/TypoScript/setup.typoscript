@@ -233,7 +233,7 @@ plugin {
 
 				report < .abstract_icon
 				report {
-					10.file = EXT:typo3_forum/Resources/Public/Images/Icons/Moderation/Report-32.png
+					10.file = EXT:typo3_forum/Resources/Public/Icons/Moderation/Report.png
 
 					21 = IMG_RESOURCE
 					21 {

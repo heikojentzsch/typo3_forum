@@ -34,6 +34,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
 use TYPO3\CMS\Extbase\Persistence\Generic\Exception\InvalidClassException;
 use TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormFieldViewHelper;
+use TYPO3\CMS\Fluid\ViewHelpers\Form\TextareaViewHelper;
 use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
@@ -86,7 +87,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
 
         $this->registerArgument(
             'id',
-            'int',
+            'string',
             'id',
             false
         );
@@ -108,6 +109,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
         $this->configuration = $this->typoscriptReader
             ->loadTyposcriptFromPath($configurationPath);
 
+        $this->panels = [];
         foreach ($this->configuration['panels.'] as $panelConfiguration) {
             $panel = GeneralUtility::makeInstance(
                 $panelConfiguration['className']
@@ -131,9 +133,9 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
             . json_encode($this->getPanelSettings())
             . ';'
             . 'window.setTimeout(function(){$(document).ready(function() {'
-            . '$(\'#'
-            . $this->arguments['id']
-            . '\').markItUp(bbcodeSettings);'
+            . '$(document.getElementById('
+            . json_encode($this->arguments['id'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
+            . ')).markItUp(bbcodeSettings);'
             . '});}, 500);</script>';
 
         $this->cache->set(
@@ -150,7 +152,13 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
             $this->arguments['configuration']
         );
 
-        return $this->javascriptSetup . parent::render();
+        $arguments = array_merge($this->arguments, $this->additionalArguments);
+        unset($arguments['configuration']);
+        return $this->javascriptSetup . $this->renderingContext->getViewHelperInvoker()->invoke(
+            TextareaViewHelper::class,
+            $arguments,
+            $this->renderingContext
+        );
     }
 
     protected function getPanelSettings(): array
@@ -209,6 +217,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
 
         $uri = $this->uriBuilder
             ->reset()
+            ->setRequest($this->getRequest())
             ->setTargetPageUid($pageInformation->getId())
             ->setArguments([
                 'type' => 43568275,
