@@ -266,9 +266,7 @@ class PostController extends AbstractController
 
         $this->persistenceManager->persistAll();
 
-        //TODO: signal slot to event psr14
         $this->eventDispatcher->dispatch($post);
-        //$this->signalSlotDispatcher->dispatch(Post::class, 'postCreated', [$post]);
 
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(Localization::translate('Post_Create_Success'))
@@ -370,7 +368,6 @@ class PostController extends AbstractController
 
         //TODO: Change to Dispatch
         $this->eventDispatcher->dispatch($post);
-        //$this->signalSlotDispatcher->dispatch(Post::class, 'postUpdated', [$post]);
 
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(Localization::translate('Post_Update_Success'))
@@ -411,7 +408,6 @@ class PostController extends AbstractController
 
         //TODO: enable dispatch
         $this->eventDispatcher->dispatch($post);
-        //$this->signalSlotDispatcher->dispatch(Post::class, 'postDeleted', [$post]);
 
         $this->clearCacheForCurrentPage();
 

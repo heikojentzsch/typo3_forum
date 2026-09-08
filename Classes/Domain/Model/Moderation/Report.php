@@ -170,7 +170,8 @@ class Report extends AbstractEntity
      */
     public function getFirstComment()
     {
-        return array_shift($this->comments->toArray());
+        $comments = $this->comments->toArray();
+        return array_shift($comments);
     }
 
     /**

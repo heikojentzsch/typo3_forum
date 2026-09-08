@@ -102,7 +102,6 @@ class ReportController extends AbstractController
         $this->userReportRepository->add($report);
 
         $this->eventDispatcher->dispatch($report);
-        //$this->signalSlotDispatcher->dispatch(Report::class, 'reportCreated', [$report]);
 
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(
@@ -131,7 +130,6 @@ class ReportController extends AbstractController
         $this->postReportRepository->add($report);
 
         //TODO: enable with events PSR 14
-        //$this->signalSlotDispatcher->dispatch(Report::class, 'reportCreated', [$report]);
 
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(LocalizationUtility::translate('Report_New_Success', 'Typo3Forum'))

@@ -116,7 +116,8 @@ class BBCode extends AbstractTextParserElement implements MarkItUpExportableInte
      */
     public function getLeftBBCode(): string
     {
-        return array_shift(explode('|', $this->bbcodeWrap));
+        $parts = explode('|', $this->bbcodeWrap);
+        return array_shift($parts);
     }
 
     /**
@@ -124,7 +125,8 @@ class BBCode extends AbstractTextParserElement implements MarkItUpExportableInte
      */
     public function getRightBBCode(): string
     {
-        return array_pop(explode('|', $this->bbcodeWrap));
+        $parts = explode('|', $this->bbcodeWrap);
+        return array_pop($parts);
     }
 
     /**
