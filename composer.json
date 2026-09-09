@@ -3,12 +3,6 @@
 	"description": "Forum extension",
 	"license": "GPL-2.0-or-later",
 	"type": "typo3-cms-extension",
-	"repositories": [
-		{
-			"type": "composer",
-			"url": "https://composer.typo3.org/"
-		}
-	],
 	"require": {
 		"php": "^8.2",
 		"typo3/cms-backend": "^14.3",
@@ -21,9 +15,7 @@
 		"phpunit/phpunit": "^11.5",
 		"helmich/typo3-typoscript-lint": "^3.3",
 		"friendsofphp/php-cs-fixer": "^3.95",
-		"phpmd/phpmd": "^2.9",
-		"phpstan/phpstan": "^2.1",
-		"psalm/phar": "^4.0"
+		"phpstan/phpstan": "^2.2"
 	},
 	"replace": {
 		"typo3-ter/typo3_forum": "self.version"
@@ -31,9 +23,7 @@
 	"config": {
 		"vendor-dir": ".Build/vendor",
 		"bin-dir": ".Build/bin",
-		"preferred-install": {
-			"typo3/cms": "source"
-		},
+		"preferred-install": "dist",
 		"allow-plugins": {
 			"typo3/cms-composer-installers": true,
 			"typo3/class-alias-loader": true
@@ -50,21 +40,23 @@
 		}
 	},
 	"scripts": {
-		"php-lint": [
-			"find Classes Configuration Tests -name '*.php' -print0 | xargs -0 -n1 php -l"
-		],
-		"php-cs-fixer": [
-			"@php .Build/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff Classes",
-			"@php .Build/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff Configuration"
+		"php-lint": "@php Build/php-lint.php",
+		"test": "@php .Build/bin/phpunit",
+		"phpstan": "@php .Build/bin/phpstan analyse --no-progress",
+		"cs-check": "@php .Build/bin/php-cs-fixer fix --config=.php-cs-fixer.php --dry-run --diff",
+		"typoscript-lint": "@php .Build/bin/typoscript-lint -c typoscript-lint.yml",
+		"ci": [
+			"@composer validate",
+			"@php-lint",
+			"@test",
+			"@phpstan",
+			"@typoscript-lint",
+			"@cs-check"
 		]
 	},
 	"extra": {
-		"branch-alias": {
-			"dev-master": "1.0.x-dev"
-		},
 		"typo3/cms": {
 			"extension-key": "typo3_forum",
-			"cms-package-dir": "{$vendor-dir}/typo3/cms",
 			"web-dir": ".Build/Web"
 		}
 	}
