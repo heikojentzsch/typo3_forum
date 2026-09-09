@@ -90,7 +90,7 @@ class PostController extends AbstractController
     {
         $showPaginate = false;
 
-        switch ($this->settings['listPosts']) {
+        switch ($this->settings['listPosts'] ?? '1') {
             case '2':
                 $posts = $this->postRepository->findByFilter(
                     $this->settings['maxItems'] ?? null,

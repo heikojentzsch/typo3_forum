@@ -171,7 +171,9 @@ return [
             'exclude' => 1,
             'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.last_topic',
             'config' => [
-                'type' => 'none',
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'readOnly' => true,
                 'foreign_table' => 'tx_typo3forum_domain_model_forum_topic',
                 'minitems' => 0,
                 'maxitems' => 1
@@ -181,7 +183,9 @@ return [
             'exclude' => 1,
             'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.last_post',
             'config' => [
-                'type' => 'none',
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'readOnly' => true,
                 'foreign_table' => 'tx_typo3forum_domain_model_forum_post',
                 'minitems' => 0,
                 'maxitems' => 1

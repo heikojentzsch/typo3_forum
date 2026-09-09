@@ -4,7 +4,10 @@ defined('TYPO3') or die();
 $tempColumns = [
     'crdate' => [
         'exclude' => 1,
-        'config' => ['type' => 'passthrough'],
+        'config' => [
+            'type' => 'datetime',
+            'default' => 0,
+        ],
     ],
     'is_online' => [
         'exclude' => 1,

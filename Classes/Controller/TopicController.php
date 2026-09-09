@@ -91,7 +91,7 @@ class TopicController extends AbstractController
     {
         $showPaginate = false;
 
-        switch ($this->settings['listTopics']) {
+        switch ($this->settings['listTopics'] ?? '1') {
             case '2':
                 $dataset = $this->topicRepository->findQuestions(
                     $this->settings['maxItems'] ?? null,

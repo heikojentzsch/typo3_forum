@@ -92,9 +92,17 @@ try {
         || (!$logoutField instanceof DOMElement && !str_contains($authenticatedHtml, $username))) {
         throw new RuntimeException('Frontend login completed without recognizable authenticated content.');
     }
+
+    foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics'] as $path) {
+        curl_setopt($curl, CURLOPT_URL, $baseUrl . $path);
+        $pageHtml = curl_exec($curl);
+        if (!is_string($pageHtml) || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) !== 200) {
+            throw new RuntimeException(sprintf('Authenticated frontend page failed: %s%s', $baseUrl, $path));
+        }
+    }
 } finally {
     curl_close($curl);
     unlink($cookieFile);
 }
 
-echo "Frontend member login passed with a real request token and session cookie.\n";
+echo "Frontend member login and authenticated pages passed with a real request token and session cookie.\n";

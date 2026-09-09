@@ -160,6 +160,11 @@ PHP
         self::assertStringNotContainsString('git reset', $wrapper);
         self::assertStringNotContainsString('ddev delete', $wrapper);
 
+        $loginCheck = (string)file_get_contents($root . '/Build/Ddev/login-check.php');
+        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics'] as $path) {
+            self::assertStringContainsString("'{$path}'", $loginCheck);
+        }
+
         $guard = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php');
         self::assertStringContainsString("Environment::getContext()->isDevelopment()", $guard);
         self::assertStringContainsString("getenv('DDEV_PROJECT') !== 'typo3forum'", $guard);

@@ -118,6 +118,16 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         self::assertSame($this->authenticationService, (new \ReflectionProperty($root, 'authenticationService'))->getValue($root));
     }
 
+    public function testRegularUsersReadTagCreationPermissionFromTypoScriptSettings(): void
+    {
+        $user = new FrontendUser();
+        (new \ReflectionProperty($user, 'settings'))->setValue($user, [
+            'forum.' => ['tag.' => ['usersCanCreate' => '1']],
+        ]);
+
+        self::assertTrue($user->canCreateTags());
+    }
+
     private function controller(string $class): object
     {
         $controller = $this->getMockBuilder($class)->disableOriginalConstructor()
