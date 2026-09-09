@@ -277,7 +277,21 @@ The Git tag supplies the release version. `ext_emconf.php` remains fallback exte
 
 ### DDEV
 
-The minimal environment uses TYPO3 `^14.3`, PHP 8.4, MariaDB 10.11 and a symlinked local `pottkinder/typo3forum` path package. It no longer includes the old Bootstrap Package/femanager/console stack or committed legacy system settings. Start with `cd ddev`, `ddev start`, `ddev composer install`, then interactive `ddev exec vendor/bin/typo3 setup`. See [DDEV setup](ddev/README.md) for site, TypoScript and storage configuration. Composer metadata and YAML validate; Docker is unavailable here, so container startup and frontend integration were not tested.
+The TYPO3 `^14.3`, PHP 8.4 and MariaDB 10.11 development environment now has one non-interactive entry point from the repository root:
+
+```bash
+./Build/setup-ddev.sh
+```
+
+Docker and DDEV are the only host prerequisites. The command starts DDEV, installs Composer dependencies in the container, verifies that the extension resolves to the mounted working checkout, initializes TYPO3 through the DDEV TCP database connection and provisions a usable development forum. `ddev setup-forum` calls the same implementation from the `ddev/` directory.
+
+The deterministic fixture provides the current plugin content types, page and storage folders, generated page-ID TypoScript, site routing, a forum/category with sample topic and post, synthetic member/moderator accounts, scoped ACLs, default local FAL storage and Mailpit delivery. Credentials are generated once outside the webroot in an ignored file and are available with `./Build/setup-ddev.sh --show-credentials`. `./Build/setup-ddev.sh --check` performs non-mutating database, configuration and HTTP verification.
+
+Managed records and completed phases are tracked with stable logical identifiers. Repeat and interrupted runs preserve UIDs, credentials, edited content, uploads and all unrelated records. The bootstrap refuses production context, an unexpected database target, unknown identity collisions and an unrecognized nonempty database. It never resets the database or the Git workspace. A recognized incomplete DDEV socket configuration is backed up and repaired without rerunning force setup over existing TYPO3 tables.
+
+The provisioner is a development-only extension required solely by `ddev/composer.json`; DDEV configuration, fixture code, generated settings, state and credentials remain outside the production release allowlist. See [the DDEV guide](ddev/README.md) for the fixture model, recovery behavior and isolated smoke harness.
+
+Docker is unavailable in the implementation environment, so fresh/repeat container startup and real frontend/backend/preview requests were **not executed**. That verification gap remains explicit and the included isolated DDEV smoke harness must run before local runtime acceptance is claimed.
 
 Implementation references: [GitLab Composer publication](https://docs.gitlab.com/user/packages/composer_repository/), [TYPO3 14 DDEV setup](https://docs.typo3.org/m/typo3/tutorial-getting-started/14.3/en-us/Installation/Install.html), [PHPStan setup](https://phpstan.org/user-guide/getting-started).
 
@@ -398,6 +412,14 @@ The suite includes:
 - existing successful attachment/FAL behavior.
 
 `composer validate`, `composer php-lint`, TYPO3 command listing, asset publication and `git diff --check` passed for the latest cleanup.
+
+For the DDEV bootstrap change, Bash syntax, command help, the missing-Docker
+failure path, Composer JSON syntax, PHP parsing, LF/final-newline rules and
+`git diff --check` were verified locally. A DDEV executable is installed, but
+no Docker client or daemon is available in this environment. The container-based
+`composer validate`, `composer ci`, fresh/repeat provisioning and HTTP checks
+were therefore **not executed** for this change; the tracked isolated smoke
+harness remains the required runtime follow-up.
 
 There is currently no GitHub Actions workflow providing independent server-side PR checks; these results were produced in the migration development/test environment.
 

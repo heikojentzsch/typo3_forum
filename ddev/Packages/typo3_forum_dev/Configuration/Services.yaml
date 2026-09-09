@@ -1,0 +1,20 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Pottkinder\Typo3ForumDev\:
+    resource: '../Classes/*'
+
+  Pottkinder\Typo3ForumDev\Command\ProvisionCommand:
+    tags:
+      - name: console.command
+        command: forum-dev:provision
+        description: 'Provision the TYPO3 Forum DDEV fixture'
+
+  Pottkinder\Typo3ForumDev\Command\CheckCommand:
+    tags:
+      - name: console.command
+        command: forum-dev:check
+        description: 'Verify the TYPO3 Forum DDEV fixture without changing it'

@@ -9,5 +9,6 @@ database:
 composer_version: "2"
 xdebug_enabled: false
 use_dns_when_possible: true
+disable_settings_management: true
 web_environment:
   - TYPO3_CONTEXT=Development
