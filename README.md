@@ -31,6 +31,12 @@ The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP
 
 ### Completed
 
+- [x] Modernize Composer QA commands and adopt PHPStan 2 at level 6.
+- [x] Replace authoritative GitLab CI and remove Travis.
+- [x] Add deterministic release packaging and gated GitLab-to-GitHub publication.
+- [x] Add minimal public GitHub verification.
+- [x] Rebuild the minimal DDEV environment for TYPO3 14.3 / PHP 8.4.
+
 - [x] Set TYPO3 v14 / PHP 8.2 platform requirements.
 - [x] Make the extension bootable on TYPO3 v14.
 - [x] Replace `static-info-tables` country handling with the TYPO3 Core Country API.
@@ -217,9 +223,67 @@ If no default FAL storage exists, the service throws a clear `RuntimeException` 
 
 Empty uploads and `UPLOAD_ERR_NO_FILE` continue to work without requiring a configured storage.
 
+## Development and release tooling
+
+**Private GitLab is the authoritative development repository and CI/CD source of truth. GitHub is the public Open Source publication mirror. GitLab CI is authoritative; GitHub Actions provides public verification only.**
+
+### Composer and static analysis
+
+Run `composer install` first. Composer is the canonical local and CI interface:
+
+| Command | Purpose / last local result |
+| --- | --- |
+| `composer validate` | Valid metadata. |
+| `composer php-lint` | 189 PHP files pass syntax checks, including root metadata, application, configuration, tests and build helpers. |
+| `composer test` | 83 tests, 835 assertions, zero skips. |
+| `composer phpstan` | PHPStan 2.2.13, level 6, zero findings. |
+| `composer typoscript-lint` | Exit 0 with 12 existing warnings; these are not presented as a warning-free result. |
+| `composer cs-check` | PHP-CS-Fixer 3.95.24, non-mutating dry run; exit 8, findings in 173 of 186 files. |
+| `composer ci` | Runs all of the above, with style last; currently exits 8 because of style debt. |
+
+All newly added PHP helpers/tests pass the style rules. Existing application files have not been globally reformatted; normalization remains separate work. GitLab reports the style job as advisory only for exit 8. Other style tool/configuration failures and all core QA failures still block the pipeline.
+
+PHPStan uses Composer autoloading, scans `Classes` and `Configuration`, and caches only in `.Build/phpstan`. The broad `.Build` source scan is removed. Tests and build helpers are covered by PHPUnit and syntax checks rather than being included in the production static-analysis scope. No baseline was generated. Collection/repository generics and missing type information were corrected. PHPDoc certainty is disabled for hydrated Extbase values; native types remain checked. Eight line-specific exceptions document the UID-zero virtual entities, retained lazy-loading/hydration paths, existing storage-PID string contract, merged userfield-array contract and intentionally disabled editor cache.
+
+Psalm 4 failed under PHP 8.4 before analysis and had no demonstrated distinct coverage; its dependency/configuration were removed. PHPMD 2.15 ran but predominantly reported historical naming, size and design noise; it was removed rather than suppressing a large report. PHPStan remains the maintained analyzer.
+
+The separately authorized PHPStan follow-up also fixes confirmed defects: mail delivery now calls TYPO3's injected mailer; missing userfield values return an empty array; slug queries use DBAL 4's integer parameter enum; solution-point defaults are applied before casting. Targeted regression tests cover these cases. Existing storage-PID behavior is preserved.
+
+Composer metadata decisions: retain `pottkinder/typo3forum`, `typo3-ter/typo3_forum` replacement, `.Build/vendor`, `.Build/bin`, the TYPO3 installer/alias-loader plugin permissions and supported `.Build/Web` web-dir. All dependencies resolve through Packagist, so the additional composer.typo3.org repository was removed. Prefer dist archives; remove the stale `dev-master` alias and unused `cms-package-dir` extra. As before, this extension does not track a root lock file: each runtime resolves compatible dependencies. Archive reproducibility refers to identical source bytes, not permanently frozen dependency resolution. The verified local install uses TYPO3 14.3.7; Composer audit reports no advisories.
+
+### CI and publication
+
+`.gitlab-ci.yml` runs core QA and TYPO3 CLI smoke checks on PHP 8.2 and 8.4, with a separate style job, a package stage and publication jobs. Official PHP CLI images are bootstrapped with the needed extensions and checksum-verified Composer 2. Composer downloads are cached by PHP version; vendor directories are not shared between runtimes. Travis and its historical release configuration are removed.
+
+Protected release tags publish internal Composer metadata through `${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/composer` using `CI_JOB_TOKEN`; the project's Package Registry must be enabled. Internal publication does not require GitHub.
+
+Public publication is opt-in and manual in GitLab. Configure protected/masked `GITHUB_TOKEN` (only the chosen public repository; Contents write and Workflows write if mirroring workflow changes), `GITHUB_REPOSITORY` (`owner/repository`) and `PUBLIC_RELEASE_ENABLED=true`. Protect release tags and permit the maintainer identity to push the public `v14` mirror. No credentials belong in repository files.
+
+After QA/package success, a maintainer runs `publish-github`. It checks the artifact checksum, verifies that the tagged commit belongs to `v14`, then atomically pushes `v14` and the exact tag without force. Divergence or existing conflicting tags fail for human resolution. It creates a draft GitHub Release with the ZIP/checksum, then publishes it (marking prerelease versions accordingly). A failure after draft creation leaves a draft for inspection; an existing release is never silently overwritten. Only `v14` and release tags are mirrored, not private development branches. No public release was executed during this task.
+
+`.github/workflows/ci.yml` runs on pull requests and pushes to `v14`: PHP 8.4 installation, Composer validation, syntax, PHPUnit, PHPStan and TypoScript lint. It has read-only permissions and no packaging/publication role. GitLab/GitHub YAML and shell syntax were validated locally; no private GitLab execution or GitHub Actions success is claimed here. PHP 8.2 is configured in CI, not locally executed.
+
+### Release archive
+
+```bash
+./build-release.sh 14.0.0
+```
+
+Requires Bash, PHP 8.2+ and ext-zip, without Composer dependencies. Outputs `dist/typo3_forum_14.0.0.zip` and `.zip.sha256`. The builder validates semantic versions, stages in a unique temporary directory, sorts names, fixes ZIP timestamps/permissions and uses stored entries to avoid compression-version differences. Temporary files are cleaned up. It does not modify tracked sources, create tags/branches, push or call publication APIs.
+
+The allowlist contains `Classes`, `Configuration`, `Resources`, `Documentation`, Composer metadata, extension metadata/configuration, SQL schemas, the extension icon, license and README. Development roots such as `.git`, `.github`, `.Build`, `Tests`, `Build` and `ddev`, plus CI/analyzer configs, are excluded. Symlinked runtime inputs are rejected. Tests verify exact contents, checksums, reproducibility despite source mtime changes, invalid versions and missing metadata. A real `14.0.0-test` build also succeeded without changing the tracked source diff.
+
+The Git tag supplies the release version. `ext_emconf.php` remains fallback extension metadata (`14.0.0-dev` on this development branch): update it deliberately in a reviewed release-preparation commit before tagging. The builder never rewrites it. Keep both separately owned release blockers open until acceptance is completed.
+
+### DDEV
+
+The minimal environment uses TYPO3 `^14.3`, PHP 8.4, MariaDB 10.11 and a symlinked local `pottkinder/typo3forum` path package. It no longer includes the old Bootstrap Package/femanager/console stack or committed legacy system settings. Start with `cd ddev`, `ddev start`, `ddev composer install`, then interactive `ddev exec vendor/bin/typo3 setup`. See [DDEV setup](ddev/README.md) for site, TypoScript and storage configuration. Composer metadata and YAML validate; Docker is unavailable here, so container startup and frontend integration were not tested.
+
+Implementation references: [GitLab Composer publication](https://docs.gitlab.com/user/packages/composer_repository/), [TYPO3 14 DDEV setup](https://docs.typo3.org/m/typo3/tutorial-getting-started/14.3/en-us/Installation/Install.html), [PHPStan setup](https://phpstan.org/user-guide/getting-started).
+
 ## Remaining migration plan
 
-The following work is still open. The order reflects the current migration plan.
+The two release blockers below are handled by a separate workstream and remain open. The remaining work in this tooling/migration stream is final cleanup and separately scoped refactors or latent bug fixes.
 
 ### 1. v12 -> v14 content-type upgrade wizard – release blocker
 
@@ -241,7 +305,7 @@ Because installations must execute the conversion **before** running the TYPO3 v
 
 The migration must preserve the existing plugin-specific configuration and be safe to run repeatedly.
 
-This is a **release blocker**.
+This is a **release blocker**, handled separately and outside this tooling workstream.
 
 ### 2. Real upgrade and integration testing – release blocker
 
@@ -268,22 +332,9 @@ Before releasing the v14 branch, test at least:
 - configured routes and page IDs;
 - backend editing of the dedicated content types.
 
-This is a **release blocker**.
+This is a **release blocker**, handled separately and outside this tooling workstream.
 
-### 3. Composer, CI and release tooling
-
-Modernize the remaining project tooling after runtime compatibility is stable:
-
-- review/update PHPStan, Psalm and PHPMD configuration/tool versions;
-- decide on repository-wide coding-style normalization separately;
-- modernize or remove obsolete `.travis.yml` configuration;
-- review and modernize `.gitlab-ci.yml`;
-- modernize `build-release.sh` and the release/build process;
-- review DDEV / local TYPO3 v14 development setup if it is to be maintained in this repository.
-
-Tooling changes must remain separate from functional TYPO3 migration changes.
-
-### 4. Final cleanup
+### 3. Final cleanup
 
 After compatibility and integration testing:
 
@@ -296,7 +347,7 @@ After compatibility and integration testing:
 - clean remaining non-functional migration leftovers;
 - perform final package-content and Composer validation.
 
-### 5. Separate refactors / latent bug fixes
+### 4. Separate refactors / latent bug fixes
 
 Architecture improvements and unrelated behavioral fixes should remain separate from the v14 compatibility migration unless they block runtime operation.
 
@@ -316,18 +367,20 @@ The migration has been repeatedly verified with the following checks during deve
 ```bash
 composer validate
 composer php-lint
-.Build/bin/phpunit
+composer test
+composer phpstan
+composer cs-check
+composer typoscript-lint
 .Build/bin/typo3 list -vvv
 .Build/bin/typo3 asset:publish -vvv
-.Build/bin/typoscript-lint Configuration/TypoScript/setup.typoscript
 git diff --check
 ```
 
-After the latest TYPO3 v14 legacy/deprecation cleanup, the full PHPUnit run reported:
+After the tooling modernization, on PHP 8.4.25 / TYPO3 14.3.7 / PHPUnit 11.5.56, the full run reported:
 
 ```text
-65 tests
-769 assertions
+83 tests
+835 assertions
 0 skips
 ```
 

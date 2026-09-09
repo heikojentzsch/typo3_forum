@@ -307,7 +307,7 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
      */
     public function getPageCount(): int
     {
-        return ceil($this->postCount / (int)$this->getSettings()['pagebrowser.']['topicShow.']['itemsPerPage']);
+        return (int)ceil($this->postCount / (int)$this->getSettings()['pagebrowser.']['topicShow.']['itemsPerPage']);
     }
 
     /**
@@ -526,13 +526,11 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
 
         // Increase the parent's forum post counter by one and mark the new post as
         // the forums latest post if necessary.
-        if ($this->forum !== null) {
-            $this->forum->_increasePostCount(+1);
-            if ($this->forum->getLastPost() === null || $this->forum->getLastPost()
-                    ->getTimestamp() < $post->getTimestamp()
-            ) {
-                $this->forum->setLastPost($post);
-            }
+        $this->forum->_increasePostCount(+1);
+        if ($this->forum->getLastPost() === null || $this->forum->getLastPost()
+                ->getTimestamp() < $post->getTimestamp()
+        ) {
+            $this->forum->setLastPost($post);
         }
 
         return $this;
@@ -559,11 +557,9 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
             $this->setLastPost(array_pop($postsArray));
         }
 
-        if ($this->forum !== null) {
-            $this->forum->_increasePostCount(-1);
-            if ($this->forum->getLastPost() === $post) {
-                $this->forum->_resetLastPost();
-            }
+        $this->forum->_increasePostCount(-1);
+        if ($this->forum->getLastPost() === $post) {
+            $this->forum->_resetLastPost();
         }
 
         return $this;
@@ -657,7 +653,7 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
     /**
      * Sets this topic to a question. Question topics will be shown at the support queries helpbox.
      *
-     * @param int $question TRUE to make this topic a question, FALSE to reset this.
+     * @param bool $question TRUE to make this topic a question, FALSE to reset this.
      */
     public function setQuestion(bool $question): self
     {
@@ -695,6 +691,7 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
      * Set a whole ObjectStorage as tag
      *
      * @param ObjectStorage $tags
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<Tag> $tags
      */
     public function setTags(ObjectStorage $tags): self
     {
@@ -769,6 +766,9 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
         return $this->readers;
     }
 
+    /**
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser> $readers
+     */
     public function setReaders(ObjectStorage $readers): self
     {
         $this->readers = $readers;

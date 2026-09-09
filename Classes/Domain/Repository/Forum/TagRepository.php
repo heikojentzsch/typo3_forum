@@ -28,6 +28,7 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\Forum\Tag> */
 class TagRepository extends Repository
 {
 
@@ -43,7 +44,7 @@ class TagRepository extends Repository
 
     /**
      * Find all ordered by topic count
-     * @return QueryResultInterface<Tag>
+     * @return QueryResultInterface<int, Tag>
      */
     public function findAllOrderedByCounter(): QueryResultInterface
     {

@@ -41,7 +41,7 @@ class TagValidator extends AbstractValidator
     * Check if $value is valid. If it is not valid, needs to add an error
     * to Result.
     *
-    * @param Tag $name
+    * @param mixed $tag
     * @return void
     */
     protected function isValid($tag):void

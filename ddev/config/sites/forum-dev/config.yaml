@@ -1,20 +1,14 @@
 base: 'https://typo3forum.ddev.site/'
-errorHandling: []
+rootPageId: 1
+websiteTitle: 'TYPO3 Forum development'
 languages:
-  -
-    title: English
+  - title: English
     enabled: true
     languageId: 0
     base: /
-    typo3Language: default
     locale: en_US.UTF-8
-    iso-639-1: en
     navigationTitle: English
-    hreflang: en-us
-    direction: ltr
+    hreflang: en-US
     flag: us
-rootPageId: 1
-routes: []
 imports:
- -
-   resource: 'EXT:typo3_forum/Configuration/Routing/Routing.yaml'
+  - resource: 'EXT:typo3_forum/Configuration/Routing/Routing.yaml'

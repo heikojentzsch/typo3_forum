@@ -34,7 +34,7 @@ class AttachmentPlainValidator extends AbstractValidator
     * Check if $value is valid. If it is not valid, needs to add an error
     * to Result.
     *
-    * @param $value
+    * @param mixed $value
     *
     * @return void
     */

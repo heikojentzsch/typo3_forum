@@ -68,6 +68,7 @@ class QuoteParserService extends AbstractTextParserService
         return $text;
     }
 
+    /** @param list<string> $matches */
     protected function replaceSingleCallback(array $matches): string
     {
         $view = $this->createQuoteView();
@@ -80,6 +81,7 @@ class QuoteParserService extends AbstractTextParserService
         return $view->render();
     }
 
+    /** @param list<string> $matches */
     protected function replaceCallback(array $matches): string
     {
         $view = $this->createQuoteView();

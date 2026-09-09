@@ -41,6 +41,7 @@ class RootForum extends Forum implements SingletonInterface
         ForumRepository $forumRepository
     ) {
         $this->ensureObjectStorages();
+        // @phpstan-ignore assign.propertyType (Virtual, non-persisted entity uses UID zero by contract.)
         $this->uid = 0;
 
         $this->forumRepository = $forumRepository;

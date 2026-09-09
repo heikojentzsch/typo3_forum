@@ -32,6 +32,7 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
 
+/** @extends AbstractFactory<\Mittwald\Typo3Forum\Domain\Model\Forum\Post> */
 class PostFactory extends AbstractFactory
 {
     protected PostRepository $postRepository;
@@ -66,7 +67,7 @@ class PostFactory extends AbstractFactory
      */
     public function createPostWithQuote(Post $quotedPost)
     {
-        /** @var $post Post */
+        /** @var Post $post */
         $post = $this->getClassInstance();
         $post->setText('[quote=' . $quotedPost->getUid() . ']' . $quotedPost->getText() . '[/quote]');
 
@@ -81,6 +82,7 @@ class PostFactory extends AbstractFactory
      *
      * @throws NotLoggedInException
      * @throws \TYPO3\CMS\Extbase\Persistence\Exception\IllegalObjectTypeException
+     * @return void
      */
     public function assignUserToPost(Post $post, ?FrontendUser $user = null)
     {
@@ -113,6 +115,7 @@ class PostFactory extends AbstractFactory
      * Deletes a post and decreases the user's post count by 1.
      *
      * @param Post $post
+     * @return void
      */
     public function deletePost(Post $post)
     {

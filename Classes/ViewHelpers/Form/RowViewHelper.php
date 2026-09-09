@@ -146,6 +146,8 @@ class RowViewHelper extends AbstractTagBasedViewHelper
 
     /**
      * Find errors for a specific property in the given errors array.
+     * @phpstan-param array<string, \TYPO3\CMS\Extbase\Error\Result> $errors
+     * @phpstan-return list<\TYPO3\CMS\Extbase\Error\Error>
      */
     protected function getErrorsForProperty(string $propertyName, array $errors): array
     {

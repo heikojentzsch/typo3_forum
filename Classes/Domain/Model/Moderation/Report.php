@@ -101,6 +101,7 @@ class Report extends AbstractEntity
      * Sets the reporter.
      *
      * @param FrontendUser $reporter The reporter.
+     * @return void
      */
     public function setReporter(FrontendUser $reporter)
     {
@@ -127,6 +128,7 @@ class Report extends AbstractEntity
      * Sets the moderator.
      *
      * @param FrontendUser $moderator The moderator.
+     * @return void
      */
     public function setModerator(FrontendUser $moderator)
     {
@@ -146,10 +148,11 @@ class Report extends AbstractEntity
      * Sets the current workflow status.
      *
      * @param ReportWorkflowStatus $workflowStatus The workflow status.
+     * @return void
      */
     public function setWorkflowStatus(ReportWorkflowStatus $workflowStatus)
     {
-        if (!$this->workflowStatus || ($this->workflowStatus && $this->workflowStatus->hasFollowupStatus($workflowStatus))) {
+        if (!$this->workflowStatus || $this->workflowStatus->hasFollowupStatus($workflowStatus)) {
             $this->workflowStatus = $workflowStatus;
         }
     }
@@ -187,6 +190,7 @@ class Report extends AbstractEntity
      * Adds a comment to this report.
      *
      * @param ReportComment $comment A comment
+     * @return void
      */
     public function addComment(ReportComment $comment)
     {
@@ -199,6 +203,7 @@ class Report extends AbstractEntity
      *
      * @param ReportComment $comment
      * @throws InvalidOperationException
+     * @return void
      */
     public function removeComment(ReportComment $comment)
     {

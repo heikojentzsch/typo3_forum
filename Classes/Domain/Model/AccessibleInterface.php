@@ -29,6 +29,8 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Access;
 /**
  * Interface definition for objects that are submitted to the access control
  * mechanism of the typo3_forum.
+ *
+ * @phpstan-require-extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
  */
 interface AccessibleInterface
 {

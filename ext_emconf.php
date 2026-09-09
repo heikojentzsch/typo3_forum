@@ -13,9 +13,9 @@ $EM_CONF[$_EXTKEY] = [
     'modify_tables' => 'fe_users',
     'clearCacheOnLoad' => 0,
 
-    // NOTE: DO NOT CHANGE this version number manually.
-    // This is done by the build-release.sh script.
-    'version' => '1.0-dev',
+    // Keep this fallback metadata in sync before tagging. Release builds never rewrite it.
+    // Composer derives the authoritative release version from the Git tag.
+    'version' => '14.0.0-dev',
     'constraints' => [
         'depends' => [
             'typo3' => '14.3.0-14.99.99',

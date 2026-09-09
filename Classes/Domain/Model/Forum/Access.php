@@ -89,6 +89,10 @@ class Access extends AbstractValueObject
      */
     protected $affectedGroup;
 
+    /**
+     * @param string|null $operation
+     * @param int|null $level
+     */
     public function __construct($operation = null, $level = null, ?\Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup $group = null)
     {
         $this->operation = $operation;
@@ -109,6 +113,7 @@ class Access extends AbstractValueObject
      * Sets the affected operation.
      *
      * @param string $operation The affected operation
+     * @return void
      */
     public function setOperation($operation)
     {
@@ -184,7 +189,7 @@ class Access extends AbstractValueObject
             }
             if ($user !== null) {
                 foreach ($user->getUsergroup() as $group) {
-                    /** @var $group \Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup */
+                    /** @var \Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup $group */
                     if ($group->getUid() === $this->affectedGroup->getUid()) {
                         $result = true;
                         break;
@@ -200,6 +205,7 @@ class Access extends AbstractValueObject
      * Negates this entry.
      *
      * @param bool $negate TRUE to negate
+     * @return void
      */
     public function setNegated($negate)
     {
@@ -218,6 +224,7 @@ class Access extends AbstractValueObject
      * Sets the group.
      *
      * @param \Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup $group The group
+     * @return void
      */
     public function setAffectedGroup(\Mittwald\Typo3Forum\Domain\Model\User\FrontendUserGroup $group)
     {

@@ -17,6 +17,12 @@ services:
         factory: ['@TYPO3\CMS\Core\Cache\CacheManager', 'getCache']
         arguments: ['typo3forum_main']
 
+    Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService:
+        autowire: true
+
+    Mittwald\Typo3Forum\Service\Mailing\PlainMailingService:
+        autowire: true
+
     Mittwald\Typo3Forum\ViewHelpers\User\IfSubscribedViewHelper:
         autowire: true
 

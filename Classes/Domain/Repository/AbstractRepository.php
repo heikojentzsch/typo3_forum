@@ -41,10 +41,16 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
  * @license    GNU Public License, version 2
  *             http://opensource.org/licenses/gpl-license.php
  */
+/**
+ * @template T of \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface
+ * @extends Repository<T>
+ */
 abstract class AbstractRepository extends Repository
 {
     protected ConfigurationBuilder $configurationBuilder;
+    /** @var array<string, mixed> */
     protected array $settings = [];
+    /** @var array<string, mixed> */
     protected array $persistenceSettings = [];
 
     public function injectConfigurationBuilder(ConfigurationBuilder $configurationBuilder): void
@@ -61,16 +67,22 @@ abstract class AbstractRepository extends Repository
             $this->setDefaultQuerySettings(
                 $this->getQuerySettings()
                     ->setRespectStoragePage(true)
+                    // @phpstan-ignore argument.type (Preserve existing TypoScript storage-ID strings, including empty values.)
                     ->setStoragePageIds(explode(',', $this->persistenceSettings['storagePid']))
             );
         }
     }
 
+    /** @return QueryInterface<T> */
     protected function createQueryWithFallbackStoragePage(): QueryInterface
     {
         return $this->addFallbackStoragePage($this->createQuery());
     }
 
+    /**
+     * @param QueryInterface<T> $query
+     * @return QueryInterface<T>
+     */
     protected function addFallbackStoragePage(QueryInterface $query): QueryInterface
     {
         $storagePageIds = $query->getQuerySettings()->getStoragePageIds();

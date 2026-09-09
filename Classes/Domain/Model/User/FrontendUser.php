@@ -881,7 +881,7 @@ class FrontendUser extends AbstractEntity
     {
         $age = (time() - $this->getDateOfBirth()) / (3600 * 24 * 365);
 
-        return floor($age);
+        return (int)floor($age);
     }
 
     /**
@@ -907,7 +907,6 @@ class FrontendUser extends AbstractEntity
         foreach ($user->getUsergroup() as $group) {
             if ($group->getUserMod()) {
                 return true;
-                break;
             }
         }
 
@@ -935,7 +934,7 @@ class FrontendUser extends AbstractEntity
     /**
      * Get the online status of a User
      *
-     * @return boolean.
+     * @return bool
      */
     public function getIsOnline()
     {
@@ -967,10 +966,11 @@ class FrontendUser extends AbstractEntity
 
     /**
      * @param bool $val
+     * @return void
      */
     public function setDisable($val)
     {
-        $this->disable = (int)$val;
+        $this->disable = (bool)$val;
     }
 
     /**
@@ -994,7 +994,7 @@ class FrontendUser extends AbstractEntity
     /**
      * Returns the absolute path of this user's avatar image (if existent).
      *
-     * @return string The absolute path of this user's avatar image (if existent).
+     * @return string|null The absolute path of this user's avatar image (if existent).
      */
     public function getImagePath()
     {
@@ -1063,6 +1063,7 @@ class FrontendUser extends AbstractEntity
      * Subscribes this user to a subscribeable object, like a topic or a forum.
      *
      * @param SubscribeableInterface $object The object that is to be subscribed. This may either be a topic or a forum.
+     * @return void
      */
     public function addSubscription(SubscribeableInterface $object)
     {
@@ -1078,6 +1079,7 @@ class FrontendUser extends AbstractEntity
      * Unsubscribes this user from a subscribeable object.
      *
      * @param SubscribeableInterface $object The object that is to be unsubscribed.
+     * @return void
      */
     public function removeSubscription(SubscribeableInterface $object)
     {
@@ -1093,6 +1095,7 @@ class FrontendUser extends AbstractEntity
      * Adds a readable object to the list of objects read by this user.
      *
      * @param ReadableInterface $readObject The object that is to be marked as read.
+     * @return void
      */
     public function addReadObject(ReadableInterface $readObject)
     {
@@ -1106,6 +1109,7 @@ class FrontendUser extends AbstractEntity
      * Removes a readable object from the list of objects read by this user.
      *
      * @param ReadableInterface $readObject The object that is to be marked as unread.
+     * @return void
      */
     public function removeReadObject(ReadableInterface $readObject)
     {
@@ -1117,6 +1121,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * Decrease the user's post count.
+     * @return void
      */
     public function decreasePostCount()
     {
@@ -1125,6 +1130,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * Increase the user's post count.
+     * @return void
      */
     public function increasePostCount()
     {
@@ -1133,6 +1139,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * Decrease the user's topic count.
+     * @return void
      */
     public function decreaseTopicCount()
     {
@@ -1141,6 +1148,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * Increase the user's topic count.
+     * @return void
      */
     public function increaseTopicCount()
     {
@@ -1149,6 +1157,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * Decrease the user's question count.
+     * @return void
      */
     public function decreaseQuestionCount()
     {
@@ -1157,6 +1166,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * Increase the user's question count.
+     * @return void
      */
     public function increaseQuestionCount()
     {
@@ -1202,6 +1212,7 @@ class FrontendUser extends AbstractEntity
      * Set the rank of this user
      *
      * @param ?Rank $rank
+     * @return void
      */
     public function setRank($rank)
     {
@@ -1233,6 +1244,8 @@ class FrontendUser extends AbstractEntity
      * a JSON serialized format.
      *
      * @param array $values All contact data of this user.
+     * @return void
+     * @phpstan-param array<string, string> $values
      */
     public function setContactData(array $values)
     {
@@ -1243,8 +1256,9 @@ class FrontendUser extends AbstractEntity
      * Sets a single contact data record. A contact data record can be unset by setting
      * it to a empty or FALSE value.
      *
-     * @param $type  string The contact record key (e.g. "twitter", "facebook", "icq", ...)
-     * @param $value string The new value. Set to a FALSE value to unset.
+     * @param string $type The contact record key (e.g. "twitter", "facebook", "icq", ...)
+     * @param string|false $value The new value. Set to a FALSE value to unset.
+     * @return void
      */
     public function setContactDataItem($type, $value)
     {
@@ -1266,6 +1280,7 @@ class FrontendUser extends AbstractEntity
      * stored in JSON serialized format in a single column.
      *
      * @return array All contact information for this user.
+     * @phpstan-return array<string, string>
      */
     public function getContactData()
     {
@@ -1281,6 +1296,7 @@ class FrontendUser extends AbstractEntity
      * Sets the helpfulCount value +1
      *
      * @api
+     * @return void
      */
     public function setHelpful()
     {
@@ -1303,6 +1319,7 @@ class FrontendUser extends AbstractEntity
      * @param int $count
      *
      * @api
+     * @return void
      */
     public function setHelpfulCount(int $count)
     {
@@ -1311,6 +1328,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * @return ObjectStorage
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic>
      */
     public function getReadTopics()
     {
@@ -1319,6 +1337,8 @@ class FrontendUser extends AbstractEntity
 
     /**
      * @param ObjectStorage $readTopics
+     * @return void
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic> $readTopics
      */
     public function setReadTopics($readTopics)
     {
@@ -1327,6 +1347,7 @@ class FrontendUser extends AbstractEntity
 
     /**
      * @return ObjectStorage
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum>
      */
     public function getReadForum()
     {
@@ -1335,6 +1356,8 @@ class FrontendUser extends AbstractEntity
 
     /**
      * @param ObjectStorage $readForum
+     * @return void
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum> $readForum
      */
     public function setReadForum($readForum)
     {

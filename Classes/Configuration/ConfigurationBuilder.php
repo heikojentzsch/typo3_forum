@@ -29,7 +29,9 @@ use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 
 class ConfigurationBuilder implements SingletonInterface
 {
+    /** @var array<string, mixed> */
     protected array $settings = [];
+    /** @var array<string, mixed> */
     protected array $persistenceSettings = [];
 
     public function __construct()
@@ -38,6 +40,7 @@ class ConfigurationBuilder implements SingletonInterface
 
     /**
      * @throws InvalidConfigurationException
+     * @phpstan-return array<string, mixed>
      */
     public function getSettings(): array
     {
@@ -50,6 +53,7 @@ class ConfigurationBuilder implements SingletonInterface
 
     /**
      * @throws InvalidConfigurationException
+     * @phpstan-return array<string, mixed>
      */
     public function getPersistenceSettings(): array
     {

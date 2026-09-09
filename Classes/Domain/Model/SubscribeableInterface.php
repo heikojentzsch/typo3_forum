@@ -43,6 +43,7 @@ interface SubscribeableInterface
      * Adds a new subscriber.
      *
      * @param \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser $user The new subscriber.
+     * @return void
      */
     public function addSubscriber(\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser $user);
 
@@ -50,6 +51,7 @@ interface SubscribeableInterface
      * Removes a subscriber.
      *
      * @param \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser $user The subscriber to be removed.
+     * @return void
      */
     public function removeSubscriber(\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser $user);
 }

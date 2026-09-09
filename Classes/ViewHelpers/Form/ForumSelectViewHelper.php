@@ -62,6 +62,7 @@ class ForumSelectViewHelper extends AbstractFormFieldViewHelper
         );
     }
 
+    /** @return list<array<string, mixed>> */
     protected function getOptions(): array
     {
         $rootForums = $this->forumRepository->findRootForums();
@@ -75,6 +76,7 @@ class ForumSelectViewHelper extends AbstractFormFieldViewHelper
 
     /**
      * Recursively generates option rows for a forum and each subforum of this forum.
+     * @phpstan-return array<string, mixed>
      */
     protected function getForumOptionRow(Forum $forum, bool $isRoot = false): array
     {
@@ -96,6 +98,7 @@ class ForumSelectViewHelper extends AbstractFormFieldViewHelper
      * @param   array $options All option rows.
      * @param int $nestingLevel The current nesting level. Required for correct formatting.
      * @return string
+     * @phpstan-param array<array-key, mixed> $options
      */
     protected function renderOptionTags($options, $nestingLevel = 1)
     {

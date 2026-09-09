@@ -44,6 +44,7 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
  * @license    GNU Public License, version 2
  *             http://opensource.org/licenses/gpl-license.php
  */
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser> */
 class FrontendUserRepository extends AbstractRepository
 {
     protected FrontendConfigurationManager $frontendConfigurationManager;
@@ -67,7 +68,9 @@ class FrontendUserRepository extends AbstractRepository
 
     /**
      * Finds users for a specific filterset.
-     * @return QueryResultInterface<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser>
+     * @return QueryResultInterface<int, \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser>
+     * @phpstan-param array<string, string>|null $orderings
+     * @phpstan-param list<int|string>|null $uids
      */
     public function findByFilter(
         ?int $limit = null,
@@ -109,7 +112,7 @@ class FrontendUserRepository extends AbstractRepository
     }
 
     /**
-     * @return QueryResultInterface<FrontendUser> The Top $limit User of this forum.
+     * @return QueryResultInterface<int, FrontendUser> The Top $limit User of this forum.
      */
     public function findTopUserByPoints(?int $limit = null, ?string $nameSearch = null): QueryResultInterface
     {
@@ -126,7 +129,7 @@ class FrontendUserRepository extends AbstractRepository
     }
 
     /**
-     * @return QueryResultInterface<FrontendUser> The Top $limit User of this forum.
+     * @return QueryResultInterface<int, FrontendUser> The Top $limit User of this forum.
      */
     public function findMostHelpfulUsers(?int $limit = null, ?string $nameSearch = null): QueryResultInterface
     {

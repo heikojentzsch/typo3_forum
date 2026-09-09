@@ -21,14 +21,16 @@ class TagService implements SingletonInterface
      * Converts array of tagUids to an ObjectStorage of Tags
      *
      * @return ObjectStorage<Tag>
+     * @phpstan-param list<int|string> $tagUids
      */
     public function hydrateTags(array $tagUids): ObjectStorage
     {
+        /** @var ObjectStorage<Tag> $tags */
         $tags = new ObjectStorage();
 
         $tagUids = array_map('intval', array_unique($tagUids));
         foreach ($tagUids as $tagUid) {
-            /** @var Tag $tag */
+            /** @var Tag|null $tag */
             $tag = $this->tagRepository->findByUid($tagUid);
             if ($tag !== null) {
                 $tag->increaseTopicCount();

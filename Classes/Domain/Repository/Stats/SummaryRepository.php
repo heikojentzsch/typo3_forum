@@ -26,6 +26,7 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Stats;
 
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\Stats\Summary> */
 class SummaryRepository extends Repository
 {
 }

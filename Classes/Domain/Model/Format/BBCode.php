@@ -100,6 +100,7 @@ class BBCode extends AbstractTextParserElement implements MarkItUpExportableInte
     /**
      * Exports this BBCode object as a plain array, that can be used in
      * a MarkItUp configuration object.
+     * @phpstan-return array<string, mixed>
      */
     public function exportForMarkItUp(): array
     {

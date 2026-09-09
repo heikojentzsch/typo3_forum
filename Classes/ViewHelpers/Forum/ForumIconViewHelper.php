@@ -89,6 +89,7 @@ class ForumIconViewHelper extends AbstractViewHelper
         );
     }
 
+    /** @return array<string, mixed> */
     protected function getDataArray(?Forum $forum = null): array
     {
         if ($forum === null) {

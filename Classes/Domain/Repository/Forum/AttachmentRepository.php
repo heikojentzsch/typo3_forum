@@ -26,6 +26,7 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
 
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment> */
 class AttachmentRepository extends Repository
 {
 }

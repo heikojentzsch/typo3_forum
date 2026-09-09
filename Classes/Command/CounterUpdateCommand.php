@@ -15,6 +15,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         $this->updateUserCounters();
     }
 
+    /** @return void */
     private function updateTopicCounters()
     {
         $topicCount = [];
@@ -67,6 +68,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         }
     }
 
+    /** @return void */
     private function updateForumCounters()
     {
         $queryBuilderTopic = $this->getQueryBuilder('tx_typo3forum_domain_model_forum_topic');
@@ -121,6 +123,7 @@ class CounterUpdateCommand extends AbstractDatabaseBasedCommand
         }
     }
 
+    /** @return void */
     private function updateUserCounters()
     {
         $forumPid = $this->storagePage;

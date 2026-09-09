@@ -31,6 +31,7 @@ use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\DomainObject\AbstractDomainObject;
 
+/** @template T of AbstractDomainObject */
 abstract class AbstractFactory implements SingletonInterface
 {
     protected FrontendUserRepository $frontendUserRepository;
@@ -45,8 +46,10 @@ abstract class AbstractFactory implements SingletonInterface
         $this->configurationBuilder = $configurationBuilder;
     }
 
+    /** @var array<string, mixed> */
     protected array $settings = [];
 
+    /** @return void */
     public function initializeObject()
     {
         $this->settings = $this->configurationBuilder->getSettings();
@@ -55,7 +58,7 @@ abstract class AbstractFactory implements SingletonInterface
     /**
      * Determines the class name of the domain object this factory is used for.
      *
-     * @return string The class name
+     * @return class-string<T> The class name derived from the factory naming convention.
      */
     protected function getClassName()
     {
@@ -63,13 +66,14 @@ abstract class AbstractFactory implements SingletonInterface
         $thisClass = preg_replace('/Factory/', 'Model', $thisClass);
         $thisClass = preg_replace('/Model$/', '', $thisClass);
 
+        /** @var class-string<T> $thisClass */
         return $thisClass;
     }
 
     /**
      * Creates an instance of the domain object class.
      *
-     * @return AbstractDomainObject An instance of the domain object.
+     * @return T An instance of the domain object.
      */
     protected function getClassInstance()
     {

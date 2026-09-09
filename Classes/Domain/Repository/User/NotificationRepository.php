@@ -27,6 +27,7 @@ namespace Mittwald\Typo3Forum\Domain\Repository\User;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\User\Notification> */
 class NotificationRepository extends Repository
 {
 
@@ -36,7 +37,7 @@ class NotificationRepository extends Repository
      * @param FrontendUser $user
      * @param int          $limit
      *
-     * @return \Mittwald\Typo3Forum\Domain\Model\User\Notification[]
+     * @return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, \Mittwald\Typo3Forum\Domain\Model\User\Notification>
      */
     public function findNotificationsForUser(FrontendUser $user, $limit = 0)
     {

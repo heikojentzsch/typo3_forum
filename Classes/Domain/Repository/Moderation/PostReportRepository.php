@@ -32,6 +32,7 @@ use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
 /**
  * Repository class for report objects.
  */
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Moderation\PostReport> */
 class PostReportRepository extends AbstractRepository
 {
     protected AuthenticationServiceInterface $authenticationService;
@@ -56,12 +57,14 @@ class PostReportRepository extends AbstractRepository
             )['persistence']['storagePid'] ?? false;
             $querySettings = $this->getQuerySettings()->setRespectStoragePage((bool)$storagePid);
             if ($storagePid !== false) {
+                // @phpstan-ignore argument.type (Preserve existing TypoScript storage-ID strings, including empty values.)
                 $querySettings->setStoragePageIds(explode(',', (string)$storagePid));
             }
             $this->setDefaultQuerySettings($querySettings);
         }
     }
 
+    /** @return array<int, \Mittwald\Typo3Forum\Domain\Model\Moderation\PostReport> */
     public function findAllAuthorizedToEdit(): array
     {
         $this->setDefaultQuerySettings($this->getQuerySettings()->setRespectStoragePage(false));
@@ -71,7 +74,6 @@ class PostReportRepository extends AbstractRepository
             function (PostReport $postReport): bool {
                 return
                     $postReport->getTopic() !== null
-                    && $postReport->getTopic()->getForum() !== null
                     && $this->authenticationService->checkModerationAuthorization(
                         $postReport->getTopic()->getForum()
                     )

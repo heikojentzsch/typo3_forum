@@ -98,6 +98,7 @@ class TopicIconViewHelper extends AbstractViewHelper
         );
     }
 
+    /** @return array<string, mixed> */
     protected function getDataArray(?Topic $topic = null): array
     {
         if ($topic === null) {

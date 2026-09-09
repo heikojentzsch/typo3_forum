@@ -36,6 +36,7 @@ class SyntaxHighlightingPanel extends \Mittwald\Typo3Forum\TextParser\Panel\Abst
      */
     protected ?array $syntaxHighlightings = null;
 
+    /** @return list<array<string, mixed>> */
     public function getItems(): ?array
     {
         if ($this->syntaxHighlightings === null) {

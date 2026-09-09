@@ -1,7 +1,9 @@
 parameters:
-    scanDirectories:
-      - .Build/
     level: 6
+    phpVersion: 80200
+    # Extbase hydration can populate lazy proxies and nullable relations beyond PHPDoc declarations.
+    treatPhpDocTypesAsCertain: false
+    tmpDir: .Build/phpstan
     paths:
         - Configuration
         - Classes

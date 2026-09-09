@@ -92,6 +92,7 @@ class Notification extends AbstractEntity
      * Get the type of this notification (Model Name)
      *
      * @param string $type
+     * @return void
      */
     public function setType($type)
     {
@@ -118,6 +119,7 @@ class Notification extends AbstractEntity
      * Sets the user
      *
      * @param FrontendUser $feuser
+     * @return void
      */
     public function setFeuser(FrontendUser $feuser)
     {
@@ -137,6 +139,7 @@ class Notification extends AbstractEntity
      * Sets the post
      *
      * @param Post $post
+     * @return void
      */
     public function setPost(Post $post)
     {
@@ -156,6 +159,7 @@ class Notification extends AbstractEntity
      * Set the tag
      *
      * @param Tag $tag
+     * @return void
      */
     public function setTag(Tag $tag)
     {
@@ -175,6 +179,7 @@ class Notification extends AbstractEntity
      * Sets the flag
      *
      * @param int $userRead
+     * @return void
      */
     public function setUserRead($userRead)
     {

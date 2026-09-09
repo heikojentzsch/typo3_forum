@@ -37,6 +37,7 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
 /**
  * Repository class for forum objects.
  */
+/** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum> */
 class ForumRepository extends Repository
 {
     protected AuthenticationServiceInterface $authenticationService;
@@ -47,6 +48,7 @@ class ForumRepository extends Repository
         $this->authenticationService = $authenticationService;
     }
 
+    /** @return QueryInterface<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum> */
     public function createQuery(): QueryInterface
     {
         $query = parent::createQuery();
@@ -94,6 +96,10 @@ class ForumRepository extends Repository
             ->getFirst();
     }
 
+    /**
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, \Mittwald\Typo3Forum\Domain\Model\Forum\Forum> $objects
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum>
+     */
     protected function filterByAccess(QueryResultInterface $objects, string $action = Access::TYPE_READ): ObjectStorage
     {
         $result = GeneralUtility::makeInstance(ObjectStorage::class);
@@ -109,7 +115,8 @@ class ForumRepository extends Repository
     /**
      * Finds forum for a specific filterset.
      *
-     * @return QueryResultInterface<Forum>
+     * @return QueryResultInterface<int, Forum>
+     * @phpstan-param list<int|string> $uids
      */
     public function findByUids(array $uids = []): QueryResultInterface
     {
@@ -126,7 +133,7 @@ class ForumRepository extends Repository
     }
 
     /**
-     * @return QueryResultInterface<Forum>
+     * @return QueryResultInterface<int, Forum>
      */
     public function findBySubscriber(FrontendUser $user, ?int $limit = null): QueryResultInterface
     {

@@ -30,6 +30,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class BasicParserService extends AbstractTextParserService
 {
     protected string $text;
+    /** @var array<int, list<string>> */
     private array $protectedParts = [];
 
     public function getParsedText(string $text, ?Post $post = null): string
@@ -44,6 +45,7 @@ class BasicParserService extends AbstractTextParserService
         return $this->text;
     }
 
+    /** @param list<string> $matches */
     protected function makeUrlClickable(array $matches): string
     {
         $ret = '';
@@ -60,15 +62,13 @@ class BasicParserService extends AbstractTextParserService
         return $matches[1] . "<a href=\"$url\" rel=\"nofollow\">$url</a>" . $ret;
     }
 
+    /** @param list<string> $matches */
     protected function makeWebFtpClickable(array $matches): string
     {
         $ret = '';
         $dest = $matches[2];
         $dest = 'http://' . $dest;
 
-        if (empty($dest)) {
-            return $matches[0];
-        }
         // removed trailing [,;:] from URL
         if (in_array(substr($dest, -1), ['.', ',', ';', ':']) === true) {
             $ret = substr($dest, -1);
@@ -77,6 +77,7 @@ class BasicParserService extends AbstractTextParserService
         return $matches[1] . "<a href=\"$dest\" rel=\"nofollow\">$dest</a>" . $ret;
     }
 
+    /** @param list<string> $matches */
     protected function makeEmailClickable(array $matches): string
     {
         $email = $matches[2] . '@' . $matches[3];

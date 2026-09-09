@@ -33,8 +33,10 @@ use Mittwald\Typo3Forum\Service\AbstractService;
  */
 abstract class AbstractTextParserService extends AbstractService
 {
+    /** @var array<string, mixed> */
     protected array $settings = [];
 
+    /** @param array<string, mixed> $settings */
     public function setSettings(array $settings): self
     {
         $this->settings = $settings;

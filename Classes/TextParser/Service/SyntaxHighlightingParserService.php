@@ -52,6 +52,7 @@ class SyntaxHighlightingParserService extends AbstractTextParserService
 
     /**
      * Callback function that renders each source code block.
+     * @phpstan-param list<string> $matches
      */
     protected function parseSourceCode(array $matches): string
     {

@@ -64,6 +64,7 @@ class FrontendUserGroup extends AbstractEntity
      * Sets the title value
      *
      * @param string $title
+     * @return void
      */
     public function setTitle($title)
     {
@@ -84,6 +85,7 @@ class FrontendUserGroup extends AbstractEntity
      * Sets the description value
      *
      * @param string $description
+     * @return void
      */
     public function setDescription($description)
     {
@@ -105,6 +107,7 @@ class FrontendUserGroup extends AbstractEntity
      * although it can hold several subgroups.
      *
      * @param ObjectStorage<FrontendUserGroup> $subgroup An object storage containing the subgroups to add
+     * @return void
      */
     public function setSubgroup(ObjectStorage $subgroup)
     {
@@ -115,6 +118,7 @@ class FrontendUserGroup extends AbstractEntity
      * Adds a subgroup to the frontend user
      *
      * @param FrontendUserGroup $subgroup
+     * @return void
      */
     public function addSubgroup(FrontendUserGroup $subgroup)
     {
@@ -125,6 +129,7 @@ class FrontendUserGroup extends AbstractEntity
      * Removes a subgroup from the frontend user group
      *
      * @param FrontendUserGroup $subgroup
+     * @return void
      */
     public function removeSubgroup(FrontendUserGroup $subgroup)
     {

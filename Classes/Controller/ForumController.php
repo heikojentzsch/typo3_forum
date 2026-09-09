@@ -100,7 +100,6 @@ class ForumController extends AbstractController
         }
 
         foreach ($forumsToMarkAsRead as $checkForum) {
-            /** @var Forum $checkForum */
             foreach ($checkForum->getTopics() as $topic) {
                 /** @var Topic $topic */
                 $topic->addReader($user);

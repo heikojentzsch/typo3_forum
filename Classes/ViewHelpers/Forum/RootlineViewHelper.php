@@ -41,6 +41,7 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
 
     /**
      * @var array
+     * @phpstan-var array<string, mixed>
      */
     protected $settings;
 
@@ -100,7 +101,7 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
     /**
      * renderNavigationNode
      *
-     * @param $object
+     * @param \Mittwald\Typo3Forum\Domain\Model\Forum\Forum|\Mittwald\Typo3Forum\Domain\Model\Forum\Topic $object
      *
      * @param bool $isCurrentNode
      * @return string

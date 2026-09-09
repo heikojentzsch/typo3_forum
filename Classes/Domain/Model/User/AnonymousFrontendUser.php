@@ -32,6 +32,7 @@ class AnonymousFrontendUser extends FrontendUser
     public function __construct($username = '', $password = '')
     {
         parent::__construct($username, $password);
+        // @phpstan-ignore assign.propertyType (Virtual, non-persisted entity uses UID zero by contract.)
         $this->uid = 0;
     }
 

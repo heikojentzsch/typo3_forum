@@ -117,10 +117,6 @@ class ModerationController extends AbstractController
 
     public function createUserReportCommentAction(UserReport $report, ReportComment $comment): ResponseInterface
     {
-        if ($report === null) {
-            throw new InvalidArgumentValueException('You need to comment a user report!', 1285059341);
-        }
-
         $comment->setAuthor($this->authenticationService->getUser());
         $report->addComment($comment);
         $this->reportRepository->update($report);

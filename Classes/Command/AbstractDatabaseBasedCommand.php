@@ -10,6 +10,7 @@ abstract class AbstractDatabaseBasedCommand extends AbstractSiteBasedTypoScriptC
 {
     protected ConnectionPool $connectionPool;
 
+    /** @return void */
     public function injectConnectionPool(ConnectionPool $connectionPool)
     {
         $this->connectionPool = $connectionPool;

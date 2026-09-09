@@ -125,6 +125,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     {
         $this->ensureObjectStorages();
         // Hydrated and manually constructed entities still need a fallback.
+        // @phpstan-ignore nullCoalesce.initializedProperty (Extbase hydration bypasses the constructor.)
         $this->authenticationService ??= GeneralUtility::makeInstance(AuthenticationService::class);
 
     }
@@ -178,6 +179,9 @@ class Forum // NOSONAR we are not going reduce the amount of functions
         return $this->description;
     }
 
+    /**
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<Forum>
+     */
     protected function getRawChildren(): ObjectStorage
     {
         return $this->children;
@@ -240,7 +244,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
         }
         $lastTopic = $this->lastTopic;
         foreach ($this->getChildren() as $child) {
-            /** @var $child Forum */
+            /** @var Forum $child */
             /** @noinspection PhpUndefinedMethodInspection */
             if ($lastTopic !== null && $lastTopic->getLastPost() !== null && $child->getLastTopic() !== null && $child->getLastTopic()->getLastPost() !== null) {
                 if ($lastTopic === null || ($child->getLastTopic() !== null &&
@@ -268,7 +272,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
         }
         $lastPost = $this->lastPost;
         foreach ($this->getChildren() as $child) {
-            /** @var $child Forum */
+            /** @var Forum $child */
             if (
                 $lastPost === null ||
                 ($child->getLastPost() !== null && $child->getLastPost()->getTimestamp() > $lastPost->getTimestamp())
@@ -306,7 +310,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     {
         $topicCount = $this->topicCount;
         foreach ($this->getChildren() as $child) {
-            /** @var $child Forum */
+            /** @var Forum $child */
             $topicCount += $child->getTopicCount();
         }
         return $topicCount;
@@ -320,7 +324,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     {
         $postCount = $this->postCount;
         foreach ($this->getChildren() as $child) {
-            /** @var $child Forum */
+            /** @var Forum $child */
             $postCount += $child->getPostCount();
         }
         return $postCount;
@@ -351,7 +355,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      */
     public function hasBeenReadByUser(?FrontendUser $user = null): bool
     {
-        if ($user === null || $this->readers === null) {
+        if ($user === null) {
             return true;
         }
 
@@ -409,7 +413,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
         // found, delegate to the parent object or deny access (grant read
         // access, if no parent is set).
         foreach ($this->acls as $acl) {
-            /** @var $acl Access */
+            /** @var Access $acl */
             if ($acl->getOperation() !== $accessType) {
                 continue;
             }
@@ -498,6 +502,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Sets the title.
      *
      * @param string $title The title of the forum
+     * @return void
      */
     public function setTitle($title)
     {
@@ -508,6 +513,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Sets the description.
      *
      * @param string $description A description for the forum
+     * @return void
      */
     public function setDescription($description)
     {
@@ -518,6 +524,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Sets the parent forum.
      *
      * @param Forum $parent The parent forum.
+     * @return void
      */
     public function setParent(Forum $parent)
     {
@@ -544,6 +551,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Removes a child forum.
      *
      * @param Forum $child The Forum to be removed
+     * @return void
      */
     public function removeChild(Forum $child)
     {
@@ -554,6 +562,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Adds a topic.
      *
      * @param Topic $topic
+     * @return void
      */
     public function addTopic(Topic $topic)
     {
@@ -575,6 +584,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Removes a topic.
      *
      * @param Topic $topic The Topic to be removed
+     * @return void
      */
     public function removeTopic(Topic $topic)
     {
@@ -588,6 +598,8 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Sets the access rules for this forum.
      *
      * @param ObjectStorage $acls
+     * @return void
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<Access> $acls
      */
     public function setAcls(ObjectStorage $acls)
     {
@@ -598,6 +610,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Adds a new access rule.
      *
      * @param Access $acl The access rule to be added
+     * @return void
      */
     public function addAcl(Access $acl)
     {
@@ -608,6 +621,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Removes a access rule.
      *
      * @param Access $acl The access rule to be removed
+     * @return void
      */
     public function removeAcl(Access $acl)
     {
@@ -618,6 +632,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Sets the last topic.
      *
      * @param Topic $lastTopic The last topic
+     * @return void
      */
     public function setLastTopic(?Topic $lastTopic = null)
     {
@@ -628,6 +643,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Sets the last post.
      *
      * @param Post $lastPost The last post.
+     * @return void
      */
     public function setLastPost(?Post $lastPost = null)
     {
@@ -638,6 +654,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Adds a new subscriber.
      *
      * @param FrontendUser $user The new subscriber.
+     * @return void
      */
     public function addSubscriber(FrontendUser $user)
     {
@@ -648,6 +665,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Removes a subscriber.
      *
      * @param FrontendUser $user The subscriber to be removed.
+     * @return void
      */
     public function removeSubscriber(FrontendUser $user)
     {
@@ -658,6 +676,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Get the Readers
      *
      * @@return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser>
+     * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser>
      */
     public function getReaders()
     {
@@ -668,6 +687,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Marks this forum as read by a certain user.
      *
      * @param FrontendUser $reader The user who read this forum.
+     * @return void
      */
     public function addReader(FrontendUser $reader)
     {
@@ -678,6 +698,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Mark this forum as unread for a certain user.
      *
      * @param FrontendUser $reader The user for whom to mark this forum as unread.
+     * @return void
      */
     public function removeReader(FrontendUser $reader)
     {
@@ -686,6 +707,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
 
     /**
      * Mark this forum as unread for all users.
+     * @return void
      */
     public function removeAllReaders()
     {
@@ -696,13 +718,14 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Resets the last post. This method iterates over all topics in this
      * forum and looks for the latest post.
      * INTERNAL USE ONLY!
+     * @return void
      */
     public function _resetLastPost()
     {
-        /** @var $lastPost Post */
+        /** @var Post|null $lastPost */
         $lastPost = null;
         foreach ($this->topics as $topic) {
-            /** @var $topic Topic */
+            /** @var Topic $topic */
             /** @noinspection PhpUndefinedMethodInspection */
             if ($topic->getLastPost() instanceof Post) {
                 $lastTopicPostTimestamp = $topic->getLastPost()->getTimestamp();
@@ -719,13 +742,14 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Resets the last topic. This method iterates over all topics in this
      * forum and looks for the latest topic.
      * INTERNAL USE ONLY!
+     * @return void
      */
     public function _resetLastTopic()
     {
         $lastTopic = null;
         foreach ($this->topics as $topic) {
-            /** @var $topic Topic */
-            /** @var $lastTopic Topic */
+            /** @var Topic $topic */
+            /** @var Topic $lastTopic */
             if ($topic->getLastPost() instanceof Post) {
                 $lastTopicPostTimestamp = $topic->getLastPost()->getTimestamp();
                 if ($lastTopic === null || $lastTopicPostTimestamp > $lastTopic->getTimestamp()) {
@@ -744,6 +768,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      *
      * @param int $amount The amount by which to increase the post count
      *                     (set a negative amount to decrease).
+     * @return void
      */
     public function _increasePostCount($amount = 1)
     {
@@ -756,6 +781,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * INTERNAL USE ONLY!
      *
      * @param int $amount The amount by which to increase the topic count (set a negative amount to decrease).
+     * @return void
      */
     public function _increaseTopicCount($amount = 1)
     {
@@ -764,6 +790,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
 
     /**
      * Resets all internal counters (e.g. topic and post counter).
+     * @return void
      */
     public function _resetCounters()
     {
@@ -773,18 +800,20 @@ class Forum // NOSONAR we are not going reduce the amount of functions
 
     /**
      * Resets the internal post counter.
+     * @return void
      */
     public function _resetPostCount()
     {
         $this->postCount = 0;
         foreach ($this->topics as $topic) {
-            /** @var $topic Topic */
+            /** @var Topic $topic */
             $this->postCount += $topic->getPostCount();
         }
     }
 
     /**
      * Resets the internal topic counter.
+     * @return void
      */
     public function _resetTopicCount()
     {

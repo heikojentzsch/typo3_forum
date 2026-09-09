@@ -36,6 +36,7 @@ interface NotificationServiceInterface
     /**
      * @param SubscribeableInterface $subscriptionObject
      * @param NotifiableInterface $notificationObject
+     * @return void
      */
     public function notifySubscribers(SubscribeableInterface $subscriptionObject, NotifiableInterface $notificationObject);
 }

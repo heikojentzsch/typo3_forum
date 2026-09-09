@@ -32,6 +32,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 trait ConfigurableEntityTrait
 {
+    /** @var array<string, mixed> */
     protected array $settings = [];
 
     public function injectSettings(ConfigurationBuilder $configurationBuilder): void
@@ -42,6 +43,7 @@ trait ConfigurableEntityTrait
     /**
      * getSettings.
      * @return array
+     * @phpstan-return array<string, mixed>
      */
     public function getSettings()
     {

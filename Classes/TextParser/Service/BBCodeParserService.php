@@ -36,6 +36,7 @@ class BBCodeParserService extends AbstractTextParserService
      * @var BBCode[]
      */
     protected array $bbCodes = [];
+    /** @var list<int> */
     protected array $userGroupIds = [];
 
     public function __construct(BBCodeRepository $bbCodeRepository)
@@ -59,7 +60,7 @@ class BBCodeParserService extends AbstractTextParserService
             $this->setUserGroupIds($post);
         }
         foreach ($this->bbCodes as $bbCode) {
-            /** @var $bbCode \Mittwald\Typo3Forum\Domain\Model\Format\BBCode */
+            /** @var \Mittwald\Typo3Forum\Domain\Model\Format\BBCode $bbCode */
             if ($bbCode->getRegularExpression() === null || $bbCode->getRegularExpressionReplacement() === null) {
                 continue;
             }
@@ -92,10 +93,8 @@ class BBCodeParserService extends AbstractTextParserService
     protected function setUserGroupIds(Post $post): self
     {
         $groups = [];
-        if ($post->getAuthor() !== null) {
-            foreach ($post->getAuthor()->getUsergroup() as $userGroup) {
-                $groups[] = $userGroup->getUid();
-            }
+        foreach ($post->getAuthor()->getUsergroup() as $userGroup) {
+            $groups[] = $userGroup->getUid();
         }
         $this->userGroupIds = $groups;
 

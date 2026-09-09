@@ -55,6 +55,7 @@ abstract class AbstractUserfield extends AbstractValueObject
     /**
      * Sets the userfield name.
      */
+    /** @param string $name */
     public function setName($name): self
     {
         $this->name = $name;
@@ -69,7 +70,7 @@ abstract class AbstractUserfield extends AbstractValueObject
      *                             The user for which the value of this userfield is
      *                             to be determined.
      *
-     * @return string              The userfield value.
+     * @return list<mixed> The userfield values, or an empty list if none are stored.
      */
     public function getValuesForUser(\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser $user): array
     {
@@ -88,7 +89,7 @@ abstract class AbstractUserfield extends AbstractValueObject
             }
         }
 
-        return null;
+        return [];
     }
 
     /**

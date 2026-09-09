@@ -60,6 +60,7 @@ class Rank extends AbstractEntity
      * Set the name of this rank
      *
      * @param string $name
+     * @return void
      */
     public function setName($name)
     {
@@ -79,6 +80,7 @@ class Rank extends AbstractEntity
      * Set the limit of this rank
      *
      * @param int $pointLimit
+     * @return void
      */
     public function setPointLimit($pointLimit)
     {
@@ -96,6 +98,7 @@ class Rank extends AbstractEntity
 
     /**
      * Set the counter of user count +1
+     * @return void
      */
     public function increaseUserCount()
     {
@@ -104,6 +107,7 @@ class Rank extends AbstractEntity
 
     /**
      * Set the counter of user count -1
+     * @return void
      */
     public function decreaseUserCount()
     {

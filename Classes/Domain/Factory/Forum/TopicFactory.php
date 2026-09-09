@@ -38,6 +38,7 @@ use TYPO3\CMS\Extbase\Persistence\Generic\Exception\InvalidClassException;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
+/** @extends AbstractFactory<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic> */
 class TopicFactory extends AbstractFactory
 {
     protected ForumRepository $forumRepository;
@@ -59,6 +60,7 @@ class TopicFactory extends AbstractFactory
 
     /**
      * Creates a new topic.
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Tag> $tags
      */
     public function createTopic(
         Forum $forum,
@@ -197,8 +199,8 @@ class TopicFactory extends AbstractFactory
         ) {
             // Add points to the new solution's author and deduct them from the old.
             // If the authors are the same person this will change nothing.
-            $pointsForGivingSolution = (int)$this->settings['rankScore.']['gaveSolution'] ?? 5;
-            $pointsForSelectingSolution = (int)$this->settings['rankScore.']['selectedSolution'] ?? 2;
+            $pointsForGivingSolution = (int)($this->settings['rankScore.']['gaveSolution'] ?? 5);
+            $pointsForSelectingSolution = (int)($this->settings['rankScore.']['selectedSolution'] ?? 2);
 
             // If a solution is given, award points to the user who gave it.
             if ($solution !== null) {

@@ -185,6 +185,8 @@ class TopicController extends AbstractController
 
     /**
      * Creates a new topic.
+     * @phpstan-param list<\Psr\Http\Message\UploadedFileInterface> $newAttachments
+     * @phpstan-param list<int|string> $tags
      */
     public function createAction(
         Forum $forum,

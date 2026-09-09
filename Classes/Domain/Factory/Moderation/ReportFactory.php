@@ -33,6 +33,7 @@ use Mittwald\Typo3Forum\Domain\Model\Moderation\UserReport;
 use Mittwald\Typo3Forum\Domain\Repository\Moderation\ReportWorkflowStatusRepository;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+/** @extends AbstractFactory<\Mittwald\Typo3Forum\Domain\Model\Moderation\Report> */
 class ReportFactory extends AbstractFactory
 {
     protected ReportWorkflowStatusRepository $reportWorkflowStatusRepository;

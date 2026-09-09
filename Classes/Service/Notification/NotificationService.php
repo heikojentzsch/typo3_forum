@@ -46,6 +46,7 @@ class NotificationService extends AbstractService implements NotificationService
     protected UriBuilder $uriBuilder;
     protected ConfigurationBuilder $configurationBuilder;
 
+    /** @var array<string, mixed> */
     protected array $settings;
 
     public function __construct(
@@ -59,6 +60,7 @@ class NotificationService extends AbstractService implements NotificationService
         $this->settings = $this->configurationBuilder->getSettings();
     }
 
+    /** @return void */
     public function initializeObject()
     {
         $this->settings = $this->configurationBuilder->getSettings();
@@ -70,6 +72,7 @@ class NotificationService extends AbstractService implements NotificationService
      *
      * @param SubscribeableInterface $subscriptionObject The subscribed object. This may for example be a forum or a topic.
      * @param NotifiableInterface $notificationObject The object that the subscriber is notified about. This may for example be a new post within an observed topic or forum or a new topic within an observed forum.
+     * @return void
      */
     public function notifySubscribers(SubscribeableInterface $subscriptionObject, NotifiableInterface $notificationObject)
     {
@@ -182,6 +185,7 @@ class NotificationService extends AbstractService implements NotificationService
         return '<a href="' . $forumLink . '">"' . $forum->getTitle() . '"</a>';
     }
 
+    /** @return string */
     protected function getTopicLink(Topic $topic)
     {
         $arguments = [

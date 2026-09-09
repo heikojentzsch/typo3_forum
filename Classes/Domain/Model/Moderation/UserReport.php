@@ -60,6 +60,7 @@ class UserReport extends Report
 
     /**
      * @param \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser $user .
+     * @return void
      */
     public function setUser(\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser $user)
     {
