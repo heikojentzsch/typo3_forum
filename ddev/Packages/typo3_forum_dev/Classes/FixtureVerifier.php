@@ -25,8 +25,9 @@ final class FixtureVerifier
     public function verify(): array
     {
         $this->guard->assertSafe();
-        if (!defined('TYPO3_version') || !str_starts_with((string)constant('TYPO3_version'), '14.3.')) {
-            throw new RuntimeException('Expected TYPO3 14.3.x.');
+        if (!defined('TYPO3_version')
+            || !self::supportsTypo3Version((string)constant('TYPO3_version'))) {
+            throw new RuntimeException('Expected TYPO3 >=14.3.0 and <15.0.0.');
         }
         if (!$this->packageManager->isPackageActive('typo3_forum') || !$this->packageManager->isPackageActive('typo3_forum_dev')) {
             throw new RuntimeException('The forum or its development provisioner is not active.');
@@ -165,6 +166,12 @@ final class FixtureVerifier
         $checks[] = 'local checked-out forum package';
 
         return $checks;
+    }
+
+    public static function supportsTypo3Version(string $version): bool
+    {
+        return version_compare($version, '14.3.0', '>=')
+            && version_compare($version, '15.0.0', '<');
     }
 
     /** @return array<string, array{username: string, password: string}> */

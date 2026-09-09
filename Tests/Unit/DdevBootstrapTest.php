@@ -64,6 +64,24 @@ final class DdevBootstrapTest extends TestCase
         );
     }
 
+    public function testFixtureVerifierAcceptsTheComposerSupportedTypo3Range(): void
+    {
+        require_once dirname(__DIR__, 2) . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php';
+
+        foreach (['14.3.0', '14.3.99', '14.4.0', '14.99.0'] as $supportedVersion) {
+            self::assertTrue(
+                \Pottkinder\Typo3ForumDev\FixtureVerifier::supportsTypo3Version($supportedVersion),
+                $supportedVersion
+            );
+        }
+        foreach (['14.2.99', '15.0.0'] as $unsupportedVersion) {
+            self::assertFalse(
+                \Pottkinder\Typo3ForumDev\FixtureVerifier::supportsTypo3Version($unsupportedVersion),
+                $unsupportedVersion
+            );
+        }
+    }
+
     public function testWrongSocketRepairPreservesUnrelatedSettingsAndCreatesBackup(): void
     {
         $configurationDirectory = $this->temporaryDirectory . '/config/system';
