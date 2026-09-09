@@ -21,7 +21,9 @@ final class ReleaseBuilderTest extends TestCase
         foreach (['Classes/test.php', 'Configuration/test.php', 'Resources/test.txt', 'Documentation/test.rst',
             'composer.json', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql', 'LICENSE.txt', 'README.md',
             '.git/config', '.github/workflows/ci.yml', '.Build/vendor/test.php', 'Tests/test.php', 'ddev/test.yml',
-            'build-release.sh', '.gitlab-ci.yml', 'phpstan.neon'] as $file) {
+            'ddev/Packages/typo3_forum_dev/Classes/Fixture.php', 'ddev/.bootstrap/credentials.json',
+            'ddev/config/system/additional.php', 'ddev/config/sites/forum-dev/config.yaml',
+            'Build/Ddev/Credentials.php', 'build-release.sh', '.gitlab-ci.yml', 'phpstan.neon'] as $file) {
             $directory = dirname($this->root . '/' . $file);
             if (!is_dir($directory)) {
                 mkdir($directory, 0777, true);

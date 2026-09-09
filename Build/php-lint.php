@@ -5,7 +5,7 @@ declare(strict_types = 1);
 $root = dirname(__DIR__);
 $files = glob($root . '/*.php') ?: [];
 $files[] = $root . '/.php-cs-fixer.php';
-foreach (['Classes', 'Configuration', 'Tests', 'Build'] as $directory) {
+foreach (['Classes', 'Configuration', 'Tests', 'Build', 'ddev/Packages/typo3_forum_dev'] as $directory) {
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS));
     foreach ($iterator as $file) {
         if ($file->isFile() && $file->getExtension() === 'php') {
