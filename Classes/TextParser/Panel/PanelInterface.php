@@ -26,7 +26,9 @@ namespace Mittwald\Typo3Forum\TextParser\Panel;
 
 interface PanelInterface
 {
+    /** @param array<string, mixed> $settings */
     public function setSettings(array $settings): self;
 
+    /** @return list<array<string, mixed>> */
     public function getItems(): ?array;
 }

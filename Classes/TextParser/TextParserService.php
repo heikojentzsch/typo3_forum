@@ -33,6 +33,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class TextParserService extends AbstractService
 {
+    /** @var array<string, mixed> */
     protected array $settings = [];
 
     /**
@@ -63,6 +64,7 @@ class TextParserService extends AbstractService
                 continue;
             }
 
+            /** @var class-string $className TypoScript names the service; its interface is checked below. */
             $newService = GeneralUtility::makeInstance($className);
 
             if (!$newService instanceof AbstractTextParserService) {

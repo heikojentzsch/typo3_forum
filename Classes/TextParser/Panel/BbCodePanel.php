@@ -35,6 +35,7 @@ class BbCodePanel extends AbstractPanel
      */
     protected ?array $bbCodes = null;
 
+    /** @return list<array<string, mixed>> */
     public function getItems(): ?array
     {
         if ($this->bbCodes === null) {

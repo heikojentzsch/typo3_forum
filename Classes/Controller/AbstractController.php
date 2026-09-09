@@ -110,7 +110,9 @@ abstract class AbstractController extends ActionController
      * @param string $key
      * @param array $arguments
      * @param string|null $titleKey
-     * @param int $severity
+     * @param ContextualFeedbackSeverity $severity
+     * @return void
+     * @phpstan-param array<array-key, mixed> $arguments
      */
     protected function addLocalizedFlashmessage(
         $key,
@@ -133,8 +135,9 @@ abstract class AbstractController extends ActionController
      * @param string|null $extensionName
      * @param array|null $arguments
      * @param int|null $pageUid
-     * @param int $delay
+     * @param null $delay
      * @param int $statusCode
+     * @phpstan-param array<array-key, mixed> $arguments
      */
     protected function redirect(
         $actionName,
@@ -142,7 +145,7 @@ abstract class AbstractController extends ActionController
         $extensionName = null,
         ?array $arguments = null,
         $pageUid = null,
-        $delay = 0,
+        $delay = null,
         $statusCode = 303
     ): ResponseInterface {
         if ($this->request->getFormat() === 'html') {

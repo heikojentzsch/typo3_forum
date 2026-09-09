@@ -65,6 +65,9 @@ class Attachment extends AbstractEntity implements ConfigurableInterface
         return $this;
     }
 
+    /**
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\TYPO3\CMS\Extbase\Domain\Model\FileReference>
+     */
     public function getReferencedFiles(): ObjectStorage
     {
         return $this->referencedFiles;
@@ -99,6 +102,7 @@ class Attachment extends AbstractEntity implements ConfigurableInterface
 
     /**
      * Gets the allowed mime types.
+     * @phpstan-return list<string>
      */
     public function getAllowedMimeTypes(): array
     {

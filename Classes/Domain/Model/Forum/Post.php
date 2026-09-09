@@ -139,6 +139,7 @@ class Post extends AbstractEntity implements AccessibleInterface, NotifiableInte
      */
     public function getAuthor(): FrontendUser
     {
+        // @phpstan-ignore instanceof.alwaysFalse (Retain the legacy lazy-loading compatibility path.)
         if ($this->author instanceof LazyLoadingProxy) {
             $this->author->_loadRealInstance();
         }
@@ -317,6 +318,7 @@ class Post extends AbstractEntity implements AccessibleInterface, NotifiableInte
 
     /**
      * Sets the attachments.
+     * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<Attachment> $attachments
      */
     public function setAttachments(ObjectStorage $attachments): self
     {

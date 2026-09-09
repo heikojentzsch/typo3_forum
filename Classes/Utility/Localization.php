@@ -43,6 +43,7 @@ class Localization
      * @param array $arguments Arguments that are to be replaced
      *
      * @return string The translated value.
+     * @phpstan-param array<array-key, mixed> $arguments
      */
     public static function translate($key, $default = null, $arguments = [])
     {

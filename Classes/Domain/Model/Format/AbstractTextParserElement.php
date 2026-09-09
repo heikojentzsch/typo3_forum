@@ -80,6 +80,7 @@ abstract class AbstractTextParserElement extends AbstractValueObject
         return $this;
     }
 
+    /** @return list<string> */
     public function getIdsOfGroups(): array
     {
         return explode(',', $this->groups);

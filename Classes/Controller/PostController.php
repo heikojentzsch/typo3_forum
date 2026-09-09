@@ -200,7 +200,7 @@ class PostController extends AbstractController
 
         $targetUrl = $this->uriBuilder
             ->reset()
-            ->setSection(str_replace('|', $post->getUid(), $sectionWrap))
+            ->setSection(str_replace('|', (string)$post->getUid(), $sectionWrap))
             ->uriFor(
                 'show',
                 [
@@ -244,6 +244,7 @@ class PostController extends AbstractController
 
     /**
      * Creates a new post.
+     * @phpstan-param list<\Psr\Http\Message\UploadedFileInterface> $newAttachments
      */
     public function createAction(
         Topic $topic,
@@ -303,6 +304,9 @@ class PostController extends AbstractController
 
     /**
      * Updates a post and its containing topic (if this is a first post).
+     * @phpstan-param list<int|string> $keepAttachments
+     * @phpstan-param list<\Psr\Http\Message\UploadedFileInterface> $newAttachments
+     * @phpstan-param list<int|string> $tags
      */
     public function updateAction(
         Post $post,

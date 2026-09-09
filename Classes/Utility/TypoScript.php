@@ -47,6 +47,7 @@ class TypoScript
      * @param string $configurationPath The typoscript path
      * @return array The typoscript configuration for the specified path.
      * @throws Exception
+     * @phpstan-return array<string, mixed>
      */
     public function loadTyposcriptFromPath($configurationPath)
     {

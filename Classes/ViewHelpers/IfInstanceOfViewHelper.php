@@ -44,7 +44,7 @@ class IfInstanceOfViewHelper extends IfViewHelper
     /**
      * Check if object is instance of className
      *
-     * @return string
+     * @return bool
      */
     public static function verdict(array $arguments, RenderingContextInterface $renderingContext): bool
     {

@@ -41,12 +41,14 @@ class CacheManager
         ;
     }
 
+    /** @return void */
     public function clearAll()
     {
         $this->cache->flush();
         $this->deleteTemporaryFiles();
     }
 
+    /** @return void */
     protected function deleteTemporaryFiles()
     {
         foreach (static::FILE_CACHE_PATHS as $fileCachePath) {

@@ -34,6 +34,7 @@ use TYPO3\CMS\Extbase\Persistence\Generic\Query;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic> */
 class TopicRepository extends AbstractRepository
 {
     protected ConnectionPool $connectionPool;
@@ -43,6 +44,7 @@ class TopicRepository extends AbstractRepository
         $this->connectionPool = $connectionPool;
     }
 
+    /** @return QueryInterface<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic> */
     public function createQuery(): QueryInterface
     {
         $query = parent::createQuery();
@@ -56,7 +58,8 @@ class TopicRepository extends AbstractRepository
     /**
      * Finds topics for a specific filterset.
      *
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
+     * @phpstan-param array<string, string>|null $orderings
      */
     public function findByFilter(?int $limit = null, ?array $orderings = null): QueryResultInterface
     {
@@ -71,7 +74,8 @@ class TopicRepository extends AbstractRepository
     }
 
     /**
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
+     * @phpstan-param list<int|string> $uids
      */
     public function findByUids(array $uids): QueryResultInterface
     {
@@ -90,7 +94,7 @@ class TopicRepository extends AbstractRepository
     /**
      * Finds topics for the forum show view. Page navigation is possible.
      *
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
      */
     public function findForIndex(Forum $forum): QueryResultInterface
     {
@@ -109,7 +113,7 @@ class TopicRepository extends AbstractRepository
     /**
      * Finds topics with questions flag.
      *
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
      */
     public function findQuestions(?int $limit = null, bool $showAnswered = false, ?FrontendUser $user = null): QueryResultInterface
     {
@@ -124,7 +128,7 @@ class TopicRepository extends AbstractRepository
         }
         $query->setOrderings(['sticky' => 'DESC',
             'posts.crdate' => 'DESC']);
-        if ($limit != null && is_numeric($limit)) {
+        if ($limit != null) {
             $query->setLimit($limit);
         }
         $query->matching($query->logicalAnd(...$constraint));
@@ -135,6 +139,7 @@ class TopicRepository extends AbstractRepository
     /**
      * Finds topics by post authors, i.e. all topics that contain at least one post
      * by a specific author. Page navigation is possible.
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, \Mittwald\Typo3Forum\Domain\Model\Forum\Topic>
      */
     public function findTopicsCreatedByAuthor(
         FrontendUser $user,
@@ -173,7 +178,7 @@ class TopicRepository extends AbstractRepository
      * Finds topics by post authors, i.e. all topics that contain at least one post
      * by a specific author. Page navigation is possible.
      *
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
      */
     public function findByPostAuthor(FrontendUser $user): QueryResultInterface
     {
@@ -185,7 +190,7 @@ class TopicRepository extends AbstractRepository
     /**
      * Finds all topic that have been subscribed by a certain user.
      *
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
      */
     public function findBySubscriber(FrontendUser $user, ?int $limit = null): QueryResultInterface
     {
@@ -205,7 +210,7 @@ class TopicRepository extends AbstractRepository
      * Finds all topic that have a specific tag
      *
      * @param Tag $tag
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
      */
     public function findByTag(Tag $tag): QueryResultInterface
     {
@@ -219,7 +224,7 @@ class TopicRepository extends AbstractRepository
 
     /**
      * Finds all popular topics
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
      */
     public function findPopularTopics(int $timeDiff = 0, ?int $limit = null): QueryResultInterface
     {
@@ -261,7 +266,7 @@ class TopicRepository extends AbstractRepository
 
     /**
      * Finds the topics with the latest updates.
-     * @return QueryResultInterface<Topic>
+     * @return QueryResultInterface<int, Topic>
      */
     public function findLatest(?int $offset = null, ?int $limit = null): QueryResultInterface
     {
@@ -300,7 +305,7 @@ class TopicRepository extends AbstractRepository
                 $queryBuilder->expr()->isNull('rt.uid_local'),
                 $queryBuilder->expr()->eq('t.forum', $queryBuilder->createNamedParameter((int)$forum->getUid(), Connection::PARAM_INT))
             );
-        /** @var Query $query */
+        /** @var Query<Topic> $query */
         $query = $this->createQuery();
         $query->statement($queryBuilder);
         return $query->execute()->toArray();

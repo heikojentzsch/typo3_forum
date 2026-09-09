@@ -61,13 +61,14 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
     /**
      * Configuration array. This array is read from the typoscript setup by
      * the typoscript reader instance.
+     * @phpstan-var array<string, mixed>
      */
     protected array $configuration = [];
 
     /**
      * Panels that contain bb code buttons.
      *
-     * @var AbstractPanel[]
+     * @var PanelInterface[]
      */
     protected array $panels = [];
 
@@ -100,6 +101,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
         string $configurationPath
     ): string {
         // TODO reenable cache of bbcodeeditor
+        // @phpstan-ignore booleanAnd.leftAlwaysFalse (The existing cache bypass remains intentional.)
         if (false && $this->cache->has('bbcodeeditor-jsonconfig')) {
             $this->javascriptSetup = $this->cache->get('bbcodeeditor-jsonconfig');
 
@@ -111,9 +113,9 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
 
         $this->panels = [];
         foreach ($this->configuration['panels.'] as $panelConfiguration) {
-            $panel = GeneralUtility::makeInstance(
-                $panelConfiguration['className']
-            );
+            /** @var class-string $panelClass TypoScript names the panel; its interface is checked below. */
+            $panelClass = $panelConfiguration['className'];
+            $panel = GeneralUtility::makeInstance($panelClass);
 
             if (!$panel instanceof PanelInterface) {
                 throw new InvalidClassException(
@@ -161,6 +163,7 @@ class BbCodeEditorViewHelper extends AbstractFormFieldViewHelper
         );
     }
 
+    /** @return array<string, mixed> */
     protected function getPanelSettings(): array
     {
         $settings = [];

@@ -36,6 +36,7 @@ class SmileyPanel extends AbstractPanel
      */
     protected ?array $smileys = null;
 
+    /** @return list<array<string, mixed>> */
     public function getItems(): ?array
     {
         if ($this->smileys === null) {

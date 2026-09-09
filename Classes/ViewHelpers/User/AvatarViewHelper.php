@@ -51,7 +51,7 @@ class AvatarViewHelper extends AbstractTagBasedViewHelper
     /**
      * Avatar of user object
      *
-     * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
+     * @throws \TYPO3Fluid\Fluid\Core\ViewHelper\Exception
      * @return string Rendered tag
      */
     public function render(): string

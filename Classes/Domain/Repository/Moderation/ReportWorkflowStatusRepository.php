@@ -31,6 +31,7 @@ use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 /**
  * Repository class for workflow status objects.
  */
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Moderation\ReportWorkflowStatus> */
 class ReportWorkflowStatusRepository extends AbstractRepository
 {
 
@@ -48,6 +49,7 @@ class ReportWorkflowStatusRepository extends AbstractRepository
     /**
      * @return QueryInterface
      */
+    /** @return QueryInterface<\Mittwald\Typo3Forum\Domain\Model\Moderation\ReportWorkflowStatus> */
     public function createQuery(): QueryInterface
     {
         return $this->addFallbackStoragePage(parent::createQuery());

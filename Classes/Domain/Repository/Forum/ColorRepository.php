@@ -27,6 +27,7 @@ namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Forum\Color> */
 class ColorRepository extends AbstractRepository
 {
     public function findAll(): QueryResultInterface

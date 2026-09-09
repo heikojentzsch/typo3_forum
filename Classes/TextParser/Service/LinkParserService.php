@@ -44,9 +44,9 @@ class LinkParserService extends AbstractTextParserService
         return preg_replace_callback(
             self::PREG_MATCH_LIST,
             function (array $matches): string {
-                list($label, $url) = ($matches[1] ?? '') === ''
-                    ? [$matches[2] ?? '', $matches[2] ?? '']
-                    : [$matches[2] ?? '', $matches[1] ?? '']
+                list($label, $url) = ($matches[1]) === ''
+                    ? [$matches[2], $matches[2]]
+                    : [$matches[2], $matches[1]]
                 ;
 
                 return '<a href="' . $url . '">' . $label . '</a>';

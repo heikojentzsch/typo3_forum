@@ -15,6 +15,7 @@ abstract class AbstractSiteBasedTypoScriptCommand extends Command
     protected SiteFinder $siteFinder;
     protected BackendConfigurationManager $typoScriptConfiguration;
 
+    /** @var array<string, mixed> */
     protected array $settings = [];
     protected int $storagePage = 0;
 
@@ -47,6 +48,7 @@ abstract class AbstractSiteBasedTypoScriptCommand extends Command
         return Command::SUCCESS;
     }
 
+    /** @return array<string, mixed> */
     protected function getSetupForSite(SiteInterface $site): array
     {
         // The core's backend setup reader also supports evaluation without a frontend

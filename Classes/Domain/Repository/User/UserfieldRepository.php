@@ -37,6 +37,7 @@ use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
  * displayed in the user profile view independently of whether they are
  * configured in the database.
  */
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield> */
 class UserfieldRepository extends AbstractRepository
 {
     protected ConfigurationManagerInterface $configurationManager;
@@ -66,6 +67,7 @@ class UserfieldRepository extends AbstractRepository
      *                             All userfields, both from the database and
      *                             the core typoscript setup.
      */
+    // @phpstan-ignore method.childReturnType (Existing API merges configured and persisted fields into an array.)
     public function findAll(): array
     {
         $query = $this->createQueryWithFallbackStoragePage();

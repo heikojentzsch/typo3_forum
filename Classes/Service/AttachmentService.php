@@ -27,10 +27,11 @@ class AttachmentService implements SingletonInterface
      * Converts uploaded files to attachment objects.
      * @param list<UploadedFileInterface> $uploadedAttachments
      * @return ObjectStorage
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment>
      */
     public function initAttachments(array $uploadedAttachments): ObjectStorage
     {
-        /* @var \Mittwald\Typo3Forum\Domain\Model\Forum\Attachment */
+        /** @var ObjectStorage<Attachment> $attachmentStorage */
         $attachmentStorage = new ObjectStorage();
 
         foreach ($uploadedAttachments as $attachmentData) {

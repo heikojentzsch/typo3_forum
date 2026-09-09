@@ -39,6 +39,7 @@ class SettingsHydrator
     /**
      * injectConfigurationBuilder.
      * @param ConfigurationBuilder $configurationBuilder
+     * @return void
      */
     public function injectConfigurationBuilder(\Mittwald\Typo3Forum\Configuration\ConfigurationBuilder $configurationBuilder)
     {
@@ -48,6 +49,7 @@ class SettingsHydrator
     /**
      * hydrateSettings.
      * @param DomainObjectInterface $object
+     * @return void
      */
     public function hydrateSettings(DomainObjectInterface $object)
     {

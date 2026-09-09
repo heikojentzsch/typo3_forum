@@ -30,11 +30,13 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 /**
  * Repository class for syntax highlighting elements.
  */
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Format\SyntaxHighlighting> */
 class SyntaxHighlightingRepository extends AbstractRepository
 {
 
     /**
      * @return QueryResultInterface
+     * @phpstan-return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, \Mittwald\Typo3Forum\Domain\Model\Format\SyntaxHighlighting>
      */
     public function findAll(): QueryResultInterface
     {

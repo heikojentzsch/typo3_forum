@@ -36,13 +36,13 @@ class LinkViewHelper extends AbstractViewHelper
 
     /**
      * @var array
+     * @phpstan-var array<string, mixed>
      */
     protected $settings;
 
     /**
      * Initialize viewHelper and add given settings
      *
-     * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception\InvalidVariableException
      */
     public function initialize(): void
     {
@@ -53,7 +53,7 @@ class LinkViewHelper extends AbstractViewHelper
     /**
      * Initialize required arguments
      *
-     * @throws \TYPO3\CMS\Fluid\Core\ViewHelper\Exception
+     * @throws \TYPO3Fluid\Fluid\Core\ViewHelper\Exception
      */
     public function initializeArguments(): void
     {

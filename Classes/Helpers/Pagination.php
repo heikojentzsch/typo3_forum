@@ -13,21 +13,32 @@ class Pagination
         'useEdgeSpacers' => true,
     ];
 
+    /** @var array<array-key, mixed> */
     protected $objects;
 
+    /** @var int */
     protected $currentPage;
+    /** @var int */
     protected $itemsPerPage;
+    /** @var int */
     protected $pageLookAround;
+    /** @var bool */
     protected $reverseOrder;
+    /** @var bool */
     protected $useEdgeSpacers;
 
 
+    /**
+     * @param array<string, mixed> $configuration
+     * @phpstan-param array<array-key, mixed> $objects
+     */
     public function __construct(array $objects, array $configuration = [])
     {
         $this->setObjects($objects);
         $this->setConfigurationArray($configuration);
     }
 
+    /** @param array<string, mixed> $configuration */
     public function setConfigurationArray(array $configuration): self
     {
         $mergedConfig = static::DEFAULT_CONFIGURATION;
@@ -48,9 +59,10 @@ class Pagination
 
     public function getMaxPage(): int
     {
-        return ceil($this->getObjectCount() / $this->getItemsPerPage());
+        return (int)ceil($this->getObjectCount() / $this->getItemsPerPage());
     }
 
+    /** @return list<int|string> */
     public function getListOfPagesToDisplay(): array
     {
         $lookAround = $this->getPageLookAround();
@@ -102,6 +114,7 @@ class Pagination
         return $range;
     }
 
+    /** @return array<array-key, mixed> */
     public function fetchPage(): array
     {
         $objects = $this->getObjects();
@@ -115,12 +128,14 @@ class Pagination
     ///////////////////
     // Setters and getters
 
+    /** @param array<array-key, mixed> $objects */
     public function setObjects(array $objects): self
     {
         $this->objects = $objects;
         return $this;
     }
 
+    /** @return array<array-key, mixed> */
     public function getObjects(): array
     {
         return $this->objects;

@@ -30,6 +30,7 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 /**
  * Repository class for bb codes.
  */
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Format\BBCode> */
 class BBCodeRepository extends AbstractRepository
 {
 

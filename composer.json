@@ -22,7 +22,7 @@
 		"helmich/typo3-typoscript-lint": "^3.3",
 		"friendsofphp/php-cs-fixer": "^3.95",
 		"phpmd/phpmd": "^2.9",
-		"phpstan/phpstan": "^0.12.52",
+		"phpstan/phpstan": "^2.1",
 		"psalm/phar": "^4.0"
 	},
 	"replace": {

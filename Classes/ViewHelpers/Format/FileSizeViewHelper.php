@@ -37,6 +37,7 @@ class FileSizeViewHelper extends AbstractViewHelper
     /**
      * Diffentently scaled units for file sizes.
      * @var array
+     * @phpstan-var list<string>
      */
     protected $suffixes = [0 => 'B',
                                 1 => 'KiB',
@@ -45,13 +46,7 @@ class FileSizeViewHelper extends AbstractViewHelper
                                 4 => 'TiB'];
 
     /**
-     * Renders the file size.
-     *
-     * @param int    $decimals
-     * @param string $decimalSeparator
-     * @param string $thousandsSeparator
-     *
-     * @return string
+     * Registers file-size formatting arguments.
      */
     public function initializeArguments(): void
     {

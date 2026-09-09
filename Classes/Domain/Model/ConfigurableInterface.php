@@ -9,6 +9,7 @@ interface ConfigurableInterface extends DomainObjectInterface
 {
     /**
      * @param ConfigurationBuilder $configurationBuilder
+     * @return void
      */
     public function injectSettings(ConfigurationBuilder $configurationBuilder);
 }

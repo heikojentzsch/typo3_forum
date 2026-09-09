@@ -31,6 +31,7 @@ use TYPO3\CMS\Core\Mail\MailerInterface;
 
 abstract class AbstractMailingService extends AbstractService implements MailingServiceInterface
 {
+    /** @var array<string, mixed> */
     protected array $settings = [];
     protected ConfigurationBuilder $configurationBuilder;
 

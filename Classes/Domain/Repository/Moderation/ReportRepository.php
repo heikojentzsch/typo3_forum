@@ -29,6 +29,7 @@ use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
 /**
  * Repository class for report objects.
  */
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Moderation\Report> */
 class ReportRepository extends AbstractRepository
 {
 }

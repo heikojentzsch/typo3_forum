@@ -26,10 +26,12 @@ namespace Mittwald\Typo3Forum\TextParser\Panel;
 
 abstract class AbstractPanel implements PanelInterface
 {
+    /** @var array<string, mixed> */
     protected array $settings = [];
 
     /**
      * @param array $settings
+     * @phpstan-param array<string, mixed> $settings
      */
     public function setSettings(array $settings): self
     {

@@ -29,10 +29,11 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
+/** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Forum\Post> */
 class PostRepository extends AbstractRepository
 {
     /**
-     * @return QueryResultInterface<Post>
+     * @return QueryResultInterface<int, Post>
      */
     public function findByAuthor(FrontendUser $user): QueryResultInterface
     {
@@ -47,8 +48,9 @@ class PostRepository extends AbstractRepository
      * @param int $limit
      * @param array   $orderings
      *
-     * @return QueryResultInterface<Post>
+     * @return QueryResultInterface<int, Post>
      *                               The selected subset of posts
+     * @phpstan-param array<string, string>|null $orderings
      */
     public function findByFilter(?int $limit = null, ?array $orderings = null): QueryResultInterface
     {
@@ -68,7 +70,8 @@ class PostRepository extends AbstractRepository
      *
      * @param array $uids
      *
-     * @return QueryResultInterface<Post> The selected subset of posts
+     * @return QueryResultInterface<int, Post> The selected subset of posts
+     * @phpstan-param list<int|string> $uids
      */
     public function findByUids(array $uids): QueryResultInterface
     {
@@ -90,7 +93,7 @@ class PostRepository extends AbstractRepository
      * @param \Mittwald\Typo3Forum\Domain\Model\Forum\Topic $topic
      *                               The topic for which the posts are to be loaded.
      *
-     * @return QueryResultInterface<Post>
+     * @return QueryResultInterface<int, Post>
      *                               The selected subset of posts in the specified
      *                               topic.
      */

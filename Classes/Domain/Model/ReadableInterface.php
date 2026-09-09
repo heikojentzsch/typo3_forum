@@ -36,6 +36,7 @@ interface ReadableInterface
      * Adds a reader to this object.
      *
      * @param User\FrontendUser $reader The reader.
+     * @return void
      */
     public function addReader(User\FrontendUser $reader);
 
@@ -43,11 +44,13 @@ interface ReadableInterface
      * Removes a reader from this object.
      *
      * @param User\FrontendUser $reader The reader.
+     * @return void
      */
     public function removeReader(User\FrontendUser $reader);
 
     /**
      * Removes all readers from this object.
+     * @return void
      */
     public function removeAllReaders();
 
