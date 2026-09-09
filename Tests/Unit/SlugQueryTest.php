@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
@@ -21,7 +21,7 @@ final class SlugQueryTest extends DatabaseTestCase
         $pool = $this->createStub(ConnectionPool::class);
         $pool->method('getConnectionForTable')->willReturn($connection);
         $container = $this->createStub(ContainerInterface::class);
-        $container->method('has')->willReturnCallback(static fn(string $id): bool => $id === ConnectionPool::class);
+        $container->method('has')->willReturnCallback(static fn (string $id): bool => $id === ConnectionPool::class);
         $container->method('get')->willReturn($pool);
         $containerProperty = new \ReflectionProperty(GeneralUtility::class, 'container');
         $previousContainer = $containerProperty->getValue();

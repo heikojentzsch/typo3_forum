@@ -74,6 +74,8 @@ publish-github:
   needs:
     - job: package
       artifacts: true
+    - job: publish-composer
+      artifacts: false
   before_script:
     - apt-get update -qq && apt-get install -y --no-install-recommends ca-certificates git gh
   script:

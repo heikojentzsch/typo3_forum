@@ -34,5 +34,5 @@ gh release create "$CI_COMMIT_TAG" "$archive" "$archive.sha256" \
   --repo "$GITHUB_REPOSITORY" --verify-tag --draft --title "$CI_COMMIT_TAG" \
   --notes "Release $CI_COMMIT_TAG. Built by the authoritative GitLab pipeline. SHA-256 checksums are included."
 prerelease=false
-[[ "$version" != *-* ]] || prerelease=true
+[[ "${version%%+*}" != *-* ]] || prerelease=true
 gh release edit "$CI_COMMIT_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease="$prerelease"

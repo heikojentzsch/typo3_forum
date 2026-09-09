@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 $root = dirname(__DIR__);
 $files = glob($root . '/*.php') ?: [];

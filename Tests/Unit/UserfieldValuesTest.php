@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
@@ -14,7 +14,7 @@ final class UserfieldValuesTest extends TestCase
 {
     public function testMissingValueReturnsAnEmptyList(): void
     {
-        $field = new class extends AbstractUserfield {};
+        $field = new class () extends AbstractUserfield {};
         $field->setUserObjectPropertyName(null);
         $user = $this->createStub(FrontendUser::class);
         $user->method('getUserfieldValues')->willReturn(new ObjectStorage());
@@ -24,7 +24,7 @@ final class UserfieldValuesTest extends TestCase
 
     public function testStoredValueIsPreserved(): void
     {
-        $field = new class extends AbstractUserfield {};
+        $field = new class () extends AbstractUserfield {};
         $field->setUserObjectPropertyName(null);
         $value = $this->createStub(Value::class);
         $value->method('getUserfield')->willReturn($field);
@@ -39,7 +39,7 @@ final class UserfieldValuesTest extends TestCase
 
     public function testMappedPropertiesKeepTheirOrderAndValues(): void
     {
-        $field = new class extends AbstractUserfield {};
+        $field = new class () extends AbstractUserfield {};
         $field->setUserObjectPropertyName('firstName|lastName');
         $user = $this->createStub(FrontendUser::class);
         $user->method('_getProperty')->willReturnMap([
