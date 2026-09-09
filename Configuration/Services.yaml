@@ -31,6 +31,10 @@ services:
         arguments:
           $cache: '@cache.typo3forum_main'
 
+    Mittwald\Typo3Forum\Controller\AjaxController:
+        autowire: true
+        autoconfigure: true
+
     Mittwald\Typo3Forum\Service\Authentication\AuthenticationService:
         autowire: true
         arguments:

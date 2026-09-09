@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
-use Mittwald\Typo3Forum\Controller\{PostController, ReportController};
+use Mittwald\Typo3Forum\Controller\{AjaxController, PostController, ReportController};
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Access, Forum, Post, RootForum, Topic};
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
@@ -44,6 +44,25 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
     {
         (new \ReflectionProperty(GeneralUtility::class, 'container'))->setValue(null, $this->previousContainer);
         parent::tearDown();
+    }
+
+    public function testAjaxControllerAutowiresExtbaseLifecycleDependencies(): void
+    {
+        $services = \Symfony\Component\Yaml\Yaml::parseFile(dirname(__DIR__, 2) . '/Configuration/Services.yaml')['services'];
+        $config = array_replace($services['_defaults'], $services[AjaxController::class]);
+        self::assertTrue($config['autowire']);
+
+        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
+        $container->setDefinition(
+            AjaxController::class,
+            (new \Symfony\Component\DependencyInjection\Definition(AjaxController::class))->setAutowired(true)
+        );
+        (new \TYPO3\CMS\Core\DependencyInjection\AutowireInjectMethodsPass())->process($container);
+        $methodCalls = array_column($container->getDefinition(AjaxController::class)->getMethodCalls(), 0);
+
+        self::assertContains('injectReflectionService', $methodCalls);
+        self::assertContains('injectConfigurationManager', $methodCalls);
+        self::assertContains('injectResponseFactory', $methodCalls);
     }
 
     public function testForumNotificationsIncludeFirstAndParentSubscriberOnlyOnce(): void
