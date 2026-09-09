@@ -36,6 +36,50 @@ services:
         arguments:
           $cache: '@cache.typo3forum_main'
 
+    Mittwald\Typo3Forum\Migration\MigrationContract:
+        autowire: true
+
+    Mittwald\Typo3Forum\Migration\FlexFormMigrator:
+        autowire: true
+
+    Mittwald\Typo3Forum\Migration\MigrationFile:
+        autowire: true
+
+    Mittwald\Typo3Forum\Migration\MigrationService:
+        autowire: true
+
+    Mittwald\Typo3Forum\Updates\ForumPluginMigrationUpdate:
+        autowire: true
+        public: true
+
+    Mittwald\Typo3Forum\Command\MigrationCheckCommand:
+        autowire: true
+        public: true
+        tags:
+          - name: console.command
+            command: 'forum:migration:check'
+
+    Mittwald\Typo3Forum\Command\MigrationPlanCommand:
+        autowire: true
+        public: true
+        tags:
+          - name: console.command
+            command: 'forum:migration:plan'
+
+    Mittwald\Typo3Forum\Command\MigrationApplyCommand:
+        autowire: true
+        public: true
+        tags:
+          - name: console.command
+            command: 'forum:migration:apply'
+
+    Mittwald\Typo3Forum\Command\MigrationVerifyCommand:
+        autowire: true
+        public: true
+        tags:
+          - name: console.command
+            command: 'forum:migration:verify'
+
 
     Mittwald\Typo3Forum\Command\CounterUpdateCommand:
         autowire: true
