@@ -46,6 +46,24 @@ final class DdevBootstrapTest extends TestCase
         self::assertSame($first, file_get_contents($path), 'A normal rerun must not rotate credentials.');
     }
 
+    public function testLocalPackageVerifierUsesTheProvidedCanonicalPaths(): void
+    {
+        $script = dirname(__DIR__, 2) . '/Build/Ddev/verify-local-package.php';
+        mkdir($this->temporaryDirectory . '/nested');
+
+        $this->runPhp(
+            $script,
+            $this->temporaryDirectory,
+            $this->temporaryDirectory . '/nested/..'
+        );
+
+        $wrapper = (string)file_get_contents(dirname(__DIR__, 2) . '/Build/setup-ddev.sh');
+        self::assertStringContainsString(
+            '/var/www/html/packages/typo3_forum /var/www/html/vendor/pottkinder/typo3forum',
+            $wrapper
+        );
+    }
+
     public function testWrongSocketRepairPreservesUnrelatedSettingsAndCreatesBackup(): void
     {
         $configurationDirectory = $this->temporaryDirectory . '/config/system';

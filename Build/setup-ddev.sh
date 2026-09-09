@@ -93,7 +93,8 @@ ddev start
 
 phase 'Installing development dependencies from the local checkout'
 ddev composer install --no-interaction --prefer-dist
-ddev exec php packages/typo3_forum/Build/Ddev/verify-local-package.php
+ddev exec php packages/typo3_forum/Build/Ddev/verify-local-package.php \
+    /var/www/html/packages/typo3_forum /var/www/html/vendor/pottkinder/typo3forum
 
 phase 'Preparing persistent local credentials'
 ddev exec php packages/typo3_forum/Build/Ddev/Credentials.php create /var/www/html/.bootstrap/credentials.json
