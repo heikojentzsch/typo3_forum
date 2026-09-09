@@ -11,7 +11,8 @@ trap cleanup EXIT HUP INT TERM
 fetch() {
     local path="$1"
     local output="$2"
-    curl "${curl_options[@]}" "${base_url}${path}" --output "${output}"
+    curl "${curl_options[@]}" "${base_url}${path}" --output "${output}" \
+        || { echo "HTTP request failed: ${base_url}${path}" >&2; return 1; }
 }
 
 fetch '/typo3' "${temporary_directory}/backend.html"

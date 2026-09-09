@@ -157,7 +157,11 @@ final class FixtureVerifier
             || ($GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] ?? '') !== 'localhost:1025') {
             throw new RuntimeException('Development mail is not routed to DDEV Mailpit.');
         }
-        $checks[] = 'DDEV Mailpit transport';
+        $trustedHostsPattern = DevelopmentGuard::trustedHostsPattern((string)getenv('DDEV_PRIMARY_URL'));
+        if (($GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] ?? '') !== $trustedHostsPattern) {
+            throw new RuntimeException('The DDEV primary host is not configured as a trusted TYPO3 host.');
+        }
+        $checks[] = 'DDEV Mailpit transport and trusted host';
 
         $packagePath = realpath(Environment::getProjectPath() . '/packages/typo3_forum');
         $installedPath = realpath(Environment::getProjectPath() . '/vendor/pottkinder/typo3forum');

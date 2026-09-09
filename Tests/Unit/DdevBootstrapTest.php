@@ -88,6 +88,22 @@ final class DdevBootstrapTest extends TestCase
         self::assertStringNotContainsString("defined('TYPO3_version')", $verifier);
     }
 
+    public function testDdevPrimaryHostIsConfiguredAsAnExactTrustedHost(): void
+    {
+        $root = dirname(__DIR__, 2);
+        require_once $root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php';
+
+        self::assertSame(
+            '^typo3forum\\.ddev\\.site$',
+            \Pottkinder\Typo3ForumDev\DevelopmentGuard::trustedHostsPattern('https://typo3forum.ddev.site')
+        );
+
+        $provisioner = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureProvisioner.php');
+        $verifier = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php');
+        self::assertStringContainsString("['SYS']['trustedHostsPattern']", $provisioner);
+        self::assertStringContainsString("['SYS']['trustedHostsPattern']", $verifier);
+    }
+
     public function testWrongSocketRepairPreservesUnrelatedSettingsAndCreatesBackup(): void
     {
         $configurationDirectory = $this->temporaryDirectory . '/config/system';

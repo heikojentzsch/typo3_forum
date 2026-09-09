@@ -380,7 +380,12 @@ TYPOSCRIPT;
         $path = Environment::getConfigPath() . '/system/additional.php';
         $beginMarker = '// TYPO3 Forum DDEV managed mail configuration: begin';
         $endMarker = '// TYPO3 Forum DDEV managed mail configuration: end';
-        $block = "{$beginMarker}\n\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';\n\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = 'localhost:1025';\n{$endMarker}";
+        $trustedHostsPattern = DevelopmentGuard::trustedHostsPattern((string)getenv('DDEV_PRIMARY_URL'));
+        $block = "{$beginMarker}\n"
+            . "\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';\n"
+            . "\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = 'localhost:1025';\n"
+            . "\$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = " . var_export($trustedHostsPattern, true) . ";\n"
+            . $endMarker;
         $contents = is_file($path) ? (string)file_get_contents($path) : "<?php\n";
         if (str_contains($contents, $beginMarker)) {
             $pattern = '/' . preg_quote($beginMarker, '/') . '.*?' . preg_quote($endMarker, '/') . '/s';
