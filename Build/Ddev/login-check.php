@@ -74,7 +74,22 @@ try {
     if (!is_string($response) || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) >= 400) {
         throw new RuntimeException('Frontend login request failed: ' . curl_error($curl));
     }
-    if (!str_contains(strtolower($response), 'logout') && !str_contains($response, $username)) {
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => $baseUrl . '/login',
+        CURLOPT_HTTPGET => true,
+    ]);
+    $authenticatedHtml = curl_exec($curl);
+    if (!is_string($authenticatedHtml) || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) !== 200) {
+        throw new RuntimeException('Unable to verify the authenticated frontend session: ' . curl_error($curl));
+    }
+    $authenticatedDocument = new DOMDocument();
+    @$authenticatedDocument->loadHTML($authenticatedHtml);
+    $authenticatedXPath = new DOMXPath($authenticatedDocument);
+    $loginForm = $authenticatedXPath->query('//form[.//input[@name="user"] and .//input[@name="pass"]]')?->item(0);
+    $logoutField = $authenticatedXPath->query('//input[@name="logintype" and @value="logout"]')?->item(0);
+    if ($loginForm instanceof DOMElement
+        || (!$logoutField instanceof DOMElement && !str_contains($authenticatedHtml, $username))) {
         throw new RuntimeException('Frontend login completed without recognizable authenticated content.');
     }
 } finally {
