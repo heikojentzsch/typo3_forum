@@ -157,7 +157,7 @@ ddev exec env TYPO3_FORUM_DDEV_BOOTSTRAP=1 vendor/bin/typo3 forum-dev:check
 ddev exec bash packages/typo3_forum/Build/Ddev/http-check.sh
 
 primary_url="$(ddev exec --quiet bash -c 'printf %s "$DDEV_PRIMARY_URL"')"
-mail_url="$(ddev exec --quiet bash -c 'printf "%s:%s" "$DDEV_PRIMARY_URL_WITHOUT_PORT" "$DDEV_MAILPIT_HTTPS_PORT"')"
+mail_url="$(ddev launch --mailpit --print-url)"
 
 cat <<EOF
 

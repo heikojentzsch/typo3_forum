@@ -155,6 +155,8 @@ PHP
         self::assertStringContainsString('forum-dev:check', $wrapper);
         self::assertStringContainsString('extension:setup --extension=typo3_forum_dev', $wrapper);
         self::assertStringContainsString('repair-local-settings.php prepare', $wrapper);
+        self::assertStringContainsString('ddev launch --mailpit --print-url', $wrapper);
+        self::assertStringNotContainsString('DDEV_MAILPIT_HTTPS_PORT', $wrapper);
         self::assertStringNotContainsString('git reset', $wrapper);
         self::assertStringNotContainsString('ddev delete', $wrapper);
 
