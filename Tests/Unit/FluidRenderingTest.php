@@ -301,6 +301,31 @@ final class FluidRenderingTest extends TestCase
         (new \Mittwald\Typo3Forum\TextParser\TextParserService($reader))->loadConfiguration();
     }
 
+    public function testSmileyParserUsesTheStoredResourceIdentifier(): void
+    {
+        $resourceIdentifier = 'EXT:typo3_forum/Resources/Public/Images/Icons/Smiley/smile.gif';
+        $resource = $this->createStub(\TYPO3\CMS\Core\SystemResource\Type\PublicResourceInterface::class);
+        $resourceFactory = $this->createMock(\TYPO3\CMS\Core\SystemResource\SystemResourceFactory::class);
+        $resourceFactory->expects(self::once())->method('createPublicResource')->with($resourceIdentifier)->willReturn($resource);
+        $resourcePublisher = $this->createStub(\TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface::class);
+        $resourcePublisher->method('generateUri')->willReturn(new \TYPO3\CMS\Core\Http\Uri('/_assets/smile.gif'));
+        $this->services[\TYPO3\CMS\Core\SystemResource\SystemResourceFactory::class] = $resourceFactory;
+        $this->services[\TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface::class] = $resourcePublisher;
+
+        $smiley = new \Mittwald\Typo3Forum\Domain\Model\Format\Smiley();
+        $smiley->setImagePath($resourceIdentifier);
+        (new \ReflectionProperty($smiley, 'smileyShortcut'))->setValue($smiley, ':)');
+        $result = $this->createStub(\TYPO3\CMS\Extbase\Persistence\QueryResultInterface::class);
+        $result->method('toArray')->willReturn([$smiley]);
+        $repository = $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Format\SmileyRepository::class);
+        $repository->method('findAll')->willReturn($result);
+
+        self::assertStringContainsString(
+            'src="/_assets/smile.gif"',
+            (new \Mittwald\Typo3Forum\TextParser\Service\SmileyParserService($repository))->getParsedText(':)')
+        );
+    }
+
     public function testPreviewPreservesZeroAndEmptyContent(): void
     {
         $context = $this->context();

@@ -79,7 +79,7 @@ class SmileyParserService extends AbstractTextParserService
     {
 
         return '<i class="tx-typo3forum-smiley"><img src="'
-            . PathUtility::getPublicResourceWebPath('EXT:typo3_forum/Resources/Public/Images/Icons/'.$smiley->getImagePath())
+            . PathUtility::getPublicResourceWebPath($smiley->getImagePath())
             . '" /></i>'
         ;
     }
