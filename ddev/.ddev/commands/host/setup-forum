@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+## Description: Provision or verify the TYPO3 Forum development installation
+## Usage: setup-forum [--check|--show-credentials|--help]
+## Example: "ddev setup-forum"
+## OSTypes: darwin,linux,windows
+
+set -Eeuo pipefail
+
+exec "${DDEV_APPROOT}/../Build/setup-ddev.sh" "$@"
