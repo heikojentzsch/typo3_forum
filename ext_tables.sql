@@ -619,3 +619,33 @@ CREATE TABLE tx_typo3forum_cache_tags (
   KEY cache_id (identifier),
   KEY cache_tag (tag)
 ) ENGINE=InnoDB;
+
+
+#
+# Durable, minimal migration journal. It stores fingerprints, never raw rows.
+#
+CREATE TABLE tx_typo3forum_migration_journal (
+  uid int(11) NOT NULL auto_increment,
+  manifest_checksum char(64) NOT NULL default '',
+  table_name varchar(64) NOT NULL default '',
+  record_uid int(11) NOT NULL default '0',
+  rule_id varchar(64) NOT NULL default '',
+  rule_version varchar(32) NOT NULL default '',
+  before_fingerprint char(64) NOT NULL default '',
+  after_fingerprint char(64) NOT NULL default '',
+  applied_at int(11) NOT NULL default '0',
+  PRIMARY KEY (uid),
+  UNIQUE migration_step (manifest_checksum, table_name, record_uid),
+  KEY record_lookup (table_name, record_uid)
+);
+
+
+#
+# A single-row lock prevents concurrent migration writers.
+#
+CREATE TABLE tx_typo3forum_migration_lock (
+  lock_id int(11) NOT NULL default '1',
+  manifest_checksum char(64) NOT NULL default '',
+  started_at int(11) NOT NULL default '0',
+  PRIMARY KEY (lock_id)
+);
