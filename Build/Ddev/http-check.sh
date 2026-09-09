@@ -31,8 +31,7 @@ fetch '/forum/topic/welcome-to-the-development-forum' "${temporary_directory}/to
 grep -Fq 'DDEV-FORUM-SAMPLE' "${temporary_directory}/topic.html" \
     || { echo 'Sample topic route did not contain the fixture marker.' >&2; exit 1; }
 
-curl "${curl_options[@]}" --get "${base_url}/" \
-    --data-urlencode 'type=43568275' \
+curl "${curl_options[@]}" --request POST "${base_url}/?type=43568275" \
     --data-urlencode 'tx_typo3forum_ajax[text]=[b]DDEV-PREVIEW[/b]' \
     --output "${temporary_directory}/preview.html" \
     || { echo "BBCode preview request failed: ${base_url}/?type=43568275" >&2; exit 1; }
