@@ -57,6 +57,7 @@ typo3_forum
 	:glob:
 
 	BasicInstallation/Index
+	Migration/Index
 	UserAndGroups/Index
 	Report/Index
 
@@ -66,4 +67,3 @@ Introduction
 ============
 
 The Documentation of the Extension can be found here: http://typo3-forum.readthedocs.io/en/master/
-

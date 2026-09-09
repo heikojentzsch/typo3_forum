@@ -71,6 +71,7 @@ The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP
 - [x] Review the quote parser's internal TypoScript conversion dependency and retain it where no semantically equivalent public TYPO3 v14 API exists.
 - [x] Fix broken backend TCA icon references.
 - [x] Add explicit handling for installations without a default FAL storage.
+- [x] Add a verified installation-migration path with standalone preflight, validated plans, four CLI commands, a native TYPO3 v14 wizard, journaled/repeatable writes and integrity verification.
 
 ### Deliberate TYPO3 v14 decisions
 
@@ -295,13 +296,9 @@ Docker is unavailable in the implementation environment, so fresh/repeat contain
 
 Implementation references: [GitLab Composer publication](https://docs.gitlab.com/user/packages/composer_repository/), [TYPO3 14 DDEV setup](https://docs.typo3.org/m/typo3/tutorial-getting-started/14.3/en-us/Installation/Install.html), [PHPStan setup](https://phpstan.org/user-guide/getting-started).
 
-## Remaining migration plan
+## Existing-installation migration
 
-The two release blockers below are handled by a separate workstream and remain open. The remaining work in this tooling/migration stream is final cleanup and separately scoped refactors or latent bug fixes.
-
-### 1. v12 -> v14 content-type upgrade wizard – release blocker
-
-Existing installations can contain TYPO3 Forum plugins stored as legacy `list_type` records. The `v14` branch uses dedicated content types:
+The migration tooling is implemented in this branch. Existing installations can contain TYPO3 Forum plugins stored as legacy `list_type` records. The `v14` branch uses dedicated content types:
 
 - `typo3forum_forum`
 - `typo3forum_userprofile`
@@ -313,15 +310,13 @@ Existing installations can contain TYPO3 Forum plugins stored as legacy `list_ty
 - `typo3forum_topiclist`
 - `typo3forum_statsbox`
 
-A migration wizard based on TYPO3's list-type-to-CType upgrade infrastructure must be provided for existing installations.
+The release package now includes a TYPO3-independent PHP 8.1+ read-only preflight under `Resources/Private/Migration/`, followed on TYPO3 v14 by `forum:migration:check`, `forum:migration:plan`, `forum:migration:apply` and `forum:migration:verify`. The registered native wizard uses the same safety path. Nine standard mappings and the historically proven pi1 `Post->list` and `Topic->list` cases are automated; unknown pi1 semantics and non-equivalent permissions block instead of guessing.
 
-Because installations must execute the conversion **before** running the TYPO3 v14-only extension, this will most likely need to be implemented and released on the v12 line first.
+The source information must be inventoried before the upgrade and `list_type`/`pi_flexform` retained until conversion. Additive TYPO3 schema updates may run first; destructive source cleanup must wait until verification. This does **not** make an arbitrary direct TYPO3 12-to-14 website upgrade safe: follow TYPO3's supported major-upgrade order and separately resolve every third-party extension and project integration.
 
-The migration must preserve the existing plugin-specific configuration and be safe to run repeatedly.
+See [the complete migration runbook](Documentation/Migration/Index.rst) for commands, exit codes, approval/checksum handling, backups, permissions, recovery, test status and production acceptance.
 
-This is a **release blocker**, handled separately and outside this tooling workstream.
-
-### 2. Real upgrade and integration testing – release blocker
+### Real upgrade and integration testing – release blocker
 
 Static checks, unit tests and TYPO3 CLI boot tests do not prove that a real upgraded installation works end-to-end.
 
