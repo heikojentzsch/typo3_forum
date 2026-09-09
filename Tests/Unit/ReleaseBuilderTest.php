@@ -18,7 +18,7 @@ final class ReleaseBuilderTest extends TestCase
     {
         $this->root = sys_get_temp_dir() . '/forum-package-test-' . bin2hex(random_bytes(8));
         mkdir($this->root);
-        foreach (['Classes/test.php', 'Configuration/test.php', 'Resources/test.txt', 'Documentation/test.rst',
+        foreach (['Classes/test.php', 'Configuration/test.php', 'Resources/test.txt', 'Resources/Private/Migration/preflight.php', 'Resources/Private/Migration/contract-v1.json', 'Documentation/test.rst',
             'composer.json', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql', 'LICENSE.txt', 'README.md',
             '.git/config', '.github/workflows/ci.yml', '.Build/vendor/test.php', 'Tests/test.php', 'ddev/test.yml',
             'ddev/Packages/typo3_forum_dev/Classes/Fixture.php', 'ddev/.bootstrap/credentials.json',
@@ -58,7 +58,7 @@ final class ReleaseBuilderTest extends TestCase
             $names[] = $zip->getNameIndex($index);
         }
         $zip->close();
-        self::assertSame(['Classes/test.php', 'Configuration/test.php', 'Documentation/test.rst', 'LICENSE.txt', 'README.md', 'Resources/test.txt', 'composer.json', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql'], $names);
+        self::assertSame(['Classes/test.php', 'Configuration/test.php', 'Documentation/test.rst', 'LICENSE.txt', 'README.md', 'Resources/Private/Migration/contract-v1.json', 'Resources/Private/Migration/preflight.php', 'Resources/test.txt', 'composer.json', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql'], $names);
     }
 
     public static function invalidVersions(): iterable
