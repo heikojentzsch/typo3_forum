@@ -13,10 +13,18 @@
           "pottkinder/typo3forum": "dev-v14"
         }
       }
+    },
+    {
+      "type": "path",
+      "url": "Packages/typo3_forum_dev",
+      "options": {
+        "symlink": true
+      }
     }
   ],
   "require": {
     "php": "^8.4",
+    "pottkinder/typo3-forum-dev": "1.0.0",
     "pottkinder/typo3forum": "dev-v14",
     "typo3/cms-install": "^14.3",
     "typo3/cms-fluid-styled-content": "^14.3",

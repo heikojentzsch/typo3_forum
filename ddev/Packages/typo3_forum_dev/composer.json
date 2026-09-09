@@ -1,0 +1,22 @@
+{
+  "name": "pottkinder/typo3-forum-dev",
+  "description": "Development-only provisioning commands for the TYPO3 Forum DDEV site.",
+  "type": "typo3-cms-extension",
+  "license": "GPL-2.0-or-later",
+  "version": "1.0.0",
+  "require": {
+    "php": "^8.4",
+    "typo3/cms-core": "^14.3",
+    "typo3/cms-backend": "^14.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Pottkinder\\Typo3ForumDev\\": "Classes/"
+    }
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "typo3_forum_dev"
+    }
+  }
+}

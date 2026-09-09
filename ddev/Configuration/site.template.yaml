@@ -1,5 +1,6 @@
-base: 'https://typo3forum.ddev.site/'
-rootPageId: 1
+# TYPO3 Forum DDEV managed site
+base: '__BASE_URL__/'
+rootPageId: __ROOT_PAGE_UID__
 websiteTitle: 'TYPO3 Forum development'
 languages:
   - title: English

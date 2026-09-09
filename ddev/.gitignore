@@ -4,7 +4,11 @@
 /vendor/
 /composer.lock
 /packages/
+!/Packages/
+!/Packages/typo3_forum_dev/
 /config/system/
+/config/sites/forum-dev/config.yaml
+/.bootstrap/
 /public/*
 !/public/favicon.ico
 !/public/.htaccess
