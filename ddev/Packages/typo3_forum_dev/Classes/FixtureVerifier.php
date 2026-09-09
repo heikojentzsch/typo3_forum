@@ -141,7 +141,7 @@ final class FixtureVerifier
             'pids.Dashboard = ' . $this->ownershipStore->uid('page.dashboard'),
             'pids.TagList = ' . $this->ownershipStore->uid('page.tags'),
             'pids.ReportList = ' . $this->ownershipStore->uid('page.moderation'),
-            'settings.pages = ' . $this->ownershipStore->uid('page.users_storage'),
+            'styles.content.loginform.pid = ' . $this->ownershipStore->uid('page.users_storage'),
         ];
         if (!is_string($constants)) {
             throw new RuntimeException('Generated forum storage/page TypoScript settings are stale.');

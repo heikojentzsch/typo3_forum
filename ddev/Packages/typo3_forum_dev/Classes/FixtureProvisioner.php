@@ -237,7 +237,7 @@ final class FixtureProvisioner
         }
 
         $constants = sprintf(
-            "plugin.tx_typo3forum.persistence.storagePid = %d\nplugin.tx_typo3forum.settings.pids.Forum = %d\nplugin.tx_typo3forum.settings.pids.UserShow = %d\nplugin.tx_typo3forum.settings.pids.UserList = %d\nplugin.tx_typo3forum.settings.pids.UserEdit = %d\nplugin.tx_typo3forum.settings.pids.Dashboard = %d\nplugin.tx_typo3forum.settings.pids.TagList = %d\nplugin.tx_typo3forum.settings.pids.ReportList = %d\nplugin.tx_felogin_login.settings.pages = %d\nplugin.tx_felogin_login.settings.redirectMode = login\nplugin.tx_felogin_login.settings.redirectFirstMethod = 1\nplugin.tx_felogin_login.settings.redirectPageLogin = %d\n",
+            "plugin.tx_typo3forum.persistence.storagePid = %d\nplugin.tx_typo3forum.settings.pids.Forum = %d\nplugin.tx_typo3forum.settings.pids.UserShow = %d\nplugin.tx_typo3forum.settings.pids.UserList = %d\nplugin.tx_typo3forum.settings.pids.UserEdit = %d\nplugin.tx_typo3forum.settings.pids.Dashboard = %d\nplugin.tx_typo3forum.settings.pids.TagList = %d\nplugin.tx_typo3forum.settings.pids.ReportList = %d\nstyles.content.loginform.pid = %d\nstyles.content.loginform.redirectMode = login\nstyles.content.loginform.redirectFirstMethod = 1\nstyles.content.loginform.redirectPageLogin = %d\n",
             $pages['forum_storage'], $pages['forum'], $pages['profile'], $pages['users'], $pages['profile'],
             $pages['dashboard'], $pages['tags'], $pages['moderation'], $pages['users_storage'], $pages['forum']
         );
@@ -253,12 +253,21 @@ page {
   20 < styles.content.get
 }
 TYPOSCRIPT;
-        $this->ownershipStore->getOrCreate('template.root', 'sys_template', [
+        $template = [
             'pid' => $pages['root'], 'title' => 'TYPO3 Forum DDEV', 'root' => 1, 'clear' => 3,
             'include_static_file' => 'EXT:fluid_styled_content/Configuration/TypoScript/,EXT:typo3_forum/Configuration/TypoScript/',
             'constants' => $constants, 'config' => $setup, 'hidden' => 0, 'deleted' => 0,
             'crdate' => $now, 'tstamp' => $now,
-        ]);
+        ];
+        $templateUid = $this->ownershipStore->getOrCreate('template.root', 'sys_template', $template);
+        $templateConnection = $this->connectionPool->getConnectionForTable('sys_template');
+        if ($templateConnection->fetchOne('SELECT constants FROM sys_template WHERE uid = ?', [$templateUid]) !== $constants) {
+            $templateConnection->update(
+                'sys_template',
+                ['constants' => $constants, 'tstamp' => $now],
+                ['uid' => $templateUid],
+            );
+        }
     }
 
     /** @param array<string, int> $pages

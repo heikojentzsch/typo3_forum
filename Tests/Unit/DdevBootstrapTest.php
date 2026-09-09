@@ -180,6 +180,9 @@ PHP
         self::assertStringContainsString('DDEV-FORUM-SAMPLE', $provisioner);
         self::assertStringContainsString('PasswordHashFactory', $provisioner);
         self::assertStringContainsString('tx_typo3forum_domain_model_forum_access', $provisioner);
+        self::assertStringContainsString('styles.content.loginform.pid = %d', $provisioner);
+        self::assertStringNotContainsString('plugin.tx_felogin_login.settings.pages', $provisioner);
+        self::assertStringContainsString("fetchOne('SELECT constants FROM sys_template WHERE uid = ?'", $provisioner);
 
         $schema = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/ext_tables.sql');
         self::assertStringContainsString('UNIQUE KEY logical_key', $schema);
