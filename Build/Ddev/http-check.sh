@@ -34,7 +34,8 @@ grep -Fq 'DDEV-FORUM-SAMPLE' "${temporary_directory}/topic.html" \
 curl "${curl_options[@]}" --get "${base_url}/" \
     --data-urlencode 'type=43568275' \
     --data-urlencode 'tx_typo3forum_ajax[text]=[b]DDEV-PREVIEW[/b]' \
-    --output "${temporary_directory}/preview.html"
+    --output "${temporary_directory}/preview.html" \
+    || { echo "BBCode preview request failed: ${base_url}/?type=43568275" >&2; exit 1; }
 grep -Fq 'DDEV-PREVIEW' "${temporary_directory}/preview.html" \
     || { echo 'BBCode preview did not return the requested marker.' >&2; exit 1; }
 
@@ -45,7 +46,8 @@ if [[ "${asset_path}" == http://* || "${asset_path}" == https://* ]]; then
 else
     asset_url="${base_url}/${asset_path#/}"
 fi
-curl "${curl_options[@]}" "${asset_url}" --output /dev/null
+curl "${curl_options[@]}" "${asset_url}" --output /dev/null \
+    || { echo "Frontend asset request failed: ${asset_url}" >&2; exit 1; }
 
 php packages/typo3_forum/Build/Ddev/login-check.php "${base_url}" /var/www/html/.bootstrap/credentials.json
 
