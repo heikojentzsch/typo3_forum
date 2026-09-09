@@ -66,7 +66,8 @@ final class DdevBootstrapTest extends TestCase
 
     public function testFixtureVerifierAcceptsTheComposerSupportedTypo3Range(): void
     {
-        require_once dirname(__DIR__, 2) . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php';
+        $verifierPath = dirname(__DIR__, 2) . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php';
+        require_once $verifierPath;
 
         foreach (['14.3.0', '14.3.99', '14.4.0', '14.99.0'] as $supportedVersion) {
             self::assertTrue(
@@ -80,6 +81,11 @@ final class DdevBootstrapTest extends TestCase
                 $unsupportedVersion
             );
         }
+
+        $verifier = (string)file_get_contents($verifierPath);
+        self::assertStringContainsString('Typo3Version $typo3Version', $verifier);
+        self::assertStringContainsString('$this->typo3Version->getVersion()', $verifier);
+        self::assertStringNotContainsString("defined('TYPO3_version')", $verifier);
     }
 
     public function testWrongSocketRepairPreservesUnrelatedSettingsAndCreatesBackup(): void

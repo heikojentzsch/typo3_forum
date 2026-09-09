@@ -8,6 +8,7 @@ use RuntimeException;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Package\PackageManager;
 
 final class FixtureVerifier
@@ -18,6 +19,7 @@ final class FixtureVerifier
         private readonly DevelopmentGuard $guard,
         private readonly PackageManager $packageManager,
         private readonly PasswordHashFactory $passwordHashFactory,
+        private readonly Typo3Version $typo3Version,
     ) {
     }
 
@@ -25,8 +27,7 @@ final class FixtureVerifier
     public function verify(): array
     {
         $this->guard->assertSafe();
-        if (!defined('TYPO3_version')
-            || !self::supportsTypo3Version((string)constant('TYPO3_version'))) {
+        if (!self::supportsTypo3Version($this->typo3Version->getVersion())) {
             throw new RuntimeException('Expected TYPO3 >=14.3.0 and <15.0.0.');
         }
         if (!$this->packageManager->isPackageActive('typo3_forum') || !$this->packageManager->isPackageActive('typo3_forum_dev')) {
