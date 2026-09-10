@@ -142,6 +142,7 @@ final class FixtureVerifier
             'pids.TagList = ' . $this->ownershipStore->uid('page.tags'),
             'pids.ReportList = ' . $this->ownershipStore->uid('page.moderation'),
             'styles.content.loginform.pid = ' . $this->ownershipStore->uid('page.users_storage'),
+            'styles.content.loginform.redirectMode = getpost,login',
         ];
         if (!is_string($constants)) {
             throw new RuntimeException('Generated forum storage/page TypoScript settings are stale.');
@@ -150,6 +151,15 @@ final class FixtureVerifier
             if (!str_contains($constants, $setting)) {
                 throw new RuntimeException(sprintf('Generated TypoScript is missing %s.', $setting));
             }
+        }
+        $dashboardGroup = $this->connectionPool->getConnectionForTable('pages')->fetchOne(
+            'SELECT fe_group FROM pages WHERE uid = ?',
+            [$this->ownershipStore->uid('page.dashboard')],
+        );
+        if ((string)$dashboardGroup !== (string)$this->ownershipStore->uid('group.member')
+            || !str_contains($site, 'errorHandler: LoginRedirect')
+            || !str_contains($site, 'loginRedirectParameter: redirect_url')) {
+            throw new RuntimeException('Dashboard login redirect configuration is missing or stale.');
         }
         $checks[] = 'site routing, TypoScript and generated UIDs';
 

@@ -314,7 +314,7 @@ services:
         autoconfigure: true
         arguments:
             $htmlMailingService: '@Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService'
-            $uriBuilder: '@TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder'
+            $contentObjectRenderer: '@TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer'
             $configurationBuilder: '@Mittwald\Typo3Forum\Configuration\ConfigurationBuilder'
 
 

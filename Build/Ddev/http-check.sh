@@ -38,15 +38,24 @@ curl "${curl_options[@]}" --request POST "${base_url}/?type=43568275" \
 grep -Fq 'DDEV-PREVIEW' "${temporary_directory}/preview.html" \
     || { echo 'BBCode preview did not return the requested marker.' >&2; exit 1; }
 
-asset_path="$(grep -m 1 -Eo 'href="[^"]*typo3_forum\.css(\?[^" ]*)?' "${temporary_directory}/forum.html" | cut -d'"' -f2)"
-[[ -n "${asset_path}" ]] || { echo 'Forum page did not reference the extension stylesheet.' >&2; exit 1; }
-if [[ "${asset_path}" == http://* || "${asset_path}" == https://* ]]; then
-    asset_url="${asset_path}"
-else
-    asset_url="${base_url}/${asset_path#/}"
-fi
-curl "${curl_options[@]}" "${asset_url}" --output /dev/null \
-    || { echo "Frontend asset request failed: ${asset_url}" >&2; exit 1; }
+for stylesheet in 'typo3_forum.css' 'forum-dev.css'; do
+    asset_path="$(grep -m 1 -Eo "href=\"[^\"]*${stylesheet}(\?[^\" ]*)?" "${temporary_directory}/forum.html" | cut -d'"' -f2)"
+    [[ -n "${asset_path}" ]] || { echo "Forum page did not reference ${stylesheet}." >&2; exit 1; }
+    if [[ "${asset_path}" == http://* || "${asset_path}" == https://* ]]; then
+        asset_url="${asset_path}"
+    else
+        asset_url="${base_url}/${asset_path#/}"
+    fi
+    curl "${curl_options[@]}" "${asset_url}" --output /dev/null \
+        || { echo "Frontend asset request failed: ${asset_url}" >&2; exit 1; }
+    if [[ "${stylesheet}" == 'typo3_forum.css' ]]; then
+        forum_stylesheet_url="${asset_url}"
+    fi
+done
+
+smiley_url="${forum_stylesheet_url%/*}/../Images/Icons/Smiley/smile.gif"
+curl "${curl_options[@]}" "${smiley_url}" --output /dev/null \
+    || { echo "Editor smiley asset request failed: ${smiley_url}" >&2; exit 1; }
 
 php packages/typo3_forum/Build/Ddev/login-check.php "${base_url}" /var/www/html/.bootstrap/credentials.json
 

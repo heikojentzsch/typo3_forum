@@ -326,6 +326,15 @@ final class FluidRenderingTest extends TestCase
         );
     }
 
+    public function testEditorSmileyIconsUsePublishedRelativeAssets(): void
+    {
+        $css = (string)file_get_contents(dirname(__DIR__, 2) . '/Resources/Public/CSS/typo3_forum.css');
+
+        self::assertStringContainsString("url('../Images/Icons/Smiley/smile.gif')", $css);
+        self::assertStringContainsString("url('../Images/Icons/Smiley/confused.gif')", $css);
+        self::assertStringNotContainsString('/typo3conf/ext/', $css);
+    }
+
     public function testPreviewPreservesZeroAndEmptyContent(): void
     {
         $context = $this->context();

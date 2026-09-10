@@ -27,18 +27,36 @@ if ($curl === false) {
 }
 curl_setopt_array($curl, [
     CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_FOLLOWLOCATION => false,
     CURLOPT_CONNECTTIMEOUT => 5,
     CURLOPT_TIMEOUT => 20,
     CURLOPT_COOKIEJAR => $cookieFile,
     CURLOPT_COOKIEFILE => $cookieFile,
-    CURLOPT_URL => $baseUrl . '/login',
+    CURLOPT_URL => $baseUrl . '/dashboard',
 ]);
 
 try {
+    $redirectResponse = curl_exec($curl);
+    $redirectStatus = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+    $loginUrl = curl_getinfo($curl, CURLINFO_REDIRECT_URL);
+    if (!is_string($redirectResponse) || $redirectStatus < 300 || $redirectStatus >= 400 || !is_string($loginUrl)) {
+        throw new RuntimeException('Anonymous dashboard request did not redirect to the login page.');
+    }
+    $loginQuery = [];
+    parse_str((string)parse_url($loginUrl, PHP_URL_QUERY), $loginQuery);
+    if (parse_url($loginUrl, PHP_URL_PATH) !== '/login'
+        || ($loginQuery['redirect_url'] ?? null) !== $baseUrl . '/dashboard'
+        || preg_match('/(?:^|[?&])(?:id|sid|session|fe_session)[^=]*=/i', $baseUrl . '/dashboard') === 1) {
+        throw new RuntimeException('Login redirect did not preserve a clean dashboard return URL.');
+    }
+
+    curl_setopt_array($curl, [
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_URL => $loginUrl,
+    ]);
     $html = curl_exec($curl);
     if (!is_string($html) || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) !== 200) {
-        throw new RuntimeException('Unable to load the frontend login form: ' . curl_error($curl));
+        throw new RuntimeException('Unable to load the redirected frontend login form: ' . curl_error($curl));
     }
 
     $document = new DOMDocument();
@@ -74,6 +92,9 @@ try {
     $response = curl_exec($curl);
     if (!is_string($response) || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) >= 400) {
         throw new RuntimeException('Frontend login request failed: ' . curl_error($curl));
+    }
+    if (rtrim((string)curl_getinfo($curl, CURLINFO_EFFECTIVE_URL), '/') !== $baseUrl . '/dashboard') {
+        throw new RuntimeException('Frontend login did not return to the originally requested dashboard URL.');
     }
 
     curl_setopt_array($curl, [

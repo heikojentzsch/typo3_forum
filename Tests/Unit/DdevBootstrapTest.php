@@ -190,9 +190,21 @@ PHP
         self::assertStringContainsString('PasswordHashFactory', $provisioner);
         self::assertStringContainsString('tx_typo3forum_domain_model_forum_access', $provisioner);
         self::assertStringContainsString('styles.content.loginform.pid = %d', $provisioner);
+        self::assertStringContainsString('styles.content.loginform.redirectMode = getpost,login', $provisioner);
         self::assertStringContainsString('persistence.storagePid = %d,%d', $provisioner);
         self::assertStringNotContainsString('plugin.tx_felogin_login.settings.pages', $provisioner);
-        self::assertStringContainsString("fetchOne('SELECT constants FROM sys_template WHERE uid = ?'", $provisioner);
+        self::assertStringContainsString("fetchAssociative(", $provisioner);
+        self::assertStringContainsString('SELECT constants, config FROM sys_template WHERE uid = ?', $provisioner);
+        self::assertStringContainsString('EXT:typo3_forum_dev/Resources/Public/Css/forum-dev.css', $provisioner);
+        self::assertStringContainsString('20.wrap = <main>|</main>', $provisioner);
+        self::assertStringContainsString("'fe_group' => (string)\$memberGroupUid", $provisioner);
+
+        $siteTemplate = (string)file_get_contents($root . '/ddev/Configuration/site.template.yaml');
+        self::assertStringContainsString('errorHandler: LoginRedirect', $siteTemplate);
+        self::assertStringContainsString('loginRedirectParameter: redirect_url', $siteTemplate);
+
+        $httpCheck = (string)file_get_contents($root . '/Build/Ddev/http-check.sh');
+        self::assertStringContainsString("'forum-dev.css'", $httpCheck);
 
         $frontendUserTca = (string)file_get_contents($root . '/Configuration/TCA/Overrides/fe_users.php');
         self::assertStringContainsString("'allowed' => 'tx_typo3forum_domain_model_forum_forum'", $frontendUserTca);

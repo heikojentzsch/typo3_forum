@@ -320,22 +320,22 @@ i.tx-typo3forum-smiley {
 }
 
 .markItUp li.tx-typo3forum-miu-smile_smiley > a {
-	background-image: url('/typo3conf/ext/typo3_forum/Resources/Public/Images/Icons/Smiley/smile.gif');
+	background-image: url('../Images/Icons/Smiley/smile.gif');
 }
 .markItUp li.tx-typo3forum-miu-wink_smiley > a {
-	background-image: url('/typo3conf/ext/typo3_forum/Resources/Public/Images/Icons/Smiley/wink.gif');
+	background-image: url('../Images/Icons/Smiley/wink.gif');
 }
 .markItUp li.tx-typo3forum-miu-neutral_smiley > a {
-	background-image: url('/typo3conf/ext/typo3_forum/Resources/Public/Images/Icons/Smiley/neutral.gif');
+	background-image: url('../Images/Icons/Smiley/neutral.gif');
 }
 .markItUp li.tx-typo3forum-miu-angry_smiley > a {
-	background-image: url('/typo3conf/ext/typo3_forum/Resources/Public/Images/Icons/Smiley/mad.gif');
+	background-image: url('../Images/Icons/Smiley/mad.gif');
 }
 .markItUp li.tx-typo3forum-miu-sad_smiley > a {
-	background-image: url('/typo3conf/ext/typo3_forum/Resources/Public/Images/Icons/Smiley/sad.gif');
+	background-image: url('../Images/Icons/Smiley/sad.gif');
 }
 .markItUp li.tx-typo3forum-miu-confused_smiley > a {
-	background-image: url('/typo3conf/ext/typo3_forum/Resources/Public/Images/Icons/Smiley/confused.gif');
+	background-image: url('../Images/Icons/Smiley/confused.gif');
 }
 
 .markItUp .preview a {

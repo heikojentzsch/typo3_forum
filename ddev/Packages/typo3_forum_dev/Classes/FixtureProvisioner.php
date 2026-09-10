@@ -33,6 +33,7 @@ final class FixtureProvisioner
         $this->ensureBackendAdministrator($credentials);
         $identities = $this->provisionIdentities($pages['users_storage'], $credentials);
         $this->ownershipStore->completePhase('identities');
+        $this->protectDashboard($pages['dashboard'], $identities['member_group']);
         $this->provisionContent($pages);
         $this->ownershipStore->completePhase('content');
         $this->failForSmokeTestAfter('content');
@@ -42,7 +43,7 @@ final class FixtureProvisioner
         $this->ownershipStore->completePhase('forum');
         $this->provisionStorage();
         $this->ownershipStore->completePhase('storage');
-        $this->writeSiteConfiguration($pages['root']);
+        $this->writeSiteConfiguration($pages['root'], $pages['login']);
         $this->writeDevelopmentMailConfiguration();
         $this->ownershipStore->completePhase('configuration');
 
@@ -195,6 +196,15 @@ final class FixtureProvisioner
         }
     }
 
+    private function protectDashboard(int $dashboardPageUid, int $memberGroupUid): void
+    {
+        $this->connectionPool->getConnectionForTable('pages')->update(
+            'pages',
+            ['fe_group' => (string)$memberGroupUid, 'tstamp' => time()],
+            ['uid' => $dashboardPageUid],
+        );
+    }
+
     /** @param array<string, mixed> $data */
     private function createIdentity(string $key, string $table, string $field, string $value, array $data): int
     {
@@ -237,13 +247,14 @@ final class FixtureProvisioner
         }
 
         $constants = sprintf(
-            "plugin.tx_typo3forum.persistence.storagePid = %d,%d\nplugin.tx_typo3forum.settings.pids.Forum = %d\nplugin.tx_typo3forum.settings.pids.UserShow = %d\nplugin.tx_typo3forum.settings.pids.UserList = %d\nplugin.tx_typo3forum.settings.pids.UserEdit = %d\nplugin.tx_typo3forum.settings.pids.Dashboard = %d\nplugin.tx_typo3forum.settings.pids.TagList = %d\nplugin.tx_typo3forum.settings.pids.ReportList = %d\nstyles.content.loginform.pid = %d\nstyles.content.loginform.redirectMode = login\nstyles.content.loginform.redirectFirstMethod = 1\nstyles.content.loginform.redirectPageLogin = %d\n",
+            "plugin.tx_typo3forum.persistence.storagePid = %d,%d\nplugin.tx_typo3forum.settings.pids.Forum = %d\nplugin.tx_typo3forum.settings.pids.UserShow = %d\nplugin.tx_typo3forum.settings.pids.UserList = %d\nplugin.tx_typo3forum.settings.pids.UserEdit = %d\nplugin.tx_typo3forum.settings.pids.Dashboard = %d\nplugin.tx_typo3forum.settings.pids.TagList = %d\nplugin.tx_typo3forum.settings.pids.ReportList = %d\nstyles.content.loginform.pid = %d\nstyles.content.loginform.redirectMode = getpost,login\nstyles.content.loginform.redirectFirstMethod = 1\nstyles.content.loginform.redirectPageLogin = %d\n",
             $pages['forum_storage'], $pages['users_storage'], $pages['forum'], $pages['profile'], $pages['users'], $pages['profile'],
             $pages['dashboard'], $pages['tags'], $pages['moderation'], $pages['users_storage'], $pages['forum']
         );
         $setup = <<<'TYPOSCRIPT'
 page = PAGE
 page {
+  includeCSS.forumDevelopment = EXT:typo3_forum_dev/Resources/Public/Css/forum-dev.css
   10 = HMENU
   10 {
     1 = TMENU
@@ -251,6 +262,7 @@ page {
     wrap = <nav><ul>|</ul></nav>
   }
   20 < styles.content.get
+  20.wrap = <main>|</main>
 }
 TYPOSCRIPT;
         $template = [
@@ -261,10 +273,14 @@ TYPOSCRIPT;
         ];
         $templateUid = $this->ownershipStore->getOrCreate('template.root', 'sys_template', $template);
         $templateConnection = $this->connectionPool->getConnectionForTable('sys_template');
-        if ($templateConnection->fetchOne('SELECT constants FROM sys_template WHERE uid = ?', [$templateUid]) !== $constants) {
+        $storedTemplate = $templateConnection->fetchAssociative(
+            'SELECT constants, config FROM sys_template WHERE uid = ?',
+            [$templateUid],
+        );
+        if ($storedTemplate === false || $storedTemplate['constants'] !== $constants || $storedTemplate['config'] !== $setup) {
             $templateConnection->update(
                 'sys_template',
-                ['constants' => $constants, 'tstamp' => $now],
+                ['constants' => $constants, 'config' => $setup, 'tstamp' => $now],
                 ['uid' => $templateUid],
             );
         }
@@ -357,7 +373,7 @@ TYPOSCRIPT;
         ]);
     }
 
-    private function writeSiteConfiguration(int $rootPageUid): void
+    private function writeSiteConfiguration(int $rootPageUid, int $loginPageUid): void
     {
         $projectPath = Environment::getProjectPath();
         $templatePath = $projectPath . '/Configuration/site.template.yaml';
@@ -368,7 +384,11 @@ TYPOSCRIPT;
             throw new RuntimeException('DDEV_PRIMARY_URL is missing or not a local DDEV URL.');
         }
         $template = (string)file_get_contents($templatePath);
-        $configuration = str_replace(['__BASE_URL__', '__ROOT_PAGE_UID__'], [$baseUrl, (string)$rootPageUid], $template);
+        $configuration = str_replace(
+            ['__BASE_URL__', '__ROOT_PAGE_UID__', '__LOGIN_PAGE_UID__'],
+            [$baseUrl, (string)$rootPageUid, (string)$loginPageUid],
+            $template,
+        );
         Yaml::parse($configuration);
         if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) {
             throw new RuntimeException('Unable to create site configuration directory.');

@@ -17,6 +17,7 @@ use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Request;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class RuntimeRegressionTest extends AbstractControllerTestCase
 {
@@ -93,12 +94,54 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $mail = $this->createMock(HTMLMailingService::class);
         $recipients = [];
         $mail->expects(self::exactly(2))->method('sendMail')->willReturnCallback(function ($user) use (&$recipients): void { $recipients[] = $user->getUid(); });
-        $service = new class($mail, $this->uriBuilder, $this->createStub(ConfigurationBuilder::class)) extends NotificationService {
+        $service = new class($mail, $this->createStub(ContentObjectRenderer::class), $this->createStub(ConfigurationBuilder::class)) extends NotificationService {
             protected function getMessage(Forum $forum, Topic $topic, Post $post, string $messageTemplate, string $unsubscribeLink): string { return 'Hello ###RECIPIENT###'; }
             protected function getForumUnsubscribeLink(Forum $forum): string { return '/unsubscribe'; }
         };
         $service->notifySubscribers($forum, $topic);
         self::assertSame([1, 4], $recipients, 'Author 2 and users 3/5 without origin-forum access are excluded even when subscribed to an accessible parent; user 1 is not duplicated.');
+    }
+
+    public function testNotificationLinksUseTheCurrentFrontendRequestWithoutSessionState(): void
+    {
+        $request = new ServerRequest('GET', 'https://example.test/forum?FE_SESSION_KEY=must-not-leak');
+        $previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        $GLOBALS['TYPO3_REQUEST'] = $request;
+        try {
+            $contentObjectRenderer = $this->createMock(ContentObjectRenderer::class);
+            $contentObjectRenderer->expects(self::once())->method('setRequest')->with($request);
+            $contentObjectRenderer->expects(self::once())->method('createUrl')->with([
+                'parameter' => 23,
+                'queryParameters' => [
+                    'tx_typo3forum_forum[controller]' => 'User',
+                    'tx_typo3forum_forum[action]' => 'subscribe',
+                    'tx_typo3forum_forum[topic]' => 42,
+                    'tx_typo3forum_forum[unsubscribe]' => 1,
+                ],
+                'forceAbsoluteUrl' => true,
+                'linkAccessRestrictedPages' => true,
+            ])->willReturn('https://example.test/unsubscribe');
+            $configuration = $this->createStub(ConfigurationBuilder::class);
+            $configuration->method('getSettings')->willReturn(['pids.' => ['Forum' => 23]]);
+            $topic = $this->createStub(Topic::class);
+            $topic->method('getUid')->willReturn(42);
+            $service = new class($this->createStub(HTMLMailingService::class), $contentObjectRenderer, $configuration) extends NotificationService {
+                public function topicUnsubscribeLink(Topic $topic): string
+                {
+                    return $this->getTopicUnsubscribeLink($topic);
+                }
+            };
+
+            $link = $service->topicUnsubscribeLink($topic);
+            self::assertSame('<a href="https://example.test/unsubscribe">Test message</a>', $link);
+            self::assertStringNotContainsString('SESSION', $link);
+        } finally {
+            if ($previousRequest === null) {
+                unset($GLOBALS['TYPO3_REQUEST']);
+            } else {
+                $GLOBALS['TYPO3_REQUEST'] = $previousRequest;
+            }
+        }
     }
 
     public function testRootInitializesCollectionsAndRetainsInjectedAuthentication(): void
