@@ -22,14 +22,14 @@ abstract class AbstractMigrationCommand extends Command
     protected function preflight(InputInterface $input): ?array
     {
         $path = (string)$input->getOption('preflight');
-        return $path === '' ? null : $this->migrationFile->read($path, 'typo3-forum-preflight/1.0');
+        return $path === '' ? null : $this->migrationFile->read($path, 'typo3-forum-preflight/2.0');
     }
 
     protected function exitCode(string $status): int
     {
         return match ($status) {
             'READY', 'SUCCESS' => 0,
-            'ALREADY_MIGRATED' => 10,
+            'ALREADY_MIGRATED', 'NO_MIGRATION_REQUIRED' => 10,
             'BLOCKED' => 20,
             'INDETERMINATE' => 30,
             default => 40,

@@ -1,6 +1,6 @@
 {
-  "format_version": "1.0",
-  "rule_version": "1.0.0",
+  "format_version": "2.0",
+  "rule_version": "2.0.0",
   "standard_plugins": {
     "typo3forum_forum": "typo3forum_forum",
     "typo3forum_userprofile": "typo3forum_userprofile",
@@ -30,6 +30,7 @@
   },
   "legacy_signatures": ["typo3forum_pi1", "typo3forum_widget"],
   "content_fields": ["uid", "pid", "CType", "list_type", "pi_flexform", "pages", "recursive", "sys_language_uid", "l18n_parent", "t3ver_oid", "t3ver_id", "t3ver_wsid", "t3ver_state", "hidden", "deleted", "starttime", "endtime", "sorting", "colPos", "header"],
+  "content_integer_fields": ["uid", "pid", "recursive", "sys_language_uid", "l18n_parent", "t3ver_oid", "t3ver_id", "t3ver_wsid", "t3ver_state", "hidden", "deleted", "starttime", "endtime", "sorting", "colPos"],
   "integrity_tables": [
     "tx_typo3forum_domain_model_format_textparser",
     "tx_typo3forum_domain_model_forum_access",
@@ -55,6 +56,33 @@
     "tx_typo3forum_domain_model_forum_color",
     "tx_typo3forum_domain_model_forum_tag_mm"
   ],
+  "integrity_projections": {
+    "tx_typo3forum_domain_model_format_textparser": {"fields": ["uid", "pid", "type", "name", "alias", "bbcode_wrap", "regular_expression", "regular_expression_replacement", "regular_expression_replacement_blocked", "groups"], "integer_fields": ["uid", "pid"]},
+    "tx_typo3forum_domain_model_forum_access": {"fields": ["uid", "pid", "login_level", "forum", "operation", "negate", "affected_group"], "integer_fields": ["uid", "pid", "login_level", "forum", "negate", "affected_group"]},
+    "tx_typo3forum_domain_model_forum_attachment": {"fields": ["uid", "post", "name"], "integer_fields": ["uid", "post"]},
+    "tx_typo3forum_domain_model_forum_forum": {"fields": ["uid", "title"], "integer_fields": ["uid"]},
+    "tx_typo3forum_domain_model_forum_post": {"fields": ["uid", "topic", "text", "author", "author_name"], "integer_fields": ["uid", "topic", "author"]},
+    "tx_typo3forum_domain_model_forum_topic": {"fields": ["uid", "forum", "subject", "author", "last_post", "solution"], "integer_fields": ["uid", "forum", "author", "last_post", "solution"]},
+    "tx_typo3forum_domain_model_moderation_report": {"fields": ["uid", "pid", "post", "feuser", "workflow_status"], "integer_fields": ["uid", "pid", "post", "feuser", "workflow_status"]},
+    "tx_typo3forum_domain_model_moderation_reportcomment": {"fields": ["uid", "pid", "report", "author", "text"], "integer_fields": ["uid", "pid", "report", "author"]},
+    "tx_typo3forum_domain_model_moderation_reportworkflowstatus": {"fields": ["uid", "pid", "name", "followup_status", "initial", "final"], "integer_fields": ["uid", "pid", "followup_status", "initial", "final"]},
+    "tx_typo3forum_domain_model_moderation_reportworkflowstatus_mm": {"fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"], "integer_fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"]},
+    "tx_typo3forum_domain_model_user_forumsubscription": {"fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"], "integer_fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"]},
+    "tx_typo3forum_domain_model_user_readforum": {"fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"], "integer_fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"]},
+    "tx_typo3forum_domain_model_user_readtopic": {"fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"], "integer_fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"]},
+    "tx_typo3forum_domain_model_user_supportpost": {"fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"], "integer_fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"]},
+    "tx_typo3forum_domain_model_user_topicsubscription": {"fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"], "integer_fields": ["uid_local", "uid_foreign", "sorting", "sorting_foreign"]},
+    "tx_typo3forum_domain_model_user_userfield_userfield": {"fields": ["uid", "pid", "name", "type", "typoscript_path", "map_to_user_object"], "integer_fields": ["uid", "pid"]},
+    "tx_typo3forum_domain_model_user_userfield_value": {"fields": ["uid", "pid", "user", "userfield", "value"], "integer_fields": ["uid", "pid", "user", "userfield"]},
+    "tx_typo3forum_domain_model_user_rank": {"fields": ["uid", "pid", "name", "point_limit", "user_count"], "integer_fields": ["uid", "pid", "point_limit", "user_count"]},
+    "tx_typo3forum_domain_model_user_notification": {"fields": ["uid", "pid", "feuser", "post", "user_read", "type", "tag"], "integer_fields": ["uid", "pid", "feuser", "post", "user_read", "tag"]},
+    "tx_typo3forum_domain_model_stats_summary": {"fields": ["uid", "pid", "type", "amount"], "integer_fields": ["uid", "pid", "amount"]},
+    "tx_typo3forum_domain_model_forum_tag": {"fields": ["uid", "name", "color", "topic_count"], "integer_fields": ["uid", "color", "topic_count"]},
+    "tx_typo3forum_domain_model_forum_color": {"fields": ["uid", "pid", "name", "primary_color", "secondary_color"], "integer_fields": ["uid", "pid"]},
+    "tx_typo3forum_domain_model_forum_tag_mm": {"fields": ["tag", "foreign_table", "foreign_uid", "sorting", "sorting_foreign"], "integer_fields": ["tag", "foreign_uid", "sorting", "sorting_foreign"]},
+    "fe_users_passwords": {"fields": ["uid", "password"], "integer_fields": ["uid"]},
+    "forum_file_references": {"fields": ["uid", "uid_local", "uid_foreign", "tablenames", "fieldname"], "integer_fields": ["uid", "uid_local", "uid_foreign"]}
+  },
   "relations": [
     ["tx_typo3forum_domain_model_forum_post", "topic", "tx_typo3forum_domain_model_forum_topic", "uid", false],
     ["tx_typo3forum_domain_model_forum_post", "author", "fe_users", "uid", true],
