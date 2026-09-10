@@ -447,6 +447,7 @@ class PostController extends AbstractController
         return $this->responseFactory->createResponse()
             ->withHeader('Content-Type', $file->getMimeType() ?: 'application/download')
             ->withHeader('Content-Disposition', 'attachment; filename="' . addcslashes($attachment->getName(), '"\\') . '"')
+            ->withHeader('Content-Length', (string)$file->getSize())
             ->withBody($this->streamFactory->createStream($file->getContents()));
     }
 }

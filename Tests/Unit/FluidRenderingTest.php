@@ -197,6 +197,7 @@ final class FluidRenderingTest extends TestCase
             '~<f:link\.action\b[^>]*action="downloadAttachment"[^>]*>\s*\{attachment\.name\}\s*</f:link\.action>~s',
             $source
         );
+        self::assertStringContainsString('pageType="43568276"', $source);
     }
 
     public function testAllPublicCustomViewHelpersRegisterArguments(): void

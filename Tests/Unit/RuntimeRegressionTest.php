@@ -248,6 +248,36 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         self::assertSame(['post' => $post], $controller->createAction($topic, $post, $files)->getArguments());
     }
 
+    public function testAttachmentDownloadReturnsTheStoredBytesWithoutPageMarkup(): void
+    {
+        $controller = $this->controller(PostController::class);
+        $contents = 'test';
+        $file = $this->createStub(\TYPO3\CMS\Core\Resource\FileReference::class);
+        $file->method('getMimeType')->willReturn('text/plain');
+        $file->method('getSize')->willReturn(strlen($contents));
+        $file->method('getContents')->willReturn($contents);
+        $fileReference = $this->createStub(\TYPO3\CMS\Extbase\Domain\Model\FileReference::class);
+        $fileReference->method('getOriginalResource')->willReturn($file);
+        $attachment = $this->createMock(\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class);
+        $attachment->expects(self::once())->method('increaseDownloadCount')->willReturnSelf();
+        $attachment->method('getFileReference')->willReturn($fileReference);
+        $attachment->method('getName')->willReturn('test.txt');
+        $repository = $this->createMock(\Mittwald\Typo3Forum\Domain\Repository\Forum\AttachmentRepository::class);
+        $repository->expects(self::once())->method('update')->with($attachment);
+        $persistenceManager = $this->createMock(PersistenceManager::class);
+        $persistenceManager->expects(self::once())->method('persistAll');
+        $this->setProperty($controller, 'attachmentRepository', $repository);
+        $this->setProperty($controller, 'persistenceManager', $persistenceManager);
+
+        $response = $controller->downloadAttachmentAction($attachment);
+
+        self::assertSame('text/plain', $response->getHeaderLine('Content-Type'));
+        self::assertSame('attachment; filename="test.txt"', $response->getHeaderLine('Content-Disposition'));
+        self::assertSame((string)strlen($contents), $response->getHeaderLine('Content-Length'));
+        self::assertSame($contents, (string)$response->getBody());
+        self::assertStringNotContainsString('<!DOCTYPE html>', (string)$response->getBody());
+    }
+
     public function testCreatingTopicWithAttachmentResetsUriBuilderAfterCachePurge(): void
     {
         $controller = $this->controller(TopicController::class);
