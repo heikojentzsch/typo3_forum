@@ -235,11 +235,11 @@ Run `composer install` first. Composer is the canonical local and CI interface:
 | Command | Purpose / last local result |
 | --- | --- |
 | `composer validate` | Valid metadata. |
-| `composer php-lint` | 189 PHP files pass syntax checks, including root metadata, application, configuration, tests and build helpers. |
-| `composer test` | 83 tests, 835 assertions, zero skips. |
+| `composer php-lint` | 217 PHP files pass syntax checks, including root metadata, application, configuration, tests and build helpers. |
+| `composer test` | 145 tests, 1,215 assertions, one explicitly gated MariaDB test skipped. |
 | `composer phpstan` | PHPStan 2.2.13, level 6, zero findings. |
-| `composer typoscript-lint` | Exit 0 with 12 existing warnings; these are not presented as a warning-free result. |
-| `composer cs-check` | PHP-CS-Fixer 3.95.24, non-mutating dry run; exit 8, findings in 173 of 186 files. |
+| `composer typoscript-lint` | Four real files scanned; exit 0 with 12 existing warnings. |
+| `composer cs-check` | PHP-CS-Fixer 3.95.25, non-mutating dry run; exit 8, findings in 139 of 206 files. |
 | `composer ci` | Runs all of the above, with style last; currently exits 8 because of style debt. |
 
 All newly added PHP helpers/tests pass the style rules. Existing application files have not been globally reformatted; normalization remains separate work. GitLab reports the style job as advisory only for exit 8. Other style tool/configuration failures and all core QA failures still block the pipeline.
@@ -310,9 +310,13 @@ The migration tooling is implemented in this branch. Existing installations can 
 - `typo3forum_topiclist`
 - `typo3forum_statsbox`
 
-The release package now includes a TYPO3-independent PHP 8.1+ read-only preflight under `Resources/Private/Migration/`, followed on TYPO3 v14 by `forum:migration:check`, `forum:migration:plan`, `forum:migration:apply` and `forum:migration:verify`. The registered native wizard uses the same safety path. Nine standard mappings and the historically proven pi1 `Post->list` and `Topic->list` cases are automated; unknown pi1 semantics and non-equivalent permissions block instead of guessing.
+The release package includes a TYPO3-independent PHP 8.1+ read-only preflight under `Resources/Private/Migration/`, followed on TYPO3 v14 by `forum:migration:check`, `forum:migration:plan`, `forum:migration:apply` and `forum:migration:verify`. The registered native wizard uses the same safety path. Nine standard mappings and the historically proven pi1 `Post->list` and `Topic->list` cases are automated; unknown pi1 semantics and non-equivalent permissions block instead of guessing. In the standard mapping the identifier stays equal, but moves from `CType=list` / `list_type=<identifier>` to `CType=<identifier>` / empty `list_type`.
 
-The source information must be inventoried before the upgrade and `list_type`/`pi_flexform` retained until conversion. Additive TYPO3 schema updates may run first; destructive source cleanup must wait until verification. This does **not** make an arbitrary direct TYPO3 12-to-14 website upgrade safe: follow TYPO3's supported major-upgrade order and separately resolve every third-party extension and project integration.
+Readiness includes both content and backend-permission operations. Plain v12+ grants are converted to the three-part v14 form (`tt_content:CType:<identifier>`); obsolete ALLOW/DENY suffixes and aggregate pi1/widget rights block for Core normalization and access review. A default FAL storage or unrelated TYPO3 records alone are not legacy-forum evidence.
+
+Preflight and plan format 2.0 retain a versioned source baseline separately from the target snapshot captured immediately before apply. Older v1 artifacts must be regenerated and are not silently re-approved. Apply owns a tokenized migration lock through final verification, locks and revalidates each MySQL/MariaDB row before updating, and commits the journal with the record. Verification rejects blocked/indeterminate/error plans, requires journal evidence for every planned write, rechecks current scope, and distinguishes `NO_MIGRATION_REQUIRED` from a completed `SUCCESS`. Target-only checks disclose their reduced assurance.
+
+The source information must be inventoried before the upgrade and `list_type`/`pi_flexform` retained until conversion. Additive TYPO3 schema updates may run first; destructive source cleanup must wait until verification. No v13-compatible forum runtime is required, but this does **not** by itself validate deployment of a complete website directly from TYPO3 12 to 14: both intervening Core change sets and every third-party/project integration still require review and real installation testing.
 
 See [the complete migration runbook](Documentation/Migration/Index.rst) for commands, exit codes, approval/checksum handling, backups, permissions, recovery, test status and production acceptance.
 
@@ -369,44 +373,11 @@ Known follow-up candidates include:
 - broader coding-style/line-ending normalization;
 - unrelated application or moderation-policy improvements identified during integration testing.
 
-## Verification baseline
+## Historical verification notes
 
-The migration has been repeatedly verified with the following checks during development:
-
-```bash
-composer validate
-composer php-lint
-composer test
-composer phpstan
-composer cs-check
-composer typoscript-lint
-.Build/bin/typo3 list -vvv
-.Build/bin/typo3 asset:publish -vvv
-git diff --check
-```
-
-After the tooling modernization, on PHP 8.4.25 / TYPO3 14.3.7 / PHPUnit 11.5.56, the full run reported:
-
-```text
-83 tests
-835 assertions
-0 skips
-```
-
-The suite includes:
-
-- repository tests;
-- isolated SQLite migration/query tests;
-- Fluid parsing and compilation;
-- all 59 shipped Fluid files through the existing rendering validation;
-- parsed and compiled conditional ViewHelper behavior;
-- controller redirect behavior after removal of the old context layer;
-- BBCode first/last wrap semantics;
-- non-mutating report comment access;
-- missing-default-FAL-storage behavior;
-- existing successful attachment/FAL behavior.
-
-`composer validate`, `composer php-lint`, TYPO3 command listing, asset publication and `git diff --check` passed for the latest cleanup.
+The single current repository verification baseline is the command/result table
+under “Composer and static analysis” above. Counts elsewhere in this section
+describe earlier focused audits and are not the current full-suite result.
 
 For the DDEV bootstrap change, Bash syntax, command help, the missing-Docker
 failure path, Composer JSON syntax, PHP parsing, LF/final-newline rules and
@@ -416,7 +387,9 @@ no Docker client or daemon is available in this environment. The container-based
 were therefore **not executed** for this change; the tracked isolated smoke
 harness remains the required runtime follow-up.
 
-There is currently no GitHub Actions workflow providing independent server-side PR checks; these results were produced in the migration development/test environment.
+The read-only public GitHub Actions workflow provides PR verification. Its
+result is reported separately from local QA and does not replace authoritative
+private GitLab CI or real migration acceptance.
 
 ### Fluid verification
 
