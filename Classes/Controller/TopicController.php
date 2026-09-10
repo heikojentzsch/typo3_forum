@@ -239,7 +239,7 @@ class TopicController extends AbstractController
             $this->purgeUrl('http://' . $_SERVER['HTTP_HOST'] . '/' . $uri);
         }
 
-        $uri = $this->uriBuilder->uriFor(
+        $uri = $this->uriBuilder->reset()->uriFor(
             'show',
             ['topic' => $topic],
             'Topic'

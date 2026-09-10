@@ -3,20 +3,24 @@ declare(strict_types=1);
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
-use Mittwald\Typo3Forum\Controller\{AjaxController, PostController, ReportController};
+use Mittwald\Typo3Forum\Controller\{AjaxController, PostController, ReportController, TopicController};
+use Mittwald\Typo3Forum\Domain\Factory\Forum\{PostFactory, TopicFactory};
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Access, Forum, Post, RootForum, Topic};
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService;
 use Mittwald\Typo3Forum\Service\Notification\NotificationService;
+use Mittwald\Typo3Forum\Service\{AttachmentService, TagService};
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use TYPO3\CMS\Core\Http\{NormalizedParams, ServerRequest};
 use TYPO3\CMS\Core\Localization\{LanguageService, LanguageServiceFactory, Locale, Locales};
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Request;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
+use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class RuntimeRegressionTest extends AbstractControllerTestCase
@@ -189,7 +193,7 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
     private function controller(string $class): object
     {
         $controller = $this->getMockBuilder($class)->disableOriginalConstructor()
-            ->onlyMethods(['getFlashMessageQueue', 'clearCacheForCurrentPage'])->getMock();
+            ->onlyMethods(['getFlashMessageQueue', 'clearCacheForCurrentPage', 'purgeUrl'])->getMock();
         $controller->method('getFlashMessageQueue')->willReturn(new FlashMessageQueue('test'));
         $this->initializeController($controller);
         $this->setProperty($controller, 'eventDispatcher', $this->createStub(EventDispatcherInterface::class));
@@ -240,5 +244,65 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $this->setProperty($controller, 'topicRepository', $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository::class));
         $this->setProperty($controller, 'persistenceManager', $this->createStub(\TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager::class));
         self::assertSame(['post' => $post], $controller->createAction($topic, $post, $files)->getArguments());
+    }
+
+    public function testCreatingTopicWithAttachmentResetsUriBuilderAfterCachePurge(): void
+    {
+        $controller = $this->controller(TopicController::class);
+        $forum = $this->createStub(Forum::class);
+        $forum->method('getUid')->willReturn(2);
+        $post = $this->createMock(Post::class);
+        $topic = $this->createStub(Topic::class);
+        $uploadedFile = $this->createStub(UploadedFileInterface::class);
+        $attachments = new ObjectStorage();
+        $tags = new ObjectStorage();
+
+        $attachmentService = $this->createMock(AttachmentService::class);
+        $attachmentService->expects(self::once())->method('initAttachments')->with([$uploadedFile])->willReturn($attachments);
+        $post->expects(self::once())->method('setAttachments')->with($attachments);
+        $postFactory = $this->createMock(PostFactory::class);
+        $postFactory->expects(self::once())->method('assignUserToPost')->with($post);
+        $tagService = $this->createMock(TagService::class);
+        $tagService->expects(self::once())->method('hydrateTags')->with([])->willReturn($tags);
+        $topicFactory = $this->createMock(TopicFactory::class);
+        $topicFactory->expects(self::once())->method('createTopic')
+            ->with($forum, $post, 'Test', false, $tags, false)
+            ->willReturn($topic);
+        $persistenceManager = $this->createMock(PersistenceManager::class);
+        $persistenceManager->expects(self::once())->method('persistAll');
+
+        $this->setProperty($controller, 'attachmentService', $attachmentService);
+        $this->setProperty($controller, 'postFactory', $postFactory);
+        $this->setProperty($controller, 'tagService', $tagService);
+        $this->setProperty($controller, 'topicFactory', $topicFactory);
+        $this->setProperty($controller, 'persistenceManager', $persistenceManager);
+        $this->setProperty($controller, 'settings', ['purgeCache' => true, 'pids' => ['Forum' => 23]]);
+
+        $this->uriBuilder->expects(self::once())->method('setTargetPageUid')->with(23)->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('setArguments')->with([
+            'tx_typo3forum_forum[forum]' => 2,
+            'tx_typo3forum_forum[controller]' => 'Forum',
+            'tx_typo3forum_forum[action]' => 'show',
+        ])->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('build')->willReturn('forum/development-forums');
+        $this->uriBuilder->expects(self::once())->method('reset')->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('uriFor')
+            ->with('show', ['topic' => $topic], 'Topic')
+            ->willReturn('/forum/topic/test');
+
+        $previousHost = $_SERVER['HTTP_HOST'] ?? null;
+        $_SERVER['HTTP_HOST'] = 'typo3forum.ddev.site';
+        try {
+            $response = $controller->createAction($forum, $post, 'Test', [], [$uploadedFile]);
+        } finally {
+            if ($previousHost === null) {
+                unset($_SERVER['HTTP_HOST']);
+            } else {
+                $_SERVER['HTTP_HOST'] = $previousHost;
+            }
+        }
+
+        self::assertSame(307, $response->getStatusCode());
+        self::assertSame('/forum/topic/test', $response->getHeaderLine('Location'));
     }
 }
