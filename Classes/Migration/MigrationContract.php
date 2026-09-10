@@ -19,7 +19,7 @@ final class MigrationContract
             throw new RuntimeException('Cannot read the forum migration contract.');
         }
         $this->data = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
-        if (($this->data['format_version'] ?? null) !== '1.0' || ($this->data['rule_version'] ?? '') === '') {
+        if (($this->data['format_version'] ?? null) !== '2.0' || ($this->data['rule_version'] ?? '') === '') {
             throw new RuntimeException('Unsupported forum migration contract.');
         }
     }
@@ -48,9 +48,21 @@ final class MigrationContract
     }
 
     /** @return list<string> */
+    public function contentIntegerFields(): array
+    {
+        return $this->data['content_integer_fields'];
+    }
+
+    /** @return list<string> */
     public function integrityTables(): array
     {
         return $this->data['integrity_tables'];
+    }
+
+    /** @return array<string, array{fields:list<string>, integer_fields:list<string>}> */
+    public function integrityProjections(): array
+    {
+        return $this->data['integrity_projections'];
     }
 
     /** @return list<array{string, string, string, string, bool}> */

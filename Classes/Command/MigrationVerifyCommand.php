@@ -23,7 +23,7 @@ final class MigrationVerifyCommand extends AbstractMigrationCommand
         if ($path === '') {
             throw new \InvalidArgumentException('--plan is required.');
         }
-        $result = $this->migrationService->verify($this->migrationFile->read($path, 'typo3-forum-plan/1.0'));
+        $result = $this->migrationService->verify($this->migrationFile->read($path, 'typo3-forum-plan/2.0'));
         if ((string)$input->getOption('output') !== '') {
             $this->migrationFile->write((string)$input->getOption('output'), $result);
         }

@@ -82,21 +82,30 @@ function schema(PDO $pdo, string $driver): array
 }
 
 /** @return array{count:int, fingerprint:string} */
-function fingerprintTable(PDO $pdo, string $driver, string $table, array $columns): array
+function fingerprintTable(PDO $pdo, string $driver, string $table, array $columns, array $integerFields = [], ?string $where = null): array
 {
     $hash = hash_init('sha256');
     $count = 0;
     $quotedColumns = implode(', ', array_map(static fn (string $column): string => identifier($column, $driver), $columns));
     $order = in_array('uid', $columns, true) ? identifier('uid', $driver) : $quotedColumns;
-    $statement = $pdo->query('SELECT ' . $quotedColumns . ' FROM ' . identifier($table, $driver) . ' ORDER BY ' . $order);
+    $sql = 'SELECT ' . $quotedColumns . ' FROM ' . identifier($table, $driver);
+    if ($where !== null) {
+        $sql .= ' WHERE ' . $where;
+    }
+    $statement = $pdo->query($sql . ' ORDER BY ' . $order);
     if ($statement === false) {
         throw new RuntimeException('Cannot fingerprint ' . $table . '.');
     }
     while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+        foreach ($integerFields as $field) {
+            if (array_key_exists($field, $row) && $row[$field] !== null) {
+                $row[$field] = (int)$row[$field];
+            }
+        }
         hash_update($hash, canonicalJson($row) . "\n");
         ++$count;
     }
-    return ['count' => $count, 'fingerprint' => hash_final($hash)];
+    return ['status' => 'checked', 'projection_version' => '2.0.0', 'fields' => $columns, 'count' => $count, 'fingerprint' => hash_final($hash)];
 }
 
 /** @return array<string, string> */
@@ -228,7 +237,14 @@ try {
                     continue;
                 }
                 $record = $row;
-                $record['fingerprint'] = hash('sha256', canonicalJson($row));
+                $record['uid'] = (int)$record['uid'];
+                $normalizedRecord = $row;
+                foreach ($contract['content_integer_fields'] as $field) {
+                    if (array_key_exists($field, $normalizedRecord) && $normalizedRecord[$field] !== null) {
+                        $normalizedRecord[$field] = (int)$normalizedRecord[$field];
+                    }
+                }
+                $record['fingerprint'] = hash('sha256', canonicalJson($normalizedRecord));
                 if (isset($record['pi_flexform'])) {
                     try {
                         $record['flexform_values'] = flexValues((string)$record['pi_flexform']);
@@ -289,28 +305,50 @@ try {
         foreach ($pdo->query($sql) ?: [] as $group) {
             $value = (string)($group['explicit_allowdeny'] ?? '');
             if (str_contains($value, 'typo3forum_')) {
-                $permissions[] = ['uid' => (int)$group['uid'], 'subgroup' => (string)($group['subgroup'] ?? ''), 'fingerprint' => hash('sha256', canonicalJson($group)), 'tokens' => array_values(array_filter(array_map('trim', explode(',', $value)), static fn (string $token): bool => str_contains($token, 'typo3forum_')))];
+                $permissionProjection = ['uid' => (int)$group['uid'], 'subgroup' => (string)($group['subgroup'] ?? ''), 'explicit_allowdeny' => $value];
+                $permissions[] = ['uid' => (int)$group['uid'], 'subgroup' => (string)($group['subgroup'] ?? ''), 'before' => $value, 'fingerprint' => hash('sha256', canonicalJson($permissionProjection)), 'tokens' => array_values(array_filter(array_map('trim', explode(',', $value)), static fn (string $token): bool => str_contains($token, 'typo3forum_')))];
                 if (str_contains($value, 'typo3forum_pi1') || str_contains($value, 'typo3forum_widget')) {
                     $findings[] = ['severity' => 'blocker', 'code' => 'NON_EQUIVALENT_LEGACY_PERMISSION', 'uid' => (int)$group['uid']];
+                }
+                foreach (array_filter(array_map('trim', explode(',', $value))) as $token) {
+                    if (preg_match('/^tt_content:(?:list_type|CType):typo3forum_[^,]*:(?:ALLOW|DENY)$/D', $token)) {
+                        $findings[] = ['severity' => 'blocker', 'code' => 'OBSOLETE_ACCESS_MODE_PERMISSION', 'uid' => (int)$group['uid'], 'token' => $token];
+                    } elseif (str_contains($token, 'typo3forum_') && !preg_match('/^tt_content:(?:list_type|CType):[a-z0-9_]+$/D', $token)) {
+                        $findings[] = ['severity' => 'blocker', 'code' => 'MALFORMED_FORUM_PERMISSION', 'uid' => (int)$group['uid'], 'token' => $token];
+                    }
                 }
             }
         }
     }
 
     $integrity = [];
-    foreach ($contract['integrity_tables'] as $table) {
-        if (isset($databaseSchema[$table])) {
-            $integrity[$table] = fingerprintTable($pdo, $driver, $table, array_keys($databaseSchema[$table]));
+    foreach ($contract['integrity_projections'] as $logicalTable => $projection) {
+        $table = $logicalTable;
+        $where = null;
+        if ($logicalTable === 'fe_users_passwords') {
+            $table = 'fe_users';
+        } elseif ($logicalTable === 'forum_file_references') {
+            $table = 'sys_file_reference';
+            $where = identifier('tablenames', $driver) . " LIKE 'tx_typo3forum_%'";
+        }
+        if (!isset($databaseSchema[$table])) {
+            continue;
+        }
+        $missing = array_values(array_diff($projection['fields'], array_keys($databaseSchema[$table])));
+        if ($missing !== []) {
+            $integrity[$logicalTable] = ['status' => 'not_checked_missing_fields', 'projection_version' => $contract['rule_version'], 'fields' => $projection['fields'], 'missing_fields' => $missing, 'count' => (int)$pdo->query('SELECT COUNT(*) FROM ' . identifier($table, $driver))->fetchColumn()];
+        } else {
+            $integrity[$logicalTable] = fingerprintTable($pdo, $driver, $table, $projection['fields'], $projection['integer_fields'], $where);
         }
     }
-    if (isset($databaseSchema['fe_users'])) {
-        $columns = array_values(array_intersect(['uid', 'password'], array_keys($databaseSchema['fe_users'])));
-        if ($columns === ['uid', 'password']) {
-            $integrity['fe_users_passwords'] = fingerprintTable($pdo, $driver, 'fe_users', $columns);
+    foreach ($integrity as $table => $evidence) {
+        if (($evidence['status'] ?? null) !== 'checked' && ($evidence['count'] ?? 0) > 0) {
+            $findings[] = ['severity' => 'indeterminate', 'code' => 'INTEGRITY_PROJECTION_INCOMPLETE', 'table' => $table, 'missing_fields' => $evidence['missing_fields'] ?? []];
         }
     }
+    $infrastructure = [];
     if (isset($databaseSchema['sys_file_storage'])) {
-        $integrity['file_storages'] = fingerprintTable($pdo, $driver, 'sys_file_storage', array_keys($databaseSchema['sys_file_storage']));
+        $infrastructure['file_storages'] = ['count' => (int)$pdo->query('SELECT COUNT(*) FROM ' . identifier('sys_file_storage', $driver))->fetchColumn(), 'classification' => 'ordinary_typo3_infrastructure'];
     }
 
     $relations = [];
@@ -338,10 +376,27 @@ try {
 
     $projectFindings = scanProject((string)($options['project-root'] ?? ''));
     if ($projectFindings !== []) {
-        $findings[] = ['severity' => 'indeterminate', 'code' => 'PROJECT_CONFIGURATION_REVIEW_REQUIRED', 'count' => count($projectFindings)];
+        $findings[] = ['severity' => 'warning', 'code' => 'PROJECT_CONFIGURATION_REVIEW_REQUIRED', 'count' => count($projectFindings), 'scope' => 'production_acceptance'];
     }
     $oldCount = array_sum($counts['standard']) + $counts['legacy_pi1'] + $counts['unknown'];
-    $hasForumData = array_sum(array_column($integrity, 'count')) > 0;
+    $pendingPermissions = 0;
+    foreach ($permissions as $permission) {
+        foreach ($permission['tokens'] as $token) {
+            if (preg_match('/^tt_content:list_type:([a-z0-9_]+)$/D', $token, $matches) && isset($contract['standard_plugins'][$matches[1]])) {
+                ++$pendingPermissions;
+            }
+        }
+    }
+    $hasForumData = false;
+    foreach ($integrity as $table => $evidence) {
+        if (str_starts_with($table, 'tx_typo3forum_domain_model_') && ($evidence['count'] ?? 0) > 0) {
+            $hasForumData = true;
+            break;
+        }
+    }
+    if ($listTypeState !== 'present' && $hasForumData && $expectedLegacyUids === []) {
+        $findings[] = ['severity' => 'indeterminate', 'code' => 'LIST_TYPE_MISSING_WITHOUT_SOURCE_PROOF'];
+    }
     $status = 'READY';
     if (array_filter($findings, static fn (array $finding): bool => $finding['severity'] === 'error')) {
         $status = 'ERROR';
@@ -349,18 +404,18 @@ try {
         $status = 'BLOCKED';
     } elseif (array_filter($findings, static fn (array $finding): bool => $finding['severity'] === 'indeterminate')) {
         $status = 'INDETERMINATE';
-    } elseif ($oldCount === 0) {
+    } elseif ($oldCount === 0 && $pendingPermissions === 0) {
         $status = $listTypeState === 'present' || !$hasForumData ? 'ALREADY_MIGRATED' : 'INDETERMINATE';
     }
     $manifest = [
-        'manifest_format' => 'typo3-forum-preflight/1.0',
+        'manifest_format' => 'typo3-forum-preflight/2.0',
         'contract_version' => $contract['rule_version'],
         'captured_at' => gmdate('c'),
         'status' => $status,
         'source' => ['typo3_version' => $options['typo3-version'] ?? null, 'extension_version' => $options['extension-version'] ?? null, 'database_driver' => $driver, 'database_version' => (string)$pdo->getAttribute(PDO::ATTR_SERVER_VERSION)],
         'schema' => ['tt_content_list_type' => $listTypeState, 'tables' => $databaseSchema],
-        'inventory' => ['counts' => $counts, 'content_records' => $records, 'backend_permissions' => $permissions, 'project_findings' => $projectFindings],
-        'integrity' => ['tables' => $integrity, 'relations' => $relations],
+        'inventory' => ['counts' => $counts, 'pending_permission_conversions' => $pendingPermissions, 'content_records' => $records, 'backend_permissions' => $permissions, 'project_findings' => $projectFindings, 'infrastructure' => $infrastructure],
+        'integrity' => ['projection_version' => $contract['rule_version'], 'tables' => $integrity, 'relations' => $relations],
         'findings' => $findings,
         'scan_limits' => ['project_scan' => 'Static files up to 2 MB; excludes vendor, var, typo3temp, .git and node_modules. Dynamic/database/external configuration requires review.', 'remote_files' => 'Remote FAL object availability is not tested.'],
     ];

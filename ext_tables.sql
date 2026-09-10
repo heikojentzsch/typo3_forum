@@ -646,6 +646,7 @@ CREATE TABLE tx_typo3forum_migration_journal (
 CREATE TABLE tx_typo3forum_migration_lock (
   lock_id int(11) NOT NULL default '1',
   manifest_checksum char(64) NOT NULL default '',
+  owner_token char(64) NOT NULL default '',
   started_at int(11) NOT NULL default '0',
   PRIMARY KEY (lock_id)
 );

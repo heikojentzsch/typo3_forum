@@ -8,6 +8,7 @@ use Mittwald\Typo3Forum\Migration\CanonicalJson;
 use Mittwald\Typo3Forum\Migration\FlexFormMigrator;
 use Mittwald\Typo3Forum\Migration\MigrationContract;
 use Mittwald\Typo3Forum\Migration\MigrationService;
+use Mittwald\Typo3Forum\Updates\ForumPluginMigrationUpdate;
 use RuntimeException;
 
 final class MigrationServiceTest extends DatabaseTestCase
@@ -20,7 +21,7 @@ final class MigrationServiceTest extends DatabaseTestCase
         $this->connection->executeStatement('CREATE TABLE tt_content (uid INTEGER PRIMARY KEY, pid INTEGER, CType TEXT, list_type TEXT, pi_flexform TEXT, pages TEXT, recursive INTEGER, sys_language_uid INTEGER, l18n_parent INTEGER, t3ver_oid INTEGER, t3ver_id INTEGER, t3ver_wsid INTEGER, t3ver_state INTEGER, hidden INTEGER, deleted INTEGER, starttime INTEGER, endtime INTEGER, sorting INTEGER, colPos INTEGER, header TEXT)');
         $this->connection->executeStatement('CREATE TABLE be_groups (uid INTEGER PRIMARY KEY, subgroup TEXT, explicit_allowdeny TEXT)');
         $this->connection->executeStatement('CREATE TABLE tx_typo3forum_migration_journal (uid INTEGER PRIMARY KEY AUTOINCREMENT, manifest_checksum TEXT, table_name TEXT, record_uid INTEGER, rule_id TEXT, rule_version TEXT, before_fingerprint TEXT, after_fingerprint TEXT, applied_at INTEGER, UNIQUE (manifest_checksum, table_name, record_uid))');
-        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_migration_lock (lock_id INTEGER PRIMARY KEY, manifest_checksum TEXT, started_at INTEGER)');
+        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_migration_lock (lock_id INTEGER PRIMARY KEY, manifest_checksum TEXT, owner_token TEXT, started_at INTEGER)');
         $this->service = new MigrationService($this->pool, new MigrationContract(), new FlexFormMigrator());
     }
 
@@ -91,18 +92,21 @@ final class MigrationServiceTest extends DatabaseTestCase
         self::assertSame(['list', 'list', 'list'], $this->connection->fetchFirstColumn('SELECT CType FROM tt_content ORDER BY uid'));
     }
 
-    public function testBackendRightsAreMappedOneToOneWhilePi1AndContradictionsBlock(): void
+    public function testBackendRightsUsePlainV14TokensWhileObsoleteAndAggregateFormatsBlock(): void
     {
         $this->insertContent(1, 'list', 'typo3forum_forum', '');
-        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '2', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_forum:ALLOW,tt_content:list_type:news_pi1:ALLOW']);
+        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '2', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_forum,tt_content:list_type:news_pi1,tt_content:list_type:typo3forum_forum,tt_content:CType:typo3forum_forum']);
         $plan = $this->service->plan();
         self::assertSame('READY', $plan['status']);
         self::assertCount(2, $plan['operations']);
         $this->service->apply($plan, $plan['checksum']);
-        self::assertSame('tt_content:CType:typo3forum_forum:ALLOW,tt_content:list_type:news_pi1:ALLOW', $this->connection->fetchOne('SELECT explicit_allowdeny FROM be_groups WHERE uid = 1'));
+        self::assertSame('tt_content:CType:typo3forum_forum,tt_content:list_type:news_pi1', $this->connection->fetchOne('SELECT explicit_allowdeny FROM be_groups WHERE uid = 1'));
+        self::assertSame('2', $this->connection->fetchOne('SELECT subgroup FROM be_groups WHERE uid = 1'));
 
         $this->connection->insert('be_groups', ['uid' => 2, 'subgroup' => '', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_pi1:ALLOW']);
+        $this->connection->insert('be_groups', ['uid' => 3, 'subgroup' => '', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_forum:DENY']);
         self::assertSame('BLOCKED', $this->service->check()['status']);
+        self::assertContains('OBSOLETE_ACCESS_MODE_PERMISSION', array_column($this->service->check()['findings'], 'code'));
     }
 
     public function testChangedSourceAndTamperedPlansAreRejected(): void
@@ -118,13 +122,7 @@ final class MigrationServiceTest extends DatabaseTestCase
     public function testNewLegacyRecordAfterPreflightBlocksTheTargetPlan(): void
     {
         $this->insertContent(1, 'list', 'typo3forum_forum', '');
-        $check = $this->service->check();
-        $preflight = [
-            'manifest_format' => 'typo3-forum-preflight/1.0',
-            'contract_version' => (new MigrationContract())->version(),
-            'inventory' => ['content_records' => [['uid' => 1, 'fingerprint' => $check['inventory']['content_records'][0]['fingerprint']]]],
-        ];
-        $preflight['checksum'] = CanonicalJson::checksum($preflight);
+        $preflight = $this->preflight();
         $this->insertContent(2, 'list', 'typo3forum_topiclist', '');
         $blocked = $this->service->check($preflight);
         self::assertSame('BLOCKED', $blocked['status']);
@@ -171,7 +169,7 @@ final class MigrationServiceTest extends DatabaseTestCase
     {
         $this->insertContent(1, 'list', 'typo3forum_forum', '');
         $plan = $this->service->plan();
-        $this->connection->insert('tx_typo3forum_migration_lock', ['lock_id' => 1, 'manifest_checksum' => $plan['checksum'], 'started_at' => 1]);
+        $this->connection->insert('tx_typo3forum_migration_lock', ['lock_id' => 1, 'manifest_checksum' => $plan['checksum'], 'owner_token' => 'interrupted', 'started_at' => 1]);
         try {
             $this->service->apply($plan, $plan['checksum']);
             self::fail('An existing lock must stop the default apply path.');
@@ -180,6 +178,16 @@ final class MigrationServiceTest extends DatabaseTestCase
         }
         self::assertSame('SUCCESS', $this->service->apply($plan, $plan['checksum'], true)['status']);
         self::assertSame(0, (int)$this->connection->fetchOne('SELECT COUNT(*) FROM tx_typo3forum_migration_lock'));
+    }
+
+    public function testInterruptedRecoveryDoesNotStealARecentActiveLock(): void
+    {
+        $this->insertContent(1, 'list', 'typo3forum_forum', '');
+        $plan = $this->service->plan();
+        $this->connection->insert('tx_typo3forum_migration_lock', ['lock_id' => 1, 'manifest_checksum' => $plan['checksum'], 'owner_token' => 'active', 'started_at' => time()]);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('still recent');
+        $this->service->apply($plan, $plan['checksum'], true);
     }
 
     public function testMissingListTypeIsIndeterminateWithForumDataButFreshSchemaIsComplete(): void
@@ -230,6 +238,273 @@ final class MigrationServiceTest extends DatabaseTestCase
         self::assertSame($before, $this->connection->fetchAssociative('SELECT * FROM tt_content WHERE uid = 1'));
         self::assertSame(0, (int)$this->connection->fetchOne('SELECT COUNT(*) FROM tx_typo3forum_migration_journal'));
         self::assertSame(0, (int)$this->connection->fetchOne('SELECT COUNT(*) FROM tx_typo3forum_migration_lock'));
+    }
+
+    public function testBlockedErrorAndIndeterminatePlansNeverVerifyAsSuccess(): void
+    {
+        $this->insertContent(1, 'list', 'typo3forum_pi1', $this->legacyFlexForm('Unknown->action'));
+        $blocked = $this->service->plan();
+        self::assertSame('BLOCKED', $blocked['status']);
+        self::assertSame('BLOCKED', $this->service->verify($blocked)['status']);
+        self::assertContains('PLAN_NOT_VERIFIABLE', array_column($this->service->verify($blocked)['problems'], 'code'));
+
+        foreach (['ERROR', 'INDETERMINATE'] as $status) {
+            $plan = $blocked;
+            $plan['status'] = $status;
+            unset($plan['checksum']);
+            $plan['checksum'] = CanonicalJson::checksum($plan);
+            self::assertSame($status, $this->service->verify($plan)['status']);
+        }
+    }
+
+    public function testVerificationRequiresAppliedTargetsAndJournalEvidence(): void
+    {
+        $this->insertContent(1, 'list', 'typo3forum_forum', '');
+        $plan = $this->service->plan();
+        $unexecuted = $this->service->verify($plan);
+        self::assertSame('BLOCKED', $unexecuted['status']);
+        self::assertContains('TARGET_MISMATCH', array_column($unexecuted['problems'], 'code'));
+        self::assertContains('JOURNAL_MISSING', array_column($unexecuted['problems'], 'code'));
+
+        self::assertSame('SUCCESS', $this->service->apply($plan, $plan['checksum'])['status']);
+        $this->connection->update('tx_typo3forum_migration_journal', ['rule_id' => 'wrong-rule'], ['manifest_checksum' => $plan['checksum']]);
+        self::assertContains('JOURNAL_MISSING', array_column($this->service->verify($plan)['problems'], 'code'));
+        $this->connection->delete('tx_typo3forum_migration_journal', ['manifest_checksum' => $plan['checksum']]);
+        self::assertContains('JOURNAL_MISSING', array_column($this->service->verify($plan)['problems'], 'code'));
+        $this->connection->executeStatement('DROP TABLE tx_typo3forum_migration_journal');
+        self::assertContains('JOURNAL_TABLE_MISSING', array_column($this->service->verify($plan)['problems'], 'code'));
+    }
+
+    public function testFreshNoOpIsRecheckedAndDoesNotFabricateJournalEvidence(): void
+    {
+        $plan = $this->service->plan();
+        self::assertSame('ALREADY_MIGRATED', $plan['status']);
+        self::assertSame('NO_MIGRATION_REQUIRED', $this->service->verify($plan)['status']);
+        self::assertSame(0, (int)$this->connection->fetchOne('SELECT COUNT(*) FROM tx_typo3forum_migration_journal'));
+
+        $this->insertContent(1, 'list', 'typo3forum_forum', '');
+        self::assertSame('BLOCKED', $this->service->verify($plan)['status']);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('no-op plan');
+        $this->service->apply($plan, $plan['checksum']);
+    }
+
+    public function testInconsistentNoOpPlanAndRemovedEvidenceAreRejected(): void
+    {
+        $this->insertContent(1, 'list', 'typo3forum_forum', '');
+        $ready = $this->service->plan();
+        $ready['status'] = 'ALREADY_MIGRATED';
+        unset($ready['checksum']);
+        $ready['checksum'] = CanonicalJson::checksum($ready);
+        try {
+            $this->service->verify($ready);
+            self::fail('An inconsistent no-op plan must be rejected.');
+        } catch (RuntimeException $exception) {
+            self::assertStringContainsString('must not contain operations', $exception->getMessage());
+        }
+
+        $preflight = $this->preflight();
+        $plan = $this->service->plan($preflight);
+        $plan['source_evidence'] = null;
+        unset($plan['checksum']);
+        $plan['checksum'] = CanonicalJson::checksum($plan);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('source-evidence assurance');
+        $this->service->verify($plan);
+    }
+
+    public function testRechecksummedPreflightCannotOmitMandatoryIntegrityEvidence(): void
+    {
+        $preflight = $this->preflight();
+        unset($preflight['integrity'], $preflight['checksum']);
+        $preflight['checksum'] = CanonicalJson::checksum($preflight);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('structure is invalid');
+        $this->service->plan($preflight);
+    }
+
+    public function testTargetOnlyAssuranceIsDisclosedAndVersionOneEvidenceIsRejected(): void
+    {
+        $check = $this->service->check();
+        self::assertSame('target_only', $check['assurance']);
+        self::assertContains('SOURCE_PREFLIGHT_NOT_SUPPLIED', array_column($check['findings'], 'code'));
+        self::assertSame('target_only', $this->service->plan()['assurance']);
+
+        $old = ['manifest_format' => 'typo3-forum-preflight/1.0', 'contract_version' => '1.0.0'];
+        $old['checksum'] = CanonicalJson::checksum($old);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Version 1 evidence is insufficient');
+        $this->service->check($old);
+    }
+
+    public function testPermissionOnlyWorkIsReadyWithAndWithoutListTypeColumn(): void
+    {
+        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '7', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_forum,tt_content:list_type:news_pi1']);
+        self::assertSame('READY', $this->service->check()['status']);
+        $plan = $this->service->plan();
+        self::assertCount(1, $plan['operations']);
+        self::assertSame('be_groups', $plan['operations'][0]['table']);
+        self::assertSame('READY', $this->service->dryRun($plan)['status']);
+        self::assertSame('SUCCESS', $this->service->apply($plan, $plan['checksum'])['status']);
+        self::assertSame('tt_content:CType:typo3forum_forum,tt_content:list_type:news_pi1', $this->connection->fetchOne('SELECT explicit_allowdeny FROM be_groups WHERE uid = 1'));
+        self::assertSame('ALREADY_MIGRATED', $this->service->check()['status']);
+
+        $this->connection->update('be_groups', ['explicit_allowdeny' => 'tt_content:list_type:typo3forum_topiclist'], ['uid' => 1]);
+        $this->connection->executeStatement('ALTER TABLE tt_content DROP COLUMN list_type');
+        self::assertSame('READY', $this->service->check()['status']);
+        $permissionPlan = $this->service->plan();
+        self::assertSame('SUCCESS', $this->service->apply($permissionPlan, $permissionPlan['checksum'])['status']);
+    }
+
+    public function testPermissionSubgroupChangeAfterPlanningIsAConflict(): void
+    {
+        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '2', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_forum']);
+        $plan = $this->service->plan();
+        $this->connection->update('be_groups', ['subgroup' => '3'], ['uid' => 1]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Source conflict');
+        $this->service->apply($plan, $plan['checksum']);
+    }
+
+    public function testWizardUsesSharedPermissionOnlyReadinessAndExecution(): void
+    {
+        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_userlist']);
+        $wizard = new ForumPluginMigrationUpdate($this->pool, $this->service, new MigrationContract());
+        self::assertTrue($wizard->updateNecessary());
+        self::assertTrue($wizard->executeUpdate());
+        self::assertFalse($wizard->updateNecessary());
+        self::assertSame('tt_content:CType:typo3forum_userlist', $this->connection->fetchOne('SELECT explicit_allowdeny FROM be_groups WHERE uid = 1'));
+    }
+
+    public function testPermissionParsingNeverTurnsDenyIntoGrantAndPreservesUnrelatedEntries(): void
+    {
+        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '2,3', 'explicit_allowdeny' => 'pages:doktype:1,tt_content:list_type:typo3forum_forum:DENY,tt_content:CType:text']);
+        $check = $this->service->check();
+        self::assertSame('BLOCKED', $check['status']);
+        self::assertContains('OBSOLETE_ACCESS_MODE_PERMISSION', array_column($check['findings'], 'code'));
+        self::assertSame('pages:doktype:1,tt_content:list_type:typo3forum_forum:DENY,tt_content:CType:text', $this->connection->fetchOne('SELECT explicit_allowdeny FROM be_groups WHERE uid = 1'));
+    }
+
+    public function testSourceEvidenceDetectsDeletedOrChangedForumDataAndPermissionChanges(): void
+    {
+        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_forum (uid INTEGER PRIMARY KEY, title TEXT)');
+        $this->connection->insert('tx_typo3forum_domain_model_forum_forum', ['uid' => 5, 'title' => 'Original']);
+        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_forum']);
+        $preflight = $this->preflight();
+
+        $this->connection->update('tx_typo3forum_domain_model_forum_forum', ['title' => 'Changed'], ['uid' => 5]);
+        $this->connection->update('be_groups', ['subgroup' => '9'], ['uid' => 1]);
+        $check = $this->service->check($preflight);
+        self::assertSame('BLOCKED', $check['status']);
+        self::assertContains('SOURCE_INTEGRITY_MISMATCH', array_column($check['findings'], 'code'));
+        self::assertContains('SOURCE_PERMISSION_CHANGED_AFTER_PREFLIGHT', array_column($check['findings'], 'code'));
+
+        $this->connection->delete('tx_typo3forum_domain_model_forum_forum', ['uid' => 5]);
+        self::assertContains('SOURCE_INTEGRITY_MISMATCH', array_column($this->service->check($preflight)['findings'], 'code'));
+    }
+
+    public function testAdditiveSchemaFieldsDoNotReplaceOrInvalidateProtectedSourceProjection(): void
+    {
+        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_forum (uid INTEGER PRIMARY KEY, title TEXT, legacy_extra TEXT)');
+        $this->connection->insert('tx_typo3forum_domain_model_forum_forum', ['uid' => 1, 'title' => 'Protected', 'legacy_extra' => 'source-only']);
+        $preflight = $this->preflight();
+
+        $this->connection->executeStatement('ALTER TABLE tx_typo3forum_domain_model_forum_forum ADD COLUMN target_addition TEXT');
+        $this->connection->update('tx_typo3forum_domain_model_forum_forum', ['target_addition' => 'new-default'], ['uid' => 1]);
+
+        self::assertSame('ALREADY_MIGRATED', $this->service->check($preflight)['status']);
+    }
+
+    public function testSupportedCorePermissionPrerequisiteIsReconciledExplicitly(): void
+    {
+        $this->connection->insert('be_groups', ['uid' => 1, 'subgroup' => '4', 'explicit_allowdeny' => 'tt_content:list_type:typo3forum_forum']);
+        $preflight = $this->preflight();
+
+        $this->connection->update('be_groups', ['explicit_allowdeny' => 'tt_content:CType:typo3forum_forum'], ['uid' => 1]);
+        $check = $this->service->check($preflight);
+
+        self::assertSame('ALREADY_MIGRATED', $check['status']);
+        self::assertContains('SOURCE_PERMISSION_PREREQUISITE_RESOLVED', array_column($check['resolutions'], 'code'));
+        self::assertNotContains('SOURCE_PERMISSION_CHANGED_AFTER_PREFLIGHT', array_column($check['findings'], 'code'));
+    }
+
+    public function testSourceBlockerAndNullVersusEmptyRemainVisible(): void
+    {
+        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_post (uid INTEGER PRIMARY KEY, topic INTEGER, text TEXT, author INTEGER, author_name TEXT)');
+        $this->connection->insert('tx_typo3forum_domain_model_forum_post', ['uid' => 1, 'topic' => 0, 'text' => null, 'author' => 0, 'author_name' => 'anonymous']);
+        $preflight = $this->preflight([['severity' => 'blocker', 'code' => 'PROJECT_SOURCE_BLOCKER']]);
+        self::assertSame('BLOCKED', $this->service->check($preflight)['status']);
+        self::assertContains('SOURCE_PROJECT_SOURCE_BLOCKER', array_column($this->service->check($preflight)['findings'], 'code'));
+
+        $preflight = $this->preflight();
+        $this->connection->update('tx_typo3forum_domain_model_forum_post', ['text' => ''], ['uid' => 1]);
+        self::assertContains('SOURCE_INTEGRITY_MISMATCH', array_column($this->service->check($preflight)['findings'], 'code'));
+    }
+
+    public function testSourceAcceptanceWarningRemainsVisibleWithoutBlockingSupportedConversion(): void
+    {
+        $this->insertContent(1, 'list', 'typo3forum_forum', '');
+        $preflight = $this->preflight([['severity' => 'warning', 'code' => 'PROJECT_CONFIGURATION_REVIEW_REQUIRED', 'scope' => 'production_acceptance']]);
+
+        $check = $this->service->check($preflight);
+
+        self::assertSame('READY', $check['status']);
+        self::assertContains('SOURCE_PROJECT_CONFIGURATION_REVIEW_REQUIRED', array_column($check['findings'], 'code'));
+    }
+
+    public function testDefaultFalStorageAndUnrelatedInfrastructureDoNotInventLegacyForumData(): void
+    {
+        $this->connection->executeStatement('CREATE TABLE sys_file_storage (uid INTEGER PRIMARY KEY, name TEXT)');
+        $this->connection->executeStatement('CREATE TABLE sys_file (uid INTEGER PRIMARY KEY, identifier TEXT)');
+        $this->connection->executeStatement('CREATE TABLE fe_users (uid INTEGER PRIMARY KEY, password TEXT)');
+        $this->connection->insert('sys_file_storage', ['uid' => 1, 'name' => 'fileadmin']);
+        $this->connection->insert('sys_file', ['uid' => 1, 'identifier' => '/unrelated.txt']);
+        $this->connection->insert('fe_users', ['uid' => 1, 'password' => 'preserve']);
+        $this->connection->executeStatement('ALTER TABLE tt_content DROP COLUMN list_type');
+        self::assertSame('ALREADY_MIGRATED', $this->service->check()['status']);
+    }
+
+    public function testJournalFailureRollsBackTheProtectedRecordUpdate(): void
+    {
+        $this->insertContent(1, 'list', 'typo3forum_forum', '');
+        $plan = $this->service->plan();
+        $this->connection->executeStatement("CREATE TRIGGER reject_migration_journal BEFORE INSERT ON tx_typo3forum_migration_journal BEGIN SELECT RAISE(ABORT, 'journal rejected'); END");
+        try {
+            $this->service->apply($plan, $plan['checksum']);
+            self::fail('Journal failure must abort apply.');
+        } catch (\Throwable $exception) {
+            self::assertStringContainsString('journal rejected', $exception->getMessage());
+        }
+        self::assertSame('list', $this->connection->fetchOne('SELECT CType FROM tt_content WHERE uid = 1'));
+        self::assertSame(0, (int)$this->connection->fetchOne('SELECT COUNT(*) FROM tx_typo3forum_migration_lock'));
+    }
+
+    /** @param list<array<string, mixed>> $findings */
+    private function preflight(array $findings = []): array
+    {
+        $check = $this->service->check();
+        $preflight = [
+            'manifest_format' => 'typo3-forum-preflight/2.0',
+            'contract_version' => (new MigrationContract())->version(),
+            'captured_at' => gmdate('c'),
+            'status' => match (true) {
+                $findings === [] => $check['status'],
+                in_array('error', array_column($findings, 'severity'), true) => 'ERROR',
+                in_array('blocker', array_column($findings, 'severity'), true) => 'BLOCKED',
+                in_array('indeterminate', array_column($findings, 'severity'), true) => 'INDETERMINATE',
+                default => $check['status'],
+            },
+            'source' => ['typo3_version' => '12.4', 'extension_version' => '12.x', 'database_driver' => 'sqlite'],
+            'schema' => $check['schema'],
+            'inventory' => $check['inventory'],
+            'integrity' => $check['integrity'],
+            'findings' => $findings,
+            'scan_limits' => [],
+        ];
+        $preflight['checksum'] = CanonicalJson::checksum($preflight);
+        return $preflight;
     }
 
     /** @param array<string, int|string> $overrides */

@@ -26,7 +26,7 @@ final class MigrationApplyCommand extends AbstractMigrationCommand
         if ($path === '') {
             throw new \InvalidArgumentException('--plan is required.');
         }
-        $plan = $this->migrationFile->read($path, 'typo3-forum-plan/1.0');
+        $plan = $this->migrationFile->read($path, 'typo3-forum-plan/2.0');
         if ((bool)$input->getOption('dry-run')) {
             $result = $this->migrationService->dryRun($plan);
             $result['applied'] = 0;

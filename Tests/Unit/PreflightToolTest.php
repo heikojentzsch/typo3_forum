@@ -87,4 +87,67 @@ final class PreflightToolTest extends TestCase
             @rmdir($directory);
         }
     }
+
+    public function testDefaultFalStorageIsInfrastructureAndObsoletePermissionsBlock(): void
+    {
+        if (!extension_loaded('pdo_sqlite')) {
+            self::markTestSkipped('The standalone preflight test requires pdo_sqlite.');
+        }
+        $directory = sys_get_temp_dir() . '/forum-preflight-evidence-' . bin2hex(random_bytes(8));
+        mkdir($directory, 0700);
+        $database = $directory . '/source.sqlite';
+        $report = $directory . '/report.json';
+        try {
+            $pdo = new PDO('sqlite:' . $database);
+            $pdo->exec('CREATE TABLE tt_content (uid INTEGER PRIMARY KEY, CType TEXT)');
+            $pdo->exec('CREATE TABLE sys_file_storage (uid INTEGER PRIMARY KEY, name TEXT)');
+            $pdo->exec("INSERT INTO sys_file_storage VALUES (1, 'fileadmin')");
+            unset($pdo);
+            $process = proc_open([PHP_BINARY, dirname(__DIR__, 2) . '/Resources/Private/Migration/preflight.php', '--dsn=sqlite:' . $database, '--output=' . $report], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+            self::assertIsResource($process);
+            stream_get_contents($pipes[1]);
+            stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            self::assertSame(10, proc_close($process));
+            $manifest = json_decode((string)file_get_contents($report), true, 512, JSON_THROW_ON_ERROR);
+            self::assertSame('typo3-forum-preflight/2.0', $manifest['manifest_format']);
+            self::assertSame('ALREADY_MIGRATED', $manifest['status']);
+            self::assertSame('ordinary_typo3_infrastructure', $manifest['inventory']['infrastructure']['file_storages']['classification']);
+
+            unlink($report);
+            $pdo = new PDO('sqlite:' . $database);
+            $pdo->exec('CREATE TABLE tx_typo3forum_domain_model_forum_forum (uid INTEGER PRIMARY KEY, title TEXT)');
+            $pdo->exec("INSERT INTO tx_typo3forum_domain_model_forum_forum VALUES (1, 'Existing forum')");
+            unset($pdo);
+            $process = proc_open([PHP_BINARY, dirname(__DIR__, 2) . '/Resources/Private/Migration/preflight.php', '--dsn=sqlite:' . $database, '--output=' . $report], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+            self::assertIsResource($process);
+            stream_get_contents($pipes[1]);
+            stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            self::assertSame(30, proc_close($process));
+            $manifest = json_decode((string)file_get_contents($report), true, 512, JSON_THROW_ON_ERROR);
+            self::assertContains('LIST_TYPE_MISSING_WITHOUT_SOURCE_PROOF', array_column($manifest['findings'], 'code'));
+
+            unlink($report);
+            $pdo = new PDO('sqlite:' . $database);
+            $pdo->exec('CREATE TABLE be_groups (uid INTEGER PRIMARY KEY, subgroup TEXT, explicit_allowdeny TEXT)');
+            $pdo->exec("INSERT INTO be_groups VALUES (1, '', 'tt_content:list_type:typo3forum_forum:DENY')");
+            unset($pdo);
+            $process = proc_open([PHP_BINARY, dirname(__DIR__, 2) . '/Resources/Private/Migration/preflight.php', '--dsn=sqlite:' . $database, '--output=' . $report], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+            self::assertIsResource($process);
+            stream_get_contents($pipes[1]);
+            stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            self::assertSame(20, proc_close($process));
+            $manifest = json_decode((string)file_get_contents($report), true, 512, JSON_THROW_ON_ERROR);
+            self::assertContains('OBSOLETE_ACCESS_MODE_PERMISSION', array_column($manifest['findings'], 'code'));
+        } finally {
+            @unlink($report);
+            @unlink($database);
+            @rmdir($directory);
+        }
+    }
 }
