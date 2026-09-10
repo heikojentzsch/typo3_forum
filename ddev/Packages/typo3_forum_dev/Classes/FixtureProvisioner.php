@@ -33,7 +33,7 @@ final class FixtureProvisioner
         $this->ensureBackendAdministrator($credentials);
         $identities = $this->provisionIdentities($pages['users_storage'], $credentials);
         $this->ownershipStore->completePhase('identities');
-        $this->protectDashboard($pages['dashboard'], $identities['member_group']);
+        $this->protectRestrictedPages($pages, $identities);
         $this->provisionContent($pages);
         $this->ownershipStore->completePhase('content');
         $this->failForSmokeTestAfter('content');
@@ -41,6 +41,8 @@ final class FixtureProvisioner
         $this->ownershipStore->completePhase('parser');
         $this->provisionForum($pages, $identities);
         $this->ownershipStore->completePhase('forum');
+        $this->provisionStatistics($pages);
+        $this->ownershipStore->completePhase('statistics');
         $this->provisionStorage();
         $this->ownershipStore->completePhase('storage');
         $this->writeSiteConfiguration($pages['root'], $pages['login']);
@@ -196,13 +198,22 @@ final class FixtureProvisioner
         }
     }
 
-    private function protectDashboard(int $dashboardPageUid, int $memberGroupUid): void
+    /** @param array<string, int> $pages
+     *  @param array<string, int> $identities
+     */
+    private function protectRestrictedPages(array $pages, array $identities): void
     {
-        $this->connectionPool->getConnectionForTable('pages')->update(
-            'pages',
-            ['fe_group' => (string)$memberGroupUid, 'tstamp' => time()],
-            ['uid' => $dashboardPageUid],
-        );
+        $connection = $this->connectionPool->getConnectionForTable('pages');
+        foreach ([
+            $pages['dashboard'] => $identities['member_group'],
+            $pages['moderation'] => $identities['moderator_group'],
+        ] as $pageUid => $groupUid) {
+            $connection->update(
+                'pages',
+                ['fe_group' => (string)$groupUid, 'tstamp' => time()],
+                ['uid' => $pageUid],
+            );
+        }
     }
 
     /** @param array<string, mixed> $data */
@@ -303,6 +314,11 @@ TYPOSCRIPT;
             'description' => 'Public forum for local development.', 'slug' => 'development-forum',
             'sorting' => 100, 'hidden' => 0, 'deleted' => 0, 'crdate' => $now, 'tstamp' => $now,
         ]);
+        $moderatorForum = $this->ownershipStore->getOrCreate('forum.moderator', 'tx_typo3forum_domain_model_forum_forum', [
+            'pid' => $storagePid, 'displayed_pid' => $pages['forum'], 'forum' => $category, 'title' => 'Moderator forum',
+            'description' => 'Forum visible only to moderators.', 'slug' => 'moderator-forum',
+            'sorting' => 200, 'hidden' => 0, 'deleted' => 0, 'crdate' => $now, 'tstamp' => $now,
+        ]);
         $topic = $this->ownershipStore->getOrCreate('topic.sample', 'tx_typo3forum_domain_model_forum_topic', [
             'pid' => $storagePid, 'forum' => $forum, 'subject' => 'Welcome to the development forum',
             'slug' => 'welcome-to-the-development-forum', 'author' => $identities['member'], 'post_count' => 1,
@@ -315,29 +331,34 @@ TYPOSCRIPT;
         ]);
 
         $forumConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_forum');
-        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET children = 1 WHERE uid = ? AND children = 0', [$category]);
+        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET children = 2 WHERE uid = ? AND children < 2', [$category]);
         $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET topics = 1, topic_count = 1, post_count = 1, last_topic = ?, last_post = ? WHERE uid = ? AND topics = 0', [$topic, $post, $forum]);
         $topicConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_topic');
         $topicConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_topic SET posts = 1, last_post = ? WHERE uid = ? AND posts = 0', [$post, $topic]);
 
-        $access = static fn (string $operation, int $level, int $group = 0): array => [
-            'pid' => $storagePid, 'forum' => $forum, 'operation' => $operation, 'login_level' => $level,
-            'affected_group' => $group, 'negate' => 0, 'hidden' => 0, 'deleted' => 0, 'crdate' => $now, 'tstamp' => $now,
+        $access = static fn (int $targetForum, string $operation, int $level, int $group = 0, bool $negate = false): array => [
+            'pid' => $storagePid, 'forum' => $targetForum, 'operation' => $operation, 'login_level' => $level,
+            'affected_group' => $group, 'negate' => $negate ? 1 : 0, 'hidden' => 0, 'deleted' => 0,
+            'crdate' => $now, 'tstamp' => $now,
         ];
         $rules = [
-            'read.everyone' => $access('read', 0),
-            'topic.member' => $access('newTopic', 2, $identities['member_group']),
-            'post.member' => $access('newPost', 2, $identities['member_group']),
-            'moderate.moderator' => $access('moderate', 2, $identities['moderator_group']),
-            'delete-topic.moderator' => $access('deleteTopic', 2, $identities['moderator_group']),
-            'delete-post.moderator' => $access('deletePost', 2, $identities['moderator_group']),
-            'edit-post.moderator' => $access('editPost', 2, $identities['moderator_group']),
-            'solution.moderator' => $access('solution', 2, $identities['moderator_group']),
+            'read.everyone' => $access($forum, 'read', 0),
+            'topic.member' => $access($forum, 'newTopic', 2, $identities['member_group']),
+            'post.member' => $access($forum, 'newPost', 2, $identities['member_group']),
+            'moderate.moderator' => $access($forum, 'moderate', 2, $identities['moderator_group']),
+            'delete-topic.moderator' => $access($forum, 'deleteTopic', 2, $identities['moderator_group']),
+            'delete-post.moderator' => $access($forum, 'deletePost', 2, $identities['moderator_group']),
+            'edit-post.moderator' => $access($forum, 'editPost', 2, $identities['moderator_group']),
+            'solution.moderator' => $access($forum, 'solution', 2, $identities['moderator_group']),
+            // ACLs are evaluated in persistence order. Grant moderators before denying all other visitors.
+            'moderator-forum.read.moderator' => $access($moderatorForum, 'read', 2, $identities['moderator_group']),
+            'moderator-forum.read.deny-everyone' => $access($moderatorForum, 'read', 0, 0, true),
         ];
         foreach ($rules as $key => $data) {
             $this->ownershipStore->getOrCreate('acl.' . $key, 'tx_typo3forum_domain_model_forum_access', $data);
         }
         $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET acls = 8 WHERE uid = ? AND acls = 0', [$forum]);
+        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET acls = 2 WHERE uid = ? AND acls < 2', [$moderatorForum]);
     }
 
     private function provisionStorage(): void
@@ -371,6 +392,51 @@ TYPOSCRIPT;
             'is_public' => 1, 'is_writable' => 1, 'is_online' => 1, 'auto_extract_metadata' => 1,
             'processingfolder' => '_processed_', 'deleted' => 0, 'crdate' => time(), 'tstamp' => time(),
         ]);
+    }
+
+    /** @param array<string, int> $pages */
+    private function provisionStatistics(array $pages): void
+    {
+        $summaryTable = 'tx_typo3forum_domain_model_stats_summary';
+        $summaryConnection = $this->connectionPool->getConnectionForTable($summaryTable);
+        /** @var array<string, array{type: class-string, table: string, pid: int}> $statistics */
+        $statistics = [
+            'post' => [
+                'type' => \Mittwald\Typo3Forum\Domain\Model\Forum\Post::class,
+                'table' => 'tx_typo3forum_domain_model_forum_post',
+                'pid' => $pages['forum_storage'],
+            ],
+            'topic' => [
+                'type' => \Mittwald\Typo3Forum\Domain\Model\Forum\Topic::class,
+                'table' => 'tx_typo3forum_domain_model_forum_topic',
+                'pid' => $pages['forum_storage'],
+            ],
+            'user' => [
+                'type' => \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser::class,
+                'table' => 'fe_users',
+                'pid' => $pages['users_storage'],
+            ],
+        ];
+
+        foreach ($statistics as $key => $statistic) {
+            $sourceConnection = $this->connectionPool->getConnectionForTable($statistic['table']);
+            $amount = (int)$sourceConnection->fetchOne(
+                'SELECT COUNT(*) FROM ' . $sourceConnection->quoteIdentifier($statistic['table']) . ' WHERE pid = ? AND deleted = 0',
+                [$statistic['pid']],
+            );
+            $summaryUid = $this->ownershipStore->getOrCreate('stats.' . $key, $summaryTable, [
+                'pid' => $pages['forum_storage'],
+                'type' => $statistic['type'],
+                'amount' => $amount,
+                'deleted' => 0,
+                'tstamp' => time(),
+            ]);
+            $summaryConnection->update(
+                $summaryTable,
+                ['amount' => $amount, 'tstamp' => time()],
+                ['uid' => $summaryUid],
+            );
+        }
     }
 
     private function writeSiteConfiguration(int $rootPageUid, int $loginPageUid): void

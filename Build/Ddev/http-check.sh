@@ -26,6 +26,10 @@ grep -Eqi 'login|username|userident' "${temporary_directory}/login.html" \
 fetch '/forum' "${temporary_directory}/forum.html"
 grep -Fq 'Development forum' "${temporary_directory}/forum.html" \
     || { echo 'Forum landing page did not contain the managed forum.' >&2; exit 1; }
+if grep -Fq 'moderator-forum' "${temporary_directory}/forum.html"; then
+    echo 'Forum landing page exposed the moderator-only forum anonymously.' >&2
+    exit 1
+fi
 
 fetch '/forum/topic/welcome-to-the-development-forum' "${temporary_directory}/topic.html"
 grep -Fq 'DDEV-FORUM-SAMPLE' "${temporary_directory}/topic.html" \
@@ -59,4 +63,4 @@ curl "${curl_options[@]}" "${smiley_url}" --output /dev/null \
 
 php packages/typo3_forum/Build/Ddev/login-check.php "${base_url}" /var/www/html/.bootstrap/credentials.json
 
-echo 'HTTP checks passed: backend, login/session, forum, topic, preview and frontend asset.'
+echo 'HTTP checks passed: backend, role access, login/session, forum, topic, preview and frontend asset.'

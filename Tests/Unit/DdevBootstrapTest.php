@@ -161,11 +161,16 @@ PHP
         self::assertStringNotContainsString('ddev delete', $wrapper);
 
         $loginCheck = (string)file_get_contents($root . '/Build/Ddev/login-check.php');
-        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
+        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
             self::assertStringContainsString("'{$path}'", $loginCheck);
         }
         self::assertStringContainsString("\$path === '/users'", $loginCheck);
+        self::assertStringContainsString("\$path === '/statistics'", $loginCheck);
+        self::assertStringContainsString('The moderation page is visible in the member navigation.', $loginCheck);
+        self::assertStringContainsString('The moderator-only forum is visible to the regular member.', $loginCheck);
+        self::assertStringContainsString('The moderator-only forum is not visible to the moderator.', $loginCheck);
         self::assertStringContainsString('$moderatorUsername', $loginCheck);
+        self::assertStringContainsString('$moderatorPassword', $loginCheck);
 
         $guard = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php');
         self::assertStringContainsString("Environment::getContext()->isDevelopment()", $guard);
@@ -197,19 +202,33 @@ PHP
         self::assertStringContainsString('SELECT constants, config FROM sys_template WHERE uid = ?', $provisioner);
         self::assertStringContainsString('EXT:typo3_forum_dev/Resources/Public/Css/forum-dev.css', $provisioner);
         self::assertStringContainsString('20.wrap = <main>|</main>', $provisioner);
-        self::assertStringContainsString("'fe_group' => (string)\$memberGroupUid", $provisioner);
+        self::assertStringContainsString("\$pages['dashboard'] => \$identities['member_group']", $provisioner);
+        self::assertStringContainsString("\$pages['moderation'] => \$identities['moderator_group']", $provisioner);
+        self::assertStringContainsString("getOrCreate('stats.' . \$key", $provisioner);
+        self::assertStringContainsString("getOrCreate('forum.moderator'", $provisioner);
+        self::assertStringContainsString("'moderator-forum.read.moderator'", $provisioner);
+        self::assertStringContainsString("'moderator-forum.read.deny-everyone'", $provisioner);
 
         $siteTemplate = (string)file_get_contents($root . '/ddev/Configuration/site.template.yaml');
         self::assertStringContainsString('errorHandler: LoginRedirect', $siteTemplate);
         self::assertStringContainsString('loginRedirectParameter: redirect_url', $siteTemplate);
+        self::assertStringContainsString('locale: de_DE.UTF-8', $siteTemplate);
+        self::assertStringContainsString('hreflang: de-DE', $siteTemplate);
+        self::assertStringContainsString('navigationTitle: Deutsch', $siteTemplate);
 
         $verifier = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php');
+        foreach (['stats.post', 'stats.topic', 'stats.user'] as $summaryKey) {
+            self::assertStringContainsString("'{$summaryKey}'", $verifier);
+        }
+        self::assertStringContainsString("uid('forum.moderator')", $verifier);
+        self::assertStringContainsString('The moderator-only forum ACLs are missing', $verifier);
         self::assertStringContainsString("(int)\$forum['topics'] < 1", $verifier);
         self::assertStringContainsString("(int)\$samplePostTopic !== \$topicUid", $verifier);
         self::assertStringNotContainsString("(int)\$forum['last_post'] !== \$postUid", $verifier);
 
         $httpCheck = (string)file_get_contents($root . '/Build/Ddev/http-check.sh');
         self::assertStringContainsString("'forum-dev.css'", $httpCheck);
+        self::assertStringContainsString("grep -Fq 'moderator-forum'", $httpCheck);
 
         $developmentCss = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Resources/Public/Css/forum-dev.css');
         self::assertStringContainsString('.tx-typo3forum-post-attachments > .card', $developmentCss);

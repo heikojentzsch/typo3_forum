@@ -3,14 +3,14 @@ base: '__BASE_URL__/'
 rootPageId: __ROOT_PAGE_UID__
 websiteTitle: 'TYPO3 Forum development'
 languages:
-  - title: English
+  - title: Deutsch
     enabled: true
     languageId: 0
     base: /
-    locale: en_US.UTF-8
-    navigationTitle: English
-    hreflang: en-US
-    flag: us
+    locale: de_DE.UTF-8
+    navigationTitle: Deutsch
+    hreflang: de-DE
+    flag: de
 imports:
   - resource: 'EXT:typo3_forum/Configuration/Routing/Routing.yaml'
 errorHandling:
