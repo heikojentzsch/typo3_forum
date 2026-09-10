@@ -151,8 +151,24 @@ table thead {
     flex: 1 1 auto;
 }
 
-.tx-typo3forum-post-attachments {
+.tx-typo3forum-post > .tx-typo3forum-post-attachments {
+    padding: 0;
     border-top: 1px solid #e2e8f0;
+}
+
+.tx-typo3forum-post-attachments > .card {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+}
+
+.tx-typo3forum-post-attachments > .card > .card-header {
+    padding: .75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tx-typo3forum-post-attachments > .card > .card-body {
+    padding: 0 1rem;
 }
 
 .tx-typo3forum-post-attachments .list-group {
@@ -164,7 +180,11 @@ table thead {
 .tx-typo3forum-post-attachments .list-group-item {
     position: relative;
     padding: .75rem;
-    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tx-typo3forum-post-attachments .list-group-item:last-child {
+    border-bottom: 0;
 }
 
 .tx-typo3forum-attachment-row,

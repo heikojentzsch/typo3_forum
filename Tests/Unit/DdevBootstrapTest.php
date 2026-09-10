@@ -211,6 +211,13 @@ PHP
         $httpCheck = (string)file_get_contents($root . '/Build/Ddev/http-check.sh');
         self::assertStringContainsString("'forum-dev.css'", $httpCheck);
 
+        $developmentCss = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Resources/Public/Css/forum-dev.css');
+        self::assertStringContainsString('.tx-typo3forum-post-attachments > .card', $developmentCss);
+        self::assertMatchesRegularExpression(
+            '~\.tx-typo3forum-post-attachments > \.card\s*\{[^}]*border:\s*0;[^}]*border-radius:\s*0;~s',
+            $developmentCss
+        );
+
         $frontendUserTca = (string)file_get_contents($root . '/Configuration/TCA/Overrides/fe_users.php');
         self::assertStringContainsString("'allowed' => 'tx_typo3forum_domain_model_forum_forum'", $frontendUserTca);
         self::assertStringContainsString("'allowed' => 'tx_typo3forum_domain_model_forum_topic'", $frontendUserTca);
