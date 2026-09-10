@@ -27,6 +27,10 @@
 				<source>Quote</source>
 				<target>Zitieren</target>
 			</trans-unit>
+			<trans-unit id="Button_Like" xml:space="preserve" approved="yes">
+				<source>Like</source>
+				<target>Gefällt mir</target>
+			</trans-unit>
 			<trans-unit id="Button_Reply" xml:space="preserve" approved="yes">
 				<source>Reply</source>
 				<target>Antworten</target>

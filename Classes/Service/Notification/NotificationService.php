@@ -33,8 +33,9 @@ use Mittwald\Typo3Forum\Domain\Model\SubscribeableInterface;
 use Mittwald\Typo3Forum\Service\AbstractService;
 use Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService;
 use Mittwald\Typo3Forum\Utility\Localization;
-use TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 /**
  * Service class for notifications. This service notifies subscribers of
@@ -43,7 +44,7 @@ use TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy;
 class NotificationService extends AbstractService implements NotificationServiceInterface
 {
     protected HTMLMailingService $htmlMailingService;
-    protected UriBuilder $uriBuilder;
+    protected ContentObjectRenderer $contentObjectRenderer;
     protected ConfigurationBuilder $configurationBuilder;
 
     /** @var array<string, mixed> */
@@ -51,11 +52,11 @@ class NotificationService extends AbstractService implements NotificationService
 
     public function __construct(
         HTMLMailingService $htmlMailingService,
-        UriBuilder $uriBuilder,
+        ContentObjectRenderer $contentObjectRenderer,
         ConfigurationBuilder $configurationBuilder
     ) {
         $this->htmlMailingService = $htmlMailingService;
-        $this->uriBuilder = $uriBuilder;
+        $this->contentObjectRenderer = $contentObjectRenderer;
         $this->configurationBuilder = $configurationBuilder;
         $this->settings = $this->configurationBuilder->getSettings();
     }
@@ -175,12 +176,7 @@ class NotificationService extends AbstractService implements NotificationService
             'tx_typo3forum_forum[forum]' => $forum->getUid(),
         ];
 
-        $forumLink = $this->uriBuilder
-            ->setTargetPageUid($this->settings['pids.']['Forum'])
-            ->setArguments($arguments)
-            ->setCreateAbsoluteUri(true)
-            ->build();
-        $this->uriBuilder->reset();
+        $forumLink = $this->buildAbsoluteLink($arguments);
 
         return '<a href="' . $forumLink . '">"' . $forum->getTitle() . '"</a>';
     }
@@ -194,13 +190,7 @@ class NotificationService extends AbstractService implements NotificationService
             'tx_typo3forum_forum[topic]' => $topic->getUid(),
         ];
 
-        $topicLink = $this->uriBuilder
-            ->setTargetPageUid($this->settings['pids.']['Forum'])
-            ->setArguments($arguments)
-            ->setCreateAbsoluteUri(true)
-            ->build()
-        ;
-        $this->uriBuilder->reset();
+        $topicLink = $this->buildAbsoluteLink($arguments);
 
         return '<a href="' . $topicLink . '">' . $topic->getTitle() . '</a>';
     }
@@ -213,50 +203,49 @@ class NotificationService extends AbstractService implements NotificationService
             'tx_typo3forum_forum[post]' => $post->getUid(),
         ];
 
-        $postLink = $this->uriBuilder
-            ->setTargetPageUid($this->settings['pids.']['Forum'])
-            ->setArguments($arguments)
-            ->setCreateAbsoluteUri(true)
-            ->build()
-        ;
-        $this->uriBuilder->reset();
+        $postLink = $this->buildAbsoluteLink($arguments);
 
         return '<a href="' . $postLink . '">"' . $post->getTopic()->getSubject() . '"</a>';
     }
 
     protected function getForumUnsubscribeLink(Forum $forum): string
     {
-        $unSubscribeLink = $this->uriBuilder
-            ->setTargetPageUid($this->settings['pids.']['Forum'])
-            ->setArguments([
-                'tx_typo3forum_forum[controller]' => 'User',
-                'tx_typo3forum_forum[action]' => 'subscribe',
-                'tx_typo3forum_forum[forum]' => $forum->getUid(),
-                'tx_typo3forum_forum[unsubscribe]' => 1,
-            ])
-            ->setCreateAbsoluteUri(true)
-            ->build()
-        ;
-        $this->uriBuilder->reset();
+        $unSubscribeLink = $this->buildAbsoluteLink([
+            'tx_typo3forum_forum[controller]' => 'User',
+            'tx_typo3forum_forum[action]' => 'subscribe',
+            'tx_typo3forum_forum[forum]' => $forum->getUid(),
+            'tx_typo3forum_forum[unsubscribe]' => 1,
+        ]);
 
         return '<a href="' . $unSubscribeLink . '">' . Localization::translate('Button_Unsubscribe') . '</a>';
     }
 
     protected function getTopicUnsubscribeLink(Topic $topic): string
     {
-        $unSubscribeLink = $this->uriBuilder
-            ->setTargetPageUid($this->settings['pids.']['Forum'])
-            ->setArguments([
-                'tx_typo3forum_forum[controller]' => 'User',
-                'tx_typo3forum_forum[action]' => 'subscribe',
-                'tx_typo3forum_forum[topic]' => $topic->getUid(),
-                'tx_typo3forum_forum[unsubscribe]' => 1,
-            ])
-            ->setCreateAbsoluteUri(true)
-            ->build()
-        ;
-        $this->uriBuilder->reset();
+        $unSubscribeLink = $this->buildAbsoluteLink([
+            'tx_typo3forum_forum[controller]' => 'User',
+            'tx_typo3forum_forum[action]' => 'subscribe',
+            'tx_typo3forum_forum[topic]' => $topic->getUid(),
+            'tx_typo3forum_forum[unsubscribe]' => 1,
+        ]);
 
         return '<a href="' . $unSubscribeLink . '">' . Localization::translate('Button_Unsubscribe') . '</a>';
+    }
+
+    /** @param array<string, int|string> $arguments */
+    protected function buildAbsoluteLink(array $arguments): string
+    {
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        if (!$request instanceof ServerRequestInterface) {
+            throw new \RuntimeException('A frontend request is required to build notification links.', 1789000001);
+        }
+
+        $this->contentObjectRenderer->setRequest($request);
+        return $this->contentObjectRenderer->createUrl([
+            'parameter' => (int)$this->settings['pids.']['Forum'],
+            'queryParameters' => $arguments,
+            'forceAbsoluteUrl' => true,
+            'linkAccessRestrictedPages' => true,
+        ]);
     }
 }

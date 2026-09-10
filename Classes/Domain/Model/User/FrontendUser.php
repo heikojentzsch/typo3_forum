@@ -633,6 +633,8 @@ class FrontendUser extends AbstractEntity
 
     /**
      * The creation date of this user.
+     *
+     * @var DateTime
      */
     protected DateTime $crdate;
 
@@ -1378,7 +1380,7 @@ class FrontendUser extends AbstractEntity
     {
         return
             $this->isInModerationGroup()
-            || $this->getSettings()['forum']['tag']['usersCanCreate'] === '1'
+            || ($this->getSettings()['forum.']['tag.']['usersCanCreate'] ?? '0') === '1'
         ;
     }
 }

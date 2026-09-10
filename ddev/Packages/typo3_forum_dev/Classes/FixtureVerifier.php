@@ -8,6 +8,7 @@ use RuntimeException;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Package\PackageManager;
 
 final class FixtureVerifier
@@ -18,6 +19,7 @@ final class FixtureVerifier
         private readonly DevelopmentGuard $guard,
         private readonly PackageManager $packageManager,
         private readonly PasswordHashFactory $passwordHashFactory,
+        private readonly Typo3Version $typo3Version,
     ) {
     }
 
@@ -25,8 +27,8 @@ final class FixtureVerifier
     public function verify(): array
     {
         $this->guard->assertSafe();
-        if (!defined('TYPO3_version') || !str_starts_with((string)constant('TYPO3_version'), '14.3.')) {
-            throw new RuntimeException('Expected TYPO3 14.3.x.');
+        if (!self::supportsTypo3Version($this->typo3Version->getVersion())) {
+            throw new RuntimeException('Expected TYPO3 >=14.3.0 and <15.0.0.');
         }
         if (!$this->packageManager->isPackageActive('typo3_forum') || !$this->packageManager->isPackageActive('typo3_forum_dev')) {
             throw new RuntimeException('The forum or its development provisioner is not active.');
@@ -53,10 +55,24 @@ final class FixtureVerifier
         }
         $forumConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_forum');
         $forumUid = $this->ownershipStore->uid('forum.public');
-        $forum = $forumConnection->fetchAssociative('SELECT forum, topics, acls, last_post FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?', [$forumUid]);
+        $topicUid = $this->ownershipStore->uid('topic.sample');
+        $forum = $forumConnection->fetchAssociative('SELECT forum, topics, acls FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?', [$forumUid]);
         if ($forum === false || (int)$forum['forum'] !== $this->ownershipStore->uid('forum.category')
-            || (int)$forum['topics'] !== 1 || (int)$forum['acls'] !== 8 || (int)$forum['last_post'] !== $postUid) {
+            || (int)$forum['topics'] < 1 || (int)$forum['acls'] < 8) {
             throw new RuntimeException('The managed forum relationships or counters are inconsistent.');
+        }
+        $topicConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_topic');
+        $topic = $topicConnection->fetchAssociative(
+            'SELECT forum, posts FROM tx_typo3forum_domain_model_forum_topic WHERE uid = ?',
+            [$topicUid],
+        );
+        $samplePostTopic = $postConnection->fetchOne(
+            'SELECT topic FROM tx_typo3forum_domain_model_forum_post WHERE uid = ?',
+            [$postUid],
+        );
+        if ($topic === false || (int)$topic['forum'] !== $forumUid || (int)$topic['posts'] < 1
+            || (int)$samplePostTopic !== $topicUid) {
+            throw new RuntimeException('The managed sample topic or post relationship is inconsistent.');
         }
         $checks[] = 'forum, sample topic and sample post';
         $parserConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_format_textparser');
@@ -132,14 +148,15 @@ final class FixtureVerifier
         $templateConnection = $this->connectionPool->getConnectionForTable('sys_template');
         $constants = $templateConnection->fetchOne('SELECT constants FROM sys_template WHERE uid = ?', [$this->ownershipStore->uid('template.root')]);
         $expectedSettings = [
-            'storagePid = ' . $this->ownershipStore->uid('page.forum_storage'),
+            'storagePid = ' . $this->ownershipStore->uid('page.forum_storage') . ',' . $this->ownershipStore->uid('page.users_storage'),
             'pids.Forum = ' . $this->ownershipStore->uid('page.forum'),
             'pids.UserShow = ' . $this->ownershipStore->uid('page.profile'),
             'pids.UserList = ' . $this->ownershipStore->uid('page.users'),
             'pids.Dashboard = ' . $this->ownershipStore->uid('page.dashboard'),
             'pids.TagList = ' . $this->ownershipStore->uid('page.tags'),
             'pids.ReportList = ' . $this->ownershipStore->uid('page.moderation'),
-            'settings.pages = ' . $this->ownershipStore->uid('page.users_storage'),
+            'styles.content.loginform.pid = ' . $this->ownershipStore->uid('page.users_storage'),
+            'styles.content.loginform.redirectMode = getpost,login',
         ];
         if (!is_string($constants)) {
             throw new RuntimeException('Generated forum storage/page TypoScript settings are stale.');
@@ -149,13 +166,26 @@ final class FixtureVerifier
                 throw new RuntimeException(sprintf('Generated TypoScript is missing %s.', $setting));
             }
         }
+        $dashboardGroup = $this->connectionPool->getConnectionForTable('pages')->fetchOne(
+            'SELECT fe_group FROM pages WHERE uid = ?',
+            [$this->ownershipStore->uid('page.dashboard')],
+        );
+        if ((string)$dashboardGroup !== (string)$this->ownershipStore->uid('group.member')
+            || !str_contains($site, 'errorHandler: LoginRedirect')
+            || !str_contains($site, 'loginRedirectParameter: redirect_url')) {
+            throw new RuntimeException('Dashboard login redirect configuration is missing or stale.');
+        }
         $checks[] = 'site routing, TypoScript and generated UIDs';
 
         if (($GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] ?? '') !== 'smtp'
             || ($GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] ?? '') !== 'localhost:1025') {
             throw new RuntimeException('Development mail is not routed to DDEV Mailpit.');
         }
-        $checks[] = 'DDEV Mailpit transport';
+        $trustedHostsPattern = DevelopmentGuard::trustedHostsPattern((string)getenv('DDEV_PRIMARY_URL'));
+        if (($GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] ?? '') !== $trustedHostsPattern) {
+            throw new RuntimeException('The DDEV primary host is not configured as a trusted TYPO3 host.');
+        }
+        $checks[] = 'DDEV Mailpit transport and trusted host';
 
         $packagePath = realpath(Environment::getProjectPath() . '/packages/typo3_forum');
         $installedPath = realpath(Environment::getProjectPath() . '/vendor/pottkinder/typo3forum');
@@ -165,6 +195,12 @@ final class FixtureVerifier
         $checks[] = 'local checked-out forum package';
 
         return $checks;
+    }
+
+    public static function supportsTypo3Version(string $version): bool
+    {
+        return version_compare($version, '14.3.0', '>=')
+            && version_compare($version, '15.0.0', '<');
     }
 
     /** @return array<string, array{username: string, password: string}> */

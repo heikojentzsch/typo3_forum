@@ -2,8 +2,13 @@
 
 declare(strict_types = 1);
 
-$packagePath = realpath(__DIR__ . '/../../');
-$installedPath = realpath(__DIR__ . '/../../ddev/vendor/pottkinder/typo3forum');
+if ($argc !== 3) {
+    fwrite(STDERR, "Usage: verify-local-package.php <checkout-path> <installed-path>\n");
+    exit(2);
+}
+
+$packagePath = realpath($argv[1]);
+$installedPath = realpath($argv[2]);
 
 if ($packagePath === false || $installedPath === false || $packagePath !== $installedPath) {
     fwrite(STDERR, "Composer did not resolve pottkinder/typo3forum to the mounted checkout.\n");

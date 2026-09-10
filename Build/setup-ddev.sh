@@ -93,7 +93,8 @@ ddev start
 
 phase 'Installing development dependencies from the local checkout'
 ddev composer install --no-interaction --prefer-dist
-ddev exec php packages/typo3_forum/Build/Ddev/verify-local-package.php
+ddev exec php packages/typo3_forum/Build/Ddev/verify-local-package.php \
+    /var/www/html/packages/typo3_forum /var/www/html/vendor/pottkinder/typo3forum
 
 phase 'Preparing persistent local credentials'
 ddev exec php packages/typo3_forum/Build/Ddev/Credentials.php create /var/www/html/.bootstrap/credentials.json
@@ -156,7 +157,7 @@ ddev exec env TYPO3_FORUM_DDEV_BOOTSTRAP=1 vendor/bin/typo3 forum-dev:check
 ddev exec bash packages/typo3_forum/Build/Ddev/http-check.sh
 
 primary_url="$(ddev exec --quiet bash -c 'printf %s "$DDEV_PRIMARY_URL"')"
-mail_url="$(ddev exec --quiet bash -c 'printf "%s:%s" "$DDEV_PRIMARY_URL_WITHOUT_PORT" "$DDEV_MAILPIT_HTTPS_PORT"')"
+mail_url="$(ddev launch --mailpit --print-url)"
 
 cat <<EOF
 

@@ -33,6 +33,7 @@ final class FixtureProvisioner
         $this->ensureBackendAdministrator($credentials);
         $identities = $this->provisionIdentities($pages['users_storage'], $credentials);
         $this->ownershipStore->completePhase('identities');
+        $this->protectDashboard($pages['dashboard'], $identities['member_group']);
         $this->provisionContent($pages);
         $this->ownershipStore->completePhase('content');
         $this->failForSmokeTestAfter('content');
@@ -42,7 +43,7 @@ final class FixtureProvisioner
         $this->ownershipStore->completePhase('forum');
         $this->provisionStorage();
         $this->ownershipStore->completePhase('storage');
-        $this->writeSiteConfiguration($pages['root']);
+        $this->writeSiteConfiguration($pages['root'], $pages['login']);
         $this->writeDevelopmentMailConfiguration();
         $this->ownershipStore->completePhase('configuration');
 
@@ -195,6 +196,15 @@ final class FixtureProvisioner
         }
     }
 
+    private function protectDashboard(int $dashboardPageUid, int $memberGroupUid): void
+    {
+        $this->connectionPool->getConnectionForTable('pages')->update(
+            'pages',
+            ['fe_group' => (string)$memberGroupUid, 'tstamp' => time()],
+            ['uid' => $dashboardPageUid],
+        );
+    }
+
     /** @param array<string, mixed> $data */
     private function createIdentity(string $key, string $table, string $field, string $value, array $data): int
     {
@@ -237,13 +247,14 @@ final class FixtureProvisioner
         }
 
         $constants = sprintf(
-            "plugin.tx_typo3forum.persistence.storagePid = %d\nplugin.tx_typo3forum.settings.pids.Forum = %d\nplugin.tx_typo3forum.settings.pids.UserShow = %d\nplugin.tx_typo3forum.settings.pids.UserList = %d\nplugin.tx_typo3forum.settings.pids.UserEdit = %d\nplugin.tx_typo3forum.settings.pids.Dashboard = %d\nplugin.tx_typo3forum.settings.pids.TagList = %d\nplugin.tx_typo3forum.settings.pids.ReportList = %d\nplugin.tx_felogin_login.settings.pages = %d\nplugin.tx_felogin_login.settings.redirectMode = login\nplugin.tx_felogin_login.settings.redirectFirstMethod = 1\nplugin.tx_felogin_login.settings.redirectPageLogin = %d\n",
-            $pages['forum_storage'], $pages['forum'], $pages['profile'], $pages['users'], $pages['profile'],
+            "plugin.tx_typo3forum.persistence.storagePid = %d,%d\nplugin.tx_typo3forum.settings.pids.Forum = %d\nplugin.tx_typo3forum.settings.pids.UserShow = %d\nplugin.tx_typo3forum.settings.pids.UserList = %d\nplugin.tx_typo3forum.settings.pids.UserEdit = %d\nplugin.tx_typo3forum.settings.pids.Dashboard = %d\nplugin.tx_typo3forum.settings.pids.TagList = %d\nplugin.tx_typo3forum.settings.pids.ReportList = %d\nstyles.content.loginform.pid = %d\nstyles.content.loginform.redirectMode = getpost,login\nstyles.content.loginform.redirectFirstMethod = 1\nstyles.content.loginform.redirectPageLogin = %d\n",
+            $pages['forum_storage'], $pages['users_storage'], $pages['forum'], $pages['profile'], $pages['users'], $pages['profile'],
             $pages['dashboard'], $pages['tags'], $pages['moderation'], $pages['users_storage'], $pages['forum']
         );
         $setup = <<<'TYPOSCRIPT'
 page = PAGE
 page {
+  includeCSS.forumDevelopment = EXT:typo3_forum_dev/Resources/Public/Css/forum-dev.css
   10 = HMENU
   10 {
     1 = TMENU
@@ -251,14 +262,28 @@ page {
     wrap = <nav><ul>|</ul></nav>
   }
   20 < styles.content.get
+  20.wrap = <main>|</main>
 }
 TYPOSCRIPT;
-        $this->ownershipStore->getOrCreate('template.root', 'sys_template', [
+        $template = [
             'pid' => $pages['root'], 'title' => 'TYPO3 Forum DDEV', 'root' => 1, 'clear' => 3,
             'include_static_file' => 'EXT:fluid_styled_content/Configuration/TypoScript/,EXT:typo3_forum/Configuration/TypoScript/',
             'constants' => $constants, 'config' => $setup, 'hidden' => 0, 'deleted' => 0,
             'crdate' => $now, 'tstamp' => $now,
-        ]);
+        ];
+        $templateUid = $this->ownershipStore->getOrCreate('template.root', 'sys_template', $template);
+        $templateConnection = $this->connectionPool->getConnectionForTable('sys_template');
+        $storedTemplate = $templateConnection->fetchAssociative(
+            'SELECT constants, config FROM sys_template WHERE uid = ?',
+            [$templateUid],
+        );
+        if ($storedTemplate === false || $storedTemplate['constants'] !== $constants || $storedTemplate['config'] !== $setup) {
+            $templateConnection->update(
+                'sys_template',
+                ['constants' => $constants, 'config' => $setup, 'tstamp' => $now],
+                ['uid' => $templateUid],
+            );
+        }
     }
 
     /** @param array<string, int> $pages
@@ -348,7 +373,7 @@ TYPOSCRIPT;
         ]);
     }
 
-    private function writeSiteConfiguration(int $rootPageUid): void
+    private function writeSiteConfiguration(int $rootPageUid, int $loginPageUid): void
     {
         $projectPath = Environment::getProjectPath();
         $templatePath = $projectPath . '/Configuration/site.template.yaml';
@@ -359,14 +384,18 @@ TYPOSCRIPT;
             throw new RuntimeException('DDEV_PRIMARY_URL is missing or not a local DDEV URL.');
         }
         $template = (string)file_get_contents($templatePath);
-        $configuration = str_replace(['__BASE_URL__', '__ROOT_PAGE_UID__'], [$baseUrl, (string)$rootPageUid], $template);
+        $configuration = str_replace(
+            ['__BASE_URL__', '__ROOT_PAGE_UID__', '__LOGIN_PAGE_UID__'],
+            [$baseUrl, (string)$rootPageUid, (string)$loginPageUid],
+            $template,
+        );
         Yaml::parse($configuration);
         if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0775, true) && !is_dir($targetDirectory)) {
             throw new RuntimeException('Unable to create site configuration directory.');
         }
         if (is_file($targetPath)) {
             $existing = (string)file_get_contents($targetPath);
-            if (!str_contains($existing, '# TYPO3 Forum DDEV managed site')) {
+            if (!self::isManagedSiteConfiguration($existing, $rootPageUid)) {
                 throw new RuntimeException('An unmanaged forum-dev site configuration already exists.');
             }
         }
@@ -375,12 +404,43 @@ TYPOSCRIPT;
         }
     }
 
+    private static function isManagedSiteConfiguration(string $configuration, int $rootPageUid): bool
+    {
+        if (str_contains($configuration, '# TYPO3 Forum DDEV managed site')) {
+            return true;
+        }
+
+        try {
+            $site = Yaml::parse($configuration);
+        } catch (\Throwable) {
+            return false;
+        }
+        if (!is_array($site)
+            || (int)($site['rootPageId'] ?? 0) !== $rootPageUid
+            || ($site['websiteTitle'] ?? null) !== 'TYPO3 Forum development') {
+            return false;
+        }
+        foreach ($site['imports'] ?? [] as $import) {
+            if (is_array($import)
+                && ($import['resource'] ?? null) === 'EXT:typo3_forum/Configuration/Routing/Routing.yaml') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function writeDevelopmentMailConfiguration(): void
     {
         $path = Environment::getConfigPath() . '/system/additional.php';
         $beginMarker = '// TYPO3 Forum DDEV managed mail configuration: begin';
         $endMarker = '// TYPO3 Forum DDEV managed mail configuration: end';
-        $block = "{$beginMarker}\n\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';\n\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = 'localhost:1025';\n{$endMarker}";
+        $trustedHostsPattern = DevelopmentGuard::trustedHostsPattern((string)getenv('DDEV_PRIMARY_URL'));
+        $block = "{$beginMarker}\n"
+            . "\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';\n"
+            . "\$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = 'localhost:1025';\n"
+            . "\$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = " . var_export($trustedHostsPattern, true) . ";\n"
+            . $endMarker;
         $contents = is_file($path) ? (string)file_get_contents($path) : "<?php\n";
         if (str_contains($contents, $beginMarker)) {
             $pattern = '/' . preg_quote($beginMarker, '/') . '.*?' . preg_quote($endMarker, '/') . '/s';

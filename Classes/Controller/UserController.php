@@ -74,7 +74,7 @@ class UserController extends AbstractController
     public function listAction(?string $nameSearch = null, int $page = 1): ResponseInterface
     {
         $limit = $this->settings['maxUserItems'] ?? null;
-        switch ($this->settings['listUsers']) {
+        switch ($this->settings['listUsers'] ?? 'default') {
             case 'helpfulUsers':
                 $users = $this->frontendUserRepository->findMostHelpfulUsers(
                     $limit,

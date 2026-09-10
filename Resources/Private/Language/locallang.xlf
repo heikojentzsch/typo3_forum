@@ -21,6 +21,9 @@
 			<trans-unit id="Button_Quote" xml:space="preserve">
 				<source>Quote</source>
 			</trans-unit>
+			<trans-unit id="Button_Like" xml:space="preserve">
+				<source>Like</source>
+			</trans-unit>
 			<trans-unit id="Button_Support_Self" xml:space="preserve">
 				<source>You wrote this post, you can't support it!</source>
 			</trans-unit>

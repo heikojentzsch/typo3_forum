@@ -26,9 +26,6 @@ namespace Mittwald\Typo3Forum\ViewHelpers\User;
 
 use Mittwald\Typo3Forum\Domain\Model\User\AnonymousFrontendUser;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
-use TYPO3\CMS\Core\Utility\PathUtility;
-use TYPO3\CMS\Fluid\ViewHelpers\ImageViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
 
 /**
@@ -65,8 +62,8 @@ class AvatarViewHelper extends AbstractTagBasedViewHelper
 
         }
 
-        if ($avatarFilename === null || $avatarFilename === false) {
-            $avatarFilename = PathUtility::getPublicResourceWebPath('EXT:typo3_forum/Resources/Public/Images/Icons/AvatarEmpty.png');
+        if ($avatarFilename === null || $avatarFilename === false || $avatarFilename === '') {
+            return '';
         }
 
         $this->tag->addAttribute('src', $avatarFilename);

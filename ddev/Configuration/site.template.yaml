@@ -13,3 +13,8 @@ languages:
     flag: us
 imports:
   - resource: 'EXT:typo3_forum/Configuration/Routing/Routing.yaml'
+errorHandling:
+  - errorCode: 403
+    errorHandler: LoginRedirect
+    loginRedirectTarget: 't3://page?uid=__LOGIN_PAGE_UID__'
+    loginRedirectParameter: redirect_url

@@ -443,3 +443,19 @@ ajaxCall {
 		pluginName = Ajax
 	}
 }
+
+attachmentDownload = PAGE
+attachmentDownload {
+	typeNum = 43568276
+	config {
+		disableAllHeaderCode = 1
+		debug = 0
+		no_cache = 1
+	}
+
+	10 = EXTBASEPLUGIN
+	10 {
+		extensionName = Typo3Forum
+		pluginName = Forum
+	}
+}

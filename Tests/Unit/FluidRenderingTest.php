@@ -176,6 +176,15 @@ final class FluidRenderingTest extends TestCase
         $this->renderBoth('<mmf:user.avatar user="{user}" width="64" height="32" alt="{alt}" />', ['user' => $user, 'alt' => '<name>'], '<img width="64" height="32" alt="&lt;name&gt;" src="/avatar.png" />');
     }
 
+    public function testMissingAvatarDoesNotRenderAPlaceholder(): void
+    {
+        $user = $this->createStub(FrontendUser::class);
+        $user->method('getImagePath')->willReturn(null);
+
+        $this->renderBoth('<mmf:user.avatar user="{user}" width="64" alt="{user.username}" />', ['user' => $user], '');
+        $this->renderBoth('<mmf:user.avatarUrl user="{user}" />', ['user' => $user], '');
+    }
+
     public function testAnonymousUserLinkIsEscaped(): void
     {
         $user = $this->createStub(AnonymousFrontendUser::class);
@@ -187,6 +196,38 @@ final class FluidRenderingTest extends TestCase
     public function testFileSizeArgumentsAreRegistered(): void
     {
         $this->renderBoth('<mmf:format.fileSize decimals="1" decimalSeparator=".">1536</mmf:format.fileSize>', [], '1.5 KiB');
+    }
+
+    public function testAttachmentNameIsRenderedInsideDownloadLink(): void
+    {
+        $source = (string)file_get_contents(dirname(__DIR__, 2) . '/Resources/Private/Partials/Bootstrap/Attachment/List.html');
+
+        self::assertMatchesRegularExpression(
+            '~<f:link\.action\b[^>]*action="downloadAttachment"[^>]*>\s*\{attachment\.name\}\s*</f:link\.action>~s',
+            $source
+        );
+        self::assertStringContainsString('pageType="43568276"', $source);
+        self::assertStringContainsString('tx-typo3forum-attachment-row', $source);
+        self::assertMatchesRegularExpression(
+            '~\{attachment\.name\}.*tx-typo3forum-attachment-separator.*format\.fileSize.*tx-typo3forum-attachment-separator.*Post_Show_Attachment_DownloadCount~s',
+            $source
+        );
+    }
+
+    public function testPostMenuShowsIconsAndLabelsInTheRequestedOrder(): void
+    {
+        $source = (string)file_get_contents(dirname(__DIR__, 2) . '/Resources/Private/Partials/Bootstrap/Post/Menu.html');
+        $previousPosition = -1;
+        foreach (['Button_Like', 'Button_Quote', 'Button_Report', 'Button_Edit', 'Button_Delete'] as $key) {
+            $position = strpos($source, '<f:translate key="' . $key . '"');
+            if ($position === false) {
+                self::fail(sprintf('Missing visible post-menu label %s.', $key));
+            }
+            self::assertGreaterThan($previousPosition, $position);
+            $previousPosition = $position;
+        }
+        self::assertStringContainsString('tx-typo3forum-post-menu-action', $source);
+        self::assertStringContainsString('aria-hidden="true"', $source);
     }
 
     public function testAllPublicCustomViewHelpersRegisterArguments(): void
@@ -299,6 +340,40 @@ final class FluidRenderingTest extends TestCase
         $reader = $this->createStub(\Mittwald\Typo3Forum\Utility\TypoScript::class);
         $reader->method('loadTyposcriptFromPath')->willReturn(['enabledServices.' => ['quotes' => $service::class, 'quotes.' => ['template' => '/custom/Quote.html']]]);
         (new \Mittwald\Typo3Forum\TextParser\TextParserService($reader))->loadConfiguration();
+    }
+
+    public function testSmileyParserUsesTheStoredResourceIdentifier(): void
+    {
+        $resourceIdentifier = 'EXT:typo3_forum/Resources/Public/Images/Icons/Smiley/smile.gif';
+        $resource = $this->createStub(\TYPO3\CMS\Core\SystemResource\Type\PublicResourceInterface::class);
+        $resourceFactory = $this->createMock(\TYPO3\CMS\Core\SystemResource\SystemResourceFactory::class);
+        $resourceFactory->expects(self::once())->method('createPublicResource')->with($resourceIdentifier)->willReturn($resource);
+        $resourcePublisher = $this->createStub(\TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface::class);
+        $resourcePublisher->method('generateUri')->willReturn(new \TYPO3\CMS\Core\Http\Uri('/_assets/smile.gif'));
+        $this->services[\TYPO3\CMS\Core\SystemResource\SystemResourceFactory::class] = $resourceFactory;
+        $this->services[\TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface::class] = $resourcePublisher;
+
+        $smiley = new \Mittwald\Typo3Forum\Domain\Model\Format\Smiley();
+        $smiley->setImagePath($resourceIdentifier);
+        (new \ReflectionProperty($smiley, 'smileyShortcut'))->setValue($smiley, ':)');
+        $result = $this->createStub(\TYPO3\CMS\Extbase\Persistence\QueryResultInterface::class);
+        $result->method('toArray')->willReturn([$smiley]);
+        $repository = $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Format\SmileyRepository::class);
+        $repository->method('findAll')->willReturn($result);
+
+        self::assertStringContainsString(
+            'src="/_assets/smile.gif"',
+            (new \Mittwald\Typo3Forum\TextParser\Service\SmileyParserService($repository))->getParsedText(':)')
+        );
+    }
+
+    public function testEditorSmileyIconsUsePublishedRelativeAssets(): void
+    {
+        $css = (string)file_get_contents(dirname(__DIR__, 2) . '/Resources/Public/CSS/typo3_forum.css');
+
+        self::assertStringContainsString("url('../Images/Icons/Smiley/smile.gif')", $css);
+        self::assertStringContainsString("url('../Images/Icons/Smiley/confused.gif')", $css);
+        self::assertStringNotContainsString('/typo3conf/ext/', $css);
     }
 
     public function testPreviewPreservesZeroAndEmptyContent(): void

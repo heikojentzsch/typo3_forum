@@ -90,7 +90,7 @@ class PostController extends AbstractController
     {
         $showPaginate = false;
 
-        switch ($this->settings['listPosts']) {
+        switch ($this->settings['listPosts'] ?? '1') {
             case '2':
                 $posts = $this->postRepository->findByFilter(
                     $this->settings['maxItems'] ?? null,
@@ -447,6 +447,7 @@ class PostController extends AbstractController
         return $this->responseFactory->createResponse()
             ->withHeader('Content-Type', $file->getMimeType() ?: 'application/download')
             ->withHeader('Content-Disposition', 'attachment; filename="' . addcslashes($attachment->getName(), '"\\') . '"')
+            ->withHeader('Content-Length', (string)$file->getSize())
             ->withBody($this->streamFactory->createStream($file->getContents()));
     }
 }

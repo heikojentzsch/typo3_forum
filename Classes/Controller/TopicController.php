@@ -91,7 +91,7 @@ class TopicController extends AbstractController
     {
         $showPaginate = false;
 
-        switch ($this->settings['listTopics']) {
+        switch ($this->settings['listTopics'] ?? '1') {
             case '2':
                 $dataset = $this->topicRepository->findQuestions(
                     $this->settings['maxItems'] ?? null,
@@ -239,7 +239,7 @@ class TopicController extends AbstractController
             $this->purgeUrl('http://' . $_SERVER['HTTP_HOST'] . '/' . $uri);
         }
 
-        $uri = $this->uriBuilder->uriFor(
+        $uri = $this->uriBuilder->reset()->uriFor(
             'show',
             ['topic' => $topic],
             'Topic'

@@ -46,6 +46,64 @@ final class DdevBootstrapTest extends TestCase
         self::assertSame($first, file_get_contents($path), 'A normal rerun must not rotate credentials.');
     }
 
+    public function testLocalPackageVerifierUsesTheProvidedCanonicalPaths(): void
+    {
+        $script = dirname(__DIR__, 2) . '/Build/Ddev/verify-local-package.php';
+        mkdir($this->temporaryDirectory . '/nested');
+
+        $this->runPhp(
+            $script,
+            $this->temporaryDirectory,
+            $this->temporaryDirectory . '/nested/..'
+        );
+
+        $wrapper = (string)file_get_contents(dirname(__DIR__, 2) . '/Build/setup-ddev.sh');
+        self::assertStringContainsString(
+            '/var/www/html/packages/typo3_forum /var/www/html/vendor/pottkinder/typo3forum',
+            $wrapper
+        );
+    }
+
+    public function testFixtureVerifierAcceptsTheComposerSupportedTypo3Range(): void
+    {
+        $verifierPath = dirname(__DIR__, 2) . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php';
+        require_once $verifierPath;
+
+        foreach (['14.3.0', '14.3.99', '14.4.0', '14.99.0'] as $supportedVersion) {
+            self::assertTrue(
+                \Pottkinder\Typo3ForumDev\FixtureVerifier::supportsTypo3Version($supportedVersion),
+                $supportedVersion
+            );
+        }
+        foreach (['14.2.99', '15.0.0'] as $unsupportedVersion) {
+            self::assertFalse(
+                \Pottkinder\Typo3ForumDev\FixtureVerifier::supportsTypo3Version($unsupportedVersion),
+                $unsupportedVersion
+            );
+        }
+
+        $verifier = (string)file_get_contents($verifierPath);
+        self::assertStringContainsString('Typo3Version $typo3Version', $verifier);
+        self::assertStringContainsString('$this->typo3Version->getVersion()', $verifier);
+        self::assertStringNotContainsString("defined('TYPO3_version')", $verifier);
+    }
+
+    public function testDdevPrimaryHostIsConfiguredAsAnExactTrustedHost(): void
+    {
+        $root = dirname(__DIR__, 2);
+        require_once $root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php';
+
+        self::assertSame(
+            '^typo3forum\\.ddev\\.site$',
+            \Pottkinder\Typo3ForumDev\DevelopmentGuard::trustedHostsPattern('https://typo3forum.ddev.site')
+        );
+
+        $provisioner = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureProvisioner.php');
+        $verifier = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php');
+        self::assertStringContainsString("['SYS']['trustedHostsPattern']", $provisioner);
+        self::assertStringContainsString("['SYS']['trustedHostsPattern']", $verifier);
+    }
+
     public function testWrongSocketRepairPreservesUnrelatedSettingsAndCreatesBackup(): void
     {
         $configurationDirectory = $this->temporaryDirectory . '/config/system';
@@ -97,8 +155,17 @@ PHP
         self::assertStringContainsString('forum-dev:check', $wrapper);
         self::assertStringContainsString('extension:setup --extension=typo3_forum_dev', $wrapper);
         self::assertStringContainsString('repair-local-settings.php prepare', $wrapper);
+        self::assertStringContainsString('ddev launch --mailpit --print-url', $wrapper);
+        self::assertStringNotContainsString('DDEV_MAILPIT_HTTPS_PORT', $wrapper);
         self::assertStringNotContainsString('git reset', $wrapper);
         self::assertStringNotContainsString('ddev delete', $wrapper);
+
+        $loginCheck = (string)file_get_contents($root . '/Build/Ddev/login-check.php');
+        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
+            self::assertStringContainsString("'{$path}'", $loginCheck);
+        }
+        self::assertStringContainsString("\$path === '/users'", $loginCheck);
+        self::assertStringContainsString('$moderatorUsername', $loginCheck);
 
         $guard = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php');
         self::assertStringContainsString("Environment::getContext()->isDevelopment()", $guard);
@@ -122,10 +189,59 @@ PHP
         self::assertStringContainsString('DDEV-FORUM-SAMPLE', $provisioner);
         self::assertStringContainsString('PasswordHashFactory', $provisioner);
         self::assertStringContainsString('tx_typo3forum_domain_model_forum_access', $provisioner);
+        self::assertStringContainsString('styles.content.loginform.pid = %d', $provisioner);
+        self::assertStringContainsString('styles.content.loginform.redirectMode = getpost,login', $provisioner);
+        self::assertStringContainsString('persistence.storagePid = %d,%d', $provisioner);
+        self::assertStringNotContainsString('plugin.tx_felogin_login.settings.pages', $provisioner);
+        self::assertStringContainsString("fetchAssociative(", $provisioner);
+        self::assertStringContainsString('SELECT constants, config FROM sys_template WHERE uid = ?', $provisioner);
+        self::assertStringContainsString('EXT:typo3_forum_dev/Resources/Public/Css/forum-dev.css', $provisioner);
+        self::assertStringContainsString('20.wrap = <main>|</main>', $provisioner);
+        self::assertStringContainsString("'fe_group' => (string)\$memberGroupUid", $provisioner);
+
+        $siteTemplate = (string)file_get_contents($root . '/ddev/Configuration/site.template.yaml');
+        self::assertStringContainsString('errorHandler: LoginRedirect', $siteTemplate);
+        self::assertStringContainsString('loginRedirectParameter: redirect_url', $siteTemplate);
+
+        $verifier = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php');
+        self::assertStringContainsString("(int)\$forum['topics'] < 1", $verifier);
+        self::assertStringContainsString("(int)\$samplePostTopic !== \$topicUid", $verifier);
+        self::assertStringNotContainsString("(int)\$forum['last_post'] !== \$postUid", $verifier);
+
+        $httpCheck = (string)file_get_contents($root . '/Build/Ddev/http-check.sh');
+        self::assertStringContainsString("'forum-dev.css'", $httpCheck);
+
+        $developmentCss = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Resources/Public/Css/forum-dev.css');
+        self::assertStringContainsString('.tx-typo3forum-post-attachments > .card', $developmentCss);
+        self::assertMatchesRegularExpression(
+            '~\.tx-typo3forum-post-attachments > \.card\s*\{[^}]*border:\s*0;[^}]*border-radius:\s*0;~s',
+            $developmentCss
+        );
+
+        $frontendUserTca = (string)file_get_contents($root . '/Configuration/TCA/Overrides/fe_users.php');
+        self::assertStringContainsString("'allowed' => 'tx_typo3forum_domain_model_forum_forum'", $frontendUserTca);
+        self::assertStringContainsString("'allowed' => 'tx_typo3forum_domain_model_forum_topic'", $frontendUserTca);
 
         $schema = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/ext_tables.sql');
         self::assertStringContainsString('UNIQUE KEY logical_key', $schema);
         self::assertStringContainsString('UNIQUE KEY phase', $schema);
+    }
+
+    public function testProvisionerRecognizesACommentlessGeneratedSiteConfiguration(): void
+    {
+        $path = dirname(__DIR__, 2) . '/ddev/Packages/typo3_forum_dev/Classes/FixtureProvisioner.php';
+        require_once $path;
+        $method = new \ReflectionMethod(\Pottkinder\Typo3ForumDev\FixtureProvisioner::class, 'isManagedSiteConfiguration');
+        $configuration = <<<'YAML'
+rootPageId: 17
+websiteTitle: 'TYPO3 Forum development'
+imports:
+  - resource: 'EXT:typo3_forum/Configuration/Routing/Routing.yaml'
+YAML;
+
+        self::assertTrue($method->invoke(null, $configuration, 17));
+        self::assertFalse($method->invoke(null, $configuration, 18));
+        self::assertFalse($method->invoke(null, str_replace('TYPO3 Forum development', 'Existing site', $configuration), 17));
     }
 
     public function testGeneratedAndDevelopmentFilesAreIgnoredAndOutsideReleaseAllowlist(): void

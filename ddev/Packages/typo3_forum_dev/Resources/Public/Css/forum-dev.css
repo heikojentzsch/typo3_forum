@@ -1,0 +1,369 @@
+:root {
+    color-scheme: light;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #1f2937;
+    background: #f1f5f9;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    line-height: 1.5;
+    background: #f1f5f9;
+}
+
+nav {
+    background: #172554;
+    box-shadow: 0 2px 8px rgb(15 23 42 / 18%);
+}
+
+nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: .75rem 1.25rem;
+    list-style: none;
+}
+
+nav a {
+    display: block;
+    padding: .45rem .7rem;
+    border-radius: .35rem;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+nav a:hover,
+nav a:focus-visible {
+    background: #1e40af;
+}
+
+main {
+    max-width: 1180px;
+    margin: 1.5rem auto;
+    padding: 1.5rem;
+    border: 1px solid #dbe3ee;
+    border-radius: .65rem;
+    background: #fff;
+    box-shadow: 0 8px 28px rgb(15 23 42 / 7%);
+}
+
+h1,
+h2,
+h3,
+legend {
+    color: #172554;
+    line-height: 1.2;
+}
+
+a {
+    color: #1d4ed8;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -.5rem;
+}
+
+.row > * {
+    min-width: 0;
+    padding: 0 .5rem;
+}
+
+.col,
+.col-12 {
+    flex: 0 0 100%;
+    width: 100%;
+}
+
+.col-2 { flex: 0 0 16.6667%; width: 16.6667%; }
+.col-6 { flex: 0 0 50%; width: 50%; }
+.col-10 { flex: 0 0 83.3333%; width: 83.3333%; }
+.col-auto { flex: 0 0 auto; width: auto; }
+
+.d-flex { display: flex; }
+.flex-wrap { flex-wrap: wrap; }
+.align-items-center { align-items: center; }
+.justify-content-center { justify-content: center; }
+.justify-content-end { justify-content: flex-end; }
+
+.table,
+table {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td,
+table th,
+table td {
+    padding: .65rem .75rem;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    vertical-align: top;
+}
+
+.table thead,
+table thead {
+    background: #f8fafc;
+}
+
+.card {
+    margin-bottom: 1rem;
+    overflow: hidden;
+    border: 1px solid #dbe3ee;
+    border-radius: .5rem;
+    background: #fff;
+}
+
+.card-header,
+.card-body,
+.card-footer {
+    padding: 1rem;
+}
+
+.card-header,
+.card-footer {
+    background: #f8fafc;
+}
+
+.tx-typo3forum-post > .row {
+    flex-wrap: nowrap;
+}
+
+.tx-typo3forum-post-author {
+    flex: 0 0 14rem;
+    width: 14rem;
+    border-right: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.tx-typo3forum-post-content {
+    flex: 1 1 auto;
+}
+
+.tx-typo3forum-post > .tx-typo3forum-post-attachments {
+    padding: 0;
+    border-top: 1px solid #e2e8f0;
+}
+
+.tx-typo3forum-post-attachments > .card {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+}
+
+.tx-typo3forum-post-attachments > .card > .card-header {
+    padding: .75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tx-typo3forum-post-attachments > .card > .card-body {
+    padding: 0 1rem;
+}
+
+.tx-typo3forum-post-attachments .list-group {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tx-typo3forum-post-attachments .list-group-item {
+    position: relative;
+    padding: .75rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tx-typo3forum-post-attachments .list-group-item:last-child {
+    border-bottom: 0;
+}
+
+.tx-typo3forum-attachment-row,
+.tx-typo3forum-attachment-details {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.tx-typo3forum-attachment-details {
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.tx-typo3forum-attachment-separator {
+    color: #94a3b8;
+}
+
+.tx-typo3forum-post-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tx-typo3forum-post-menu-action {
+    display: inline-flex;
+    gap: .35rem;
+    align-items: center;
+    padding: .4rem .65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .35rem;
+    background: #fff;
+    color: #1d4ed8;
+    line-height: 1.2;
+    text-decoration: none;
+}
+
+.tx-typo3forum-post-menu-action:hover,
+.tx-typo3forum-post-menu-action:focus-visible {
+    border-color: #1d4ed8;
+    background: #eff6ff;
+}
+
+.btn,
+button,
+input[type="submit"] {
+    display: inline-block;
+    padding: .5rem .85rem;
+    border: 1px solid #1d4ed8;
+    border-radius: .35rem;
+    color: #fff;
+    background: #1d4ed8;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn:hover,
+button:hover,
+input[type="submit"]:hover {
+    background: #1e3a8a;
+}
+
+input,
+select,
+textarea {
+    max-width: 100%;
+    padding: .5rem .65rem;
+    border: 1px solid #94a3b8;
+    border-radius: .35rem;
+    background: #fff;
+    font: inherit;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.alert {
+    margin: 1rem 0;
+    padding: .8rem 1rem;
+    border: 1px solid #bfdbfe;
+    border-radius: .4rem;
+    background: #eff6ff;
+}
+
+.badge {
+    display: inline-block;
+    padding: .25em .55em;
+    border-radius: 999px;
+    background: #e2e8f0;
+    font-size: .85em;
+}
+
+.pagination {
+    display: flex;
+    gap: .25rem;
+    padding: 0;
+    list-style: none;
+}
+
+.page-link {
+    display: block;
+    padding: .35rem .65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .3rem;
+    text-decoration: none;
+}
+
+.page-item.active .page-link {
+    color: #fff;
+    background: #1d4ed8;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: .55;
+}
+
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mt-5 { margin-top: 2rem; }
+.mb-0 { margin-bottom: 0; }
+.mb-2 { margin-bottom: .5rem; }
+.mb-3 { margin-bottom: 1rem; }
+.mb-4 { margin-bottom: 1.5rem; }
+.me-1 { margin-right: .25rem; }
+.p-3 { padding: 1rem; }
+.p-4 { padding: 1.5rem; }
+.align-middle { vertical-align: middle; }
+.text-nowrap { white-space: nowrap; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+@media (max-width: 720px) {
+    main {
+        margin: .75rem;
+        padding: 1rem;
+    }
+
+    .table,
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .col-2,
+    .col-6,
+    .col-10 {
+        flex-basis: 100%;
+        width: 100%;
+    }
+
+    .tx-typo3forum-post > .row {
+        flex-wrap: wrap;
+    }
+
+    .tx-typo3forum-post-author,
+    .tx-typo3forum-post-content {
+        flex-basis: 100%;
+        width: 100%;
+    }
+
+    .tx-typo3forum-post-author {
+        border-right: 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .tx-typo3forum-attachment-details {
+        flex-wrap: wrap;
+        white-space: normal;
+    }
+}

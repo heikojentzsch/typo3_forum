@@ -1,19 +1,25 @@
 {namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
 <div
-	class="card mb-4"
+	class="card mb-4 tx-typo3forum-post"
 	<f:if condition="!{disablePostId}">id="{mmf:format.replace(search: '|', replace: post.uid, subject: settings.topicController.show.postIdWrap)}"</f:if>
 >
 	<div class="row">
-		<div class="col-md-9">
+		<div class="col-md-3 p-3 tx-typo3forum-post-author">
+			<f:if condition="{post.author.anonymous}">
+				<f:then>
+					<f:render partial="User/AnonymousInformationRow" arguments="{user: post.author}"/>
+				</f:then>
+				<f:else>
+					<f:render partial="User/InformationRow" arguments="{user: post.author}"/>
+				</f:else>
+			</f:if>
+		</div>
+
+		<div class="col-md-9 tx-typo3forum-post-content">
 			<div class="card-body d-flex flex-column h-100">
 				<div class="tx-typo3forum-parsed-text card-text flex-grow-1">
 					<mmf:format.textParser post="{post}"/>
 				</div>
-				<f:if condition="{post.attachments}">
-					<div class="mt-4">
-						<f:render partial="Attachment/List" arguments="{attachments: post.attachments}" />
-					</div>
-				</f:if>
 				<f:if condition="{post.author.signature}">
 					<div class="mt-3">
 						<hr />
@@ -24,18 +30,12 @@
 				</f:if>
 			</div>
 		</div>
-
-		<div class="col-md-3 p-3 ps-0">
-			<f:if condition="{post.author.anonymous}">
-				<f:then>
-					<f:render partial="User/AnonymousInformationRow" arguments="{user: post.author}"/>
-				</f:then>
-				<f:else>
-					<f:render partial="User/InformationRow" arguments="{user: post.author}"/>
-				</f:else>
-			</f:if>
-		</div>
 	</div>
+	<f:if condition="{post.attachments}">
+		<div class="p-3 tx-typo3forum-post-attachments">
+			<f:render partial="Attachment/List" arguments="{attachments: post.attachments}" />
+		</div>
+	</f:if>
 	<div class="card-footer p-3">
 		<div class="row">
 			<div class="col-6 d-flex align-items-center">

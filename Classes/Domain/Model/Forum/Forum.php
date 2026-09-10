@@ -267,10 +267,7 @@ class Forum // NOSONAR we are not going reduce the amount of functions
         if ($this->lastPost === null) {
             $this->_resetLastPost();
         }
-        if (!$this->lastPost instanceof Post) {
-            return null;
-        }
-        $lastPost = $this->lastPost;
+        $lastPost = $this->lastPost instanceof Post ? $this->lastPost : null;
         foreach ($this->getChildren() as $child) {
             /** @var Forum $child */
             if (

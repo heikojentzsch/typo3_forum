@@ -3,20 +3,25 @@ declare(strict_types=1);
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
-use Mittwald\Typo3Forum\Controller\{PostController, ReportController};
+use Mittwald\Typo3Forum\Controller\{AjaxController, PostController, ReportController, TopicController};
+use Mittwald\Typo3Forum\Domain\Factory\Forum\{PostFactory, TopicFactory};
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Access, Forum, Post, RootForum, Topic};
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService;
 use Mittwald\Typo3Forum\Service\Notification\NotificationService;
+use Mittwald\Typo3Forum\Service\{AttachmentService, TagService};
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use TYPO3\CMS\Core\Http\{NormalizedParams, ServerRequest};
 use TYPO3\CMS\Core\Localization\{LanguageService, LanguageServiceFactory, Locale, Locales};
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Request;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
+use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class RuntimeRegressionTest extends AbstractControllerTestCase
 {
@@ -44,6 +49,25 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
     {
         (new \ReflectionProperty(GeneralUtility::class, 'container'))->setValue(null, $this->previousContainer);
         parent::tearDown();
+    }
+
+    public function testAjaxControllerAutowiresExtbaseLifecycleDependencies(): void
+    {
+        $services = \Symfony\Component\Yaml\Yaml::parseFile(dirname(__DIR__, 2) . '/Configuration/Services.yaml')['services'];
+        $config = array_replace($services['_defaults'], $services[AjaxController::class]);
+        self::assertTrue($config['autowire']);
+
+        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
+        $container->setDefinition(
+            AjaxController::class,
+            (new \Symfony\Component\DependencyInjection\Definition(AjaxController::class))->setAutowired(true)
+        );
+        (new \TYPO3\CMS\Core\DependencyInjection\AutowireInjectMethodsPass())->process($container);
+        $methodCalls = array_column($container->getDefinition(AjaxController::class)->getMethodCalls(), 0);
+
+        self::assertContains('injectReflectionService', $methodCalls);
+        self::assertContains('injectConfigurationManager', $methodCalls);
+        self::assertContains('injectResponseFactory', $methodCalls);
     }
 
     public function testForumNotificationsIncludeFirstAndParentSubscriberOnlyOnce(): void
@@ -74,12 +98,54 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $mail = $this->createMock(HTMLMailingService::class);
         $recipients = [];
         $mail->expects(self::exactly(2))->method('sendMail')->willReturnCallback(function ($user) use (&$recipients): void { $recipients[] = $user->getUid(); });
-        $service = new class($mail, $this->uriBuilder, $this->createStub(ConfigurationBuilder::class)) extends NotificationService {
+        $service = new class($mail, $this->createStub(ContentObjectRenderer::class), $this->createStub(ConfigurationBuilder::class)) extends NotificationService {
             protected function getMessage(Forum $forum, Topic $topic, Post $post, string $messageTemplate, string $unsubscribeLink): string { return 'Hello ###RECIPIENT###'; }
             protected function getForumUnsubscribeLink(Forum $forum): string { return '/unsubscribe'; }
         };
         $service->notifySubscribers($forum, $topic);
         self::assertSame([1, 4], $recipients, 'Author 2 and users 3/5 without origin-forum access are excluded even when subscribed to an accessible parent; user 1 is not duplicated.');
+    }
+
+    public function testNotificationLinksUseTheCurrentFrontendRequestWithoutSessionState(): void
+    {
+        $request = new ServerRequest('https://example.test/forum?FE_SESSION_KEY=must-not-leak');
+        $previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        $GLOBALS['TYPO3_REQUEST'] = $request;
+        try {
+            $contentObjectRenderer = $this->createMock(ContentObjectRenderer::class);
+            $contentObjectRenderer->expects(self::once())->method('setRequest')->with($request);
+            $contentObjectRenderer->expects(self::once())->method('createUrl')->with([
+                'parameter' => 23,
+                'queryParameters' => [
+                    'tx_typo3forum_forum[controller]' => 'User',
+                    'tx_typo3forum_forum[action]' => 'subscribe',
+                    'tx_typo3forum_forum[topic]' => 42,
+                    'tx_typo3forum_forum[unsubscribe]' => 1,
+                ],
+                'forceAbsoluteUrl' => true,
+                'linkAccessRestrictedPages' => true,
+            ])->willReturn('https://example.test/unsubscribe');
+            $configuration = $this->createStub(ConfigurationBuilder::class);
+            $configuration->method('getSettings')->willReturn(['pids.' => ['Forum' => 23]]);
+            $topic = $this->createStub(Topic::class);
+            $topic->method('getUid')->willReturn(42);
+            $service = new class($this->createStub(HTMLMailingService::class), $contentObjectRenderer, $configuration) extends NotificationService {
+                public function topicUnsubscribeLink(Topic $topic): string
+                {
+                    return $this->getTopicUnsubscribeLink($topic);
+                }
+            };
+
+            $link = $service->topicUnsubscribeLink($topic);
+            self::assertSame('<a href="https://example.test/unsubscribe">Test message</a>', $link);
+            self::assertStringNotContainsString('SESSION', $link);
+        } finally {
+            if ($previousRequest === null) {
+                unset($GLOBALS['TYPO3_REQUEST']);
+            } else {
+                $GLOBALS['TYPO3_REQUEST'] = $previousRequest;
+            }
+        }
     }
 
     public function testRootInitializesCollectionsAndRetainsInjectedAuthentication(): void
@@ -99,10 +165,37 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         self::assertSame($this->authenticationService, (new \ReflectionProperty($root, 'authenticationService'))->getValue($root));
     }
 
+    public function testParentForumReturnsTheLastPostFromItsChildren(): void
+    {
+        $this->authenticationService->method('checkAuthorization')->willReturn(true);
+        $parent = (new \ReflectionClass(Forum::class))->newInstanceWithoutConstructor();
+        $parent->ensureObjectStorages();
+        $parent->injectAuthenticationService($this->authenticationService);
+        $child = (new \ReflectionClass(Forum::class))->newInstanceWithoutConstructor();
+        $child->ensureObjectStorages();
+        $child->injectAuthenticationService($this->authenticationService);
+        $lastPost = $this->createStub(Post::class);
+        $lastPost->method('getTimestamp')->willReturn(new \DateTime());
+        $child->setLastPost($lastPost);
+        $parent->addChild($child);
+
+        self::assertSame($lastPost, $parent->getLastPost());
+    }
+
+    public function testRegularUsersReadTagCreationPermissionFromTypoScriptSettings(): void
+    {
+        $user = new FrontendUser();
+        (new \ReflectionProperty($user, 'settings'))->setValue($user, [
+            'forum.' => ['tag.' => ['usersCanCreate' => '1']],
+        ]);
+
+        self::assertTrue($user->canCreateTags());
+    }
+
     private function controller(string $class): object
     {
         $controller = $this->getMockBuilder($class)->disableOriginalConstructor()
-            ->onlyMethods(['getFlashMessageQueue', 'clearCacheForCurrentPage'])->getMock();
+            ->onlyMethods(['getFlashMessageQueue', 'clearCacheForCurrentPage', 'purgeUrl'])->getMock();
         $controller->method('getFlashMessageQueue')->willReturn(new FlashMessageQueue('test'));
         $this->initializeController($controller);
         $this->setProperty($controller, 'eventDispatcher', $this->createStub(EventDispatcherInterface::class));
@@ -153,5 +246,95 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $this->setProperty($controller, 'topicRepository', $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository::class));
         $this->setProperty($controller, 'persistenceManager', $this->createStub(\TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager::class));
         self::assertSame(['post' => $post], $controller->createAction($topic, $post, $files)->getArguments());
+    }
+
+    public function testAttachmentDownloadReturnsTheStoredBytesWithoutPageMarkup(): void
+    {
+        $controller = $this->controller(PostController::class);
+        $contents = 'test';
+        $file = $this->createStub(\TYPO3\CMS\Core\Resource\FileReference::class);
+        $file->method('getMimeType')->willReturn('text/plain');
+        $file->method('getSize')->willReturn(strlen($contents));
+        $file->method('getContents')->willReturn($contents);
+        $fileReference = $this->createStub(\TYPO3\CMS\Extbase\Domain\Model\FileReference::class);
+        $fileReference->method('getOriginalResource')->willReturn($file);
+        $attachment = $this->createMock(\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class);
+        $attachment->expects(self::once())->method('increaseDownloadCount')->willReturnSelf();
+        $attachment->method('getFileReference')->willReturn($fileReference);
+        $attachment->method('getName')->willReturn('test.txt');
+        $repository = $this->createMock(\Mittwald\Typo3Forum\Domain\Repository\Forum\AttachmentRepository::class);
+        $repository->expects(self::once())->method('update')->with($attachment);
+        $persistenceManager = $this->createMock(PersistenceManager::class);
+        $persistenceManager->expects(self::once())->method('persistAll');
+        $this->setProperty($controller, 'attachmentRepository', $repository);
+        $this->setProperty($controller, 'persistenceManager', $persistenceManager);
+
+        $response = $controller->downloadAttachmentAction($attachment);
+
+        self::assertSame('text/plain', $response->getHeaderLine('Content-Type'));
+        self::assertSame('attachment; filename="test.txt"', $response->getHeaderLine('Content-Disposition'));
+        self::assertSame((string)strlen($contents), $response->getHeaderLine('Content-Length'));
+        self::assertSame($contents, (string)$response->getBody());
+        self::assertStringNotContainsString('<!DOCTYPE html>', (string)$response->getBody());
+    }
+
+    public function testCreatingTopicWithAttachmentResetsUriBuilderAfterCachePurge(): void
+    {
+        $controller = $this->controller(TopicController::class);
+        $forum = $this->createStub(Forum::class);
+        $forum->method('getUid')->willReturn(2);
+        $post = $this->createMock(Post::class);
+        $topic = $this->createStub(Topic::class);
+        $uploadedFile = $this->createStub(UploadedFileInterface::class);
+        $attachments = new ObjectStorage();
+        $tags = new ObjectStorage();
+
+        $attachmentService = $this->createMock(AttachmentService::class);
+        $attachmentService->expects(self::once())->method('initAttachments')->with([$uploadedFile])->willReturn($attachments);
+        $post->expects(self::once())->method('setAttachments')->with($attachments);
+        $postFactory = $this->createMock(PostFactory::class);
+        $postFactory->expects(self::once())->method('assignUserToPost')->with($post);
+        $tagService = $this->createMock(TagService::class);
+        $tagService->expects(self::once())->method('hydrateTags')->with([])->willReturn($tags);
+        $topicFactory = $this->createMock(TopicFactory::class);
+        $topicFactory->expects(self::once())->method('createTopic')
+            ->with($forum, $post, 'Test', false, $tags, false)
+            ->willReturn($topic);
+        $persistenceManager = $this->createMock(PersistenceManager::class);
+        $persistenceManager->expects(self::once())->method('persistAll');
+
+        $this->setProperty($controller, 'attachmentService', $attachmentService);
+        $this->setProperty($controller, 'postFactory', $postFactory);
+        $this->setProperty($controller, 'tagService', $tagService);
+        $this->setProperty($controller, 'topicFactory', $topicFactory);
+        $this->setProperty($controller, 'persistenceManager', $persistenceManager);
+        $this->setProperty($controller, 'settings', ['purgeCache' => true, 'pids' => ['Forum' => 23]]);
+
+        $this->uriBuilder->expects(self::once())->method('setTargetPageUid')->with(23)->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('setArguments')->with([
+            'tx_typo3forum_forum[forum]' => 2,
+            'tx_typo3forum_forum[controller]' => 'Forum',
+            'tx_typo3forum_forum[action]' => 'show',
+        ])->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('build')->willReturn('forum/development-forums');
+        $this->uriBuilder->expects(self::once())->method('reset')->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('uriFor')
+            ->with('show', ['topic' => $topic], 'Topic')
+            ->willReturn('/forum/topic/test');
+
+        $previousHost = $_SERVER['HTTP_HOST'] ?? null;
+        $_SERVER['HTTP_HOST'] = 'typo3forum.ddev.site';
+        try {
+            $response = $controller->createAction($forum, $post, 'Test', [], [$uploadedFile]);
+        } finally {
+            if ($previousHost === null) {
+                unset($_SERVER['HTTP_HOST']);
+            } else {
+                $_SERVER['HTTP_HOST'] = $previousHost;
+            }
+        }
+
+        self::assertSame(307, $response->getStatusCode());
+        self::assertSame('/forum/topic/test', $response->getHeaderLine('Location'));
     }
 }

@@ -9,6 +9,16 @@ use TYPO3\CMS\Core\Core\Environment;
 
 final class DevelopmentGuard
 {
+    public static function trustedHostsPattern(string $baseUrl): string
+    {
+        $host = parse_url($baseUrl, PHP_URL_HOST);
+        if (!is_string($host) || $host === '') {
+            throw new RuntimeException('DDEV_PRIMARY_URL does not contain a valid host.');
+        }
+
+        return '^' . preg_quote($host, '/') . '$';
+    }
+
     public function assertSafe(): void
     {
         if (!Environment::getContext()->isDevelopment()) {
