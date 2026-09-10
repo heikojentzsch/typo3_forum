@@ -227,6 +227,7 @@ PHP
             self::assertStringContainsString("'{$summaryKey}'", $verifier);
         }
         self::assertStringContainsString("uid('forum.moderator')", $verifier);
+        self::assertStringNotContainsString("\$moderatorForum['topics']", $verifier);
         self::assertStringContainsString('The moderator-only forum ACLs are missing', $verifier);
         self::assertStringContainsString("(int)\$forum['topics'] < 1", $verifier);
         self::assertStringContainsString("(int)\$samplePostTopic !== \$topicUid", $verifier);
