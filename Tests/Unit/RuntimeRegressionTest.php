@@ -161,6 +161,21 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         self::assertSame($this->authenticationService, (new \ReflectionProperty($root, 'authenticationService'))->getValue($root));
     }
 
+    public function testParentForumReturnsTheLastPostFromItsChildren(): void
+    {
+        $this->authenticationService->method('checkAuthorization')->willReturn(true);
+        $parent = new Forum();
+        $parent->injectAuthenticationService($this->authenticationService);
+        $child = new Forum();
+        $child->injectAuthenticationService($this->authenticationService);
+        $lastPost = $this->createStub(Post::class);
+        $lastPost->method('getTimestamp')->willReturn(new \DateTime());
+        $child->setLastPost($lastPost);
+        $parent->addChild($child);
+
+        self::assertSame($lastPost, $parent->getLastPost());
+    }
+
     public function testRegularUsersReadTagCreationPermissionFromTypoScriptSettings(): void
     {
         $user = new FrontendUser();
