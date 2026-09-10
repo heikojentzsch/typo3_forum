@@ -73,7 +73,7 @@ final class FixtureVerifier
         }
         if ((int)$categoryChildren < 2 || $moderatorForum === false
             || (int)$moderatorForum['forum'] !== $categoryUid || $moderatorForum['slug'] !== 'moderator-forum'
-            || (int)$moderatorForum['topics'] !== 0 || (int)$moderatorForum['acls'] < 2) {
+            || (int)$moderatorForum['topics'] !== 0 || (int)$moderatorForum['acls'] < 4) {
             throw new RuntimeException('The managed moderator forum is missing or inconsistent.');
         }
         $topicConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_topic');
@@ -180,6 +180,18 @@ final class FixtureVerifier
             || $denyReadAcl['operation'] !== 'read' || (int)$denyReadAcl['login_level'] !== 0
             || (int)$denyReadAcl['affected_group'] !== 0 || (int)$denyReadAcl['negate'] !== 1) {
             throw new RuntimeException('The moderator-only forum ACLs are missing, inconsistent or ordered incorrectly.');
+        }
+        foreach (['topic' => 'newTopic', 'post' => 'newPost'] as $key => $operation) {
+            $acl = $aclConnection->fetchAssociative(
+                'SELECT forum, operation, login_level, affected_group, negate FROM tx_typo3forum_domain_model_forum_access WHERE uid = ? AND deleted = 0',
+                [$this->ownershipStore->uid('acl.moderator-forum.' . $key . '.moderator')],
+            );
+            if ($acl === false || (int)$acl['forum'] !== $moderatorForumUid || $acl['operation'] !== $operation
+                || (int)$acl['login_level'] !== 2
+                || (int)$acl['affected_group'] !== $this->ownershipStore->uid('group.moderator')
+                || (int)$acl['negate'] !== 0) {
+                throw new RuntimeException(sprintf('The moderator forum %s ACL is inconsistent.', $operation));
+            }
         }
         $checks[] = 'member, moderator and scoped forum ACL records';
 

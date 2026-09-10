@@ -164,7 +164,10 @@ try {
     if (!str_contains($moderatorForumList, 'moderator-forum')) {
         throw new RuntimeException('The moderator-only forum is not visible to the moderator.');
     }
-    fetchPage($moderatorCurl, $baseUrl . '/forum/moderator-forum');
+    $moderatorForum = fetchPage($moderatorCurl, $baseUrl . '/forum/moderator-forum');
+    if (!str_contains($moderatorForum, '/forum/moderator-forum/new')) {
+        throw new RuntimeException('The moderator cannot create a topic in the moderator-only forum.');
+    }
 } finally {
     curl_close($moderatorCurl);
     unlink($moderatorCookieFile);

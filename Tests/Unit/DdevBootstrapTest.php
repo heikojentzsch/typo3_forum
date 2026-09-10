@@ -169,6 +169,7 @@ PHP
         self::assertStringContainsString('The moderation page is visible in the member navigation.', $loginCheck);
         self::assertStringContainsString('The moderator-only forum is visible to the regular member.', $loginCheck);
         self::assertStringContainsString('The moderator-only forum is not visible to the moderator.', $loginCheck);
+        self::assertStringContainsString('The moderator cannot create a topic in the moderator-only forum.', $loginCheck);
         self::assertStringContainsString('$moderatorUsername', $loginCheck);
         self::assertStringContainsString('$moderatorPassword', $loginCheck);
 
@@ -208,6 +209,8 @@ PHP
         self::assertStringContainsString("getOrCreate('forum.moderator'", $provisioner);
         self::assertStringContainsString("'moderator-forum.read.moderator'", $provisioner);
         self::assertStringContainsString("'moderator-forum.read.deny-everyone'", $provisioner);
+        self::assertStringContainsString("'moderator-forum.topic.moderator'", $provisioner);
+        self::assertStringContainsString("'moderator-forum.post.moderator'", $provisioner);
 
         $siteTemplate = (string)file_get_contents($root . '/ddev/Configuration/site.template.yaml');
         self::assertStringContainsString('errorHandler: LoginRedirect', $siteTemplate);
