@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
+use GuzzleHttp\Psr7\Uri;
 use Mittwald\Typo3Forum\Controller\ForumController;
-use Mittwald\Typo3Forum\Domain\Exception\Authentication\{NoAccessException, NotLoggedInException};
+use Mittwald\Typo3Forum\Domain\Exception\Authentication\NotLoggedInException;
+use Mittwald\Typo3Forum\Domain\Model\Forum\Access;
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Forum, RootForum, Topic};
 use Mittwald\Typo3Forum\Domain\Model\User\{AnonymousFrontendUser, FrontendUser};
 use Mittwald\Typo3Forum\Domain\Repository\Forum\{ForumRepository, TopicRepository};
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Core\Localization\{LanguageService, LanguageServiceFactory, Locale, Locales};
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Http\ForwardResponse;
+use TYPO3\CMS\Extbase\Mvc\RequestInterface;
 use TYPO3\CMS\Extbase\Persistence\{ObjectStorage, QueryResultInterface};
 
 final class ForumControllerTest extends AbstractControllerTestCase
@@ -19,10 +25,32 @@ final class ForumControllerTest extends AbstractControllerTestCase
     private ForumController $controller;
     private ForumRepository&MockObject $forumRepository;
     private TopicRepository&MockObject $topicRepository;
+    private mixed $previousContainer;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->previousContainer = (new \ReflectionProperty(GeneralUtility::class, 'container'))->getValue();
+        $language = $this->createStub(LanguageService::class);
+        $language->method('translate')->willReturnCallback(
+            static fn(string $key): string => $key === 'Error_AccessDenied_Title'
+                ? 'Access denied'
+                : 'You do not have permission to view this content.'
+        );
+        $language->method('getLocale')->willReturn(new Locale('en'));
+        $factory = $this->createStub(LanguageServiceFactory::class);
+        $factory->method('create')->willReturn($language);
+        $factory->method('createFromUserPreferences')->willReturn($language);
+        $locales = $this->createStub(Locales::class);
+        $locales->method('createLocaleFromRequest')->willReturn(new Locale('en'));
+        $container = $this->createStub(ContainerInterface::class);
+        $container->method('has')->willReturnCallback(
+            static fn(string $id): bool => in_array($id, [LanguageServiceFactory::class, Locales::class], true)
+        );
+        $container->method('get')->willReturnCallback(
+            static fn(string $id): object => $id === Locales::class ? $locales : $factory
+        );
+        GeneralUtility::setContainer($container);
         $this->forumRepository = $this->createMock(ForumRepository::class);
         $this->topicRepository = $this->createMock(TopicRepository::class);
         $this->controller = new ForumController(
@@ -31,6 +59,12 @@ final class ForumControllerTest extends AbstractControllerTestCase
             $this->createStub(RootForum::class),
         );
         $this->initializeController($this->controller);
+    }
+
+    protected function tearDown(): void
+    {
+        (new \ReflectionProperty(GeneralUtility::class, 'container'))->setValue(null, $this->previousContainer);
+        parent::tearDown();
     }
 
     public function testIndexForwardsTheFirstRootForumToShow(): void
@@ -59,24 +93,64 @@ final class ForumControllerTest extends AbstractControllerTestCase
         $forum = $this->forum();
         $topics = $this->createStub(QueryResultInterface::class);
         $this->topicRepository->expects(self::once())->method('findForIndex')->with($forum)->willReturn($topics);
-        $this->authenticationService->expects(self::once())->method('assertReadAuthorization')->with($forum);
+        $this->authenticationService->expects(self::once())->method('checkAuthorization')
+            ->with($forum, Access::TYPE_READ)->willReturn(true);
         $this->view->expects(self::once())->method('assignMultiple')
             ->with(['forum' => $forum, 'topics' => $topics, 'page' => 2])->willReturnSelf();
         $this->view->expects(self::once())->method('render')->willReturn('<p>Forum</p>');
         $this->assertHtmlResponse($this->controller->showAction($forum, 2), '<p>Forum</p>');
     }
 
-    public function testShowPropagatesDeniedReadAccessWithoutRendering(): void
+    public function testShowRedirectsAnonymousUserToLoginWithOriginalUrl(): void
     {
         $forum = $this->forum();
-        $this->topicRepository->method('findForIndex')->willReturn($this->createStub(QueryResultInterface::class));
-        $this->authenticationService->expects(self::once())->method('assertReadAuthorization')->with($forum)
-            ->willThrowException(new NoAccessException('Denied', 1284709852));
+        $requestUri = 'https://example.test/forum/private?filter=unread';
+        $request = $this->createStub(RequestInterface::class);
+        $request->method('getUri')->willReturn(new Uri($requestUri));
+        $anonymousUser = (new \ReflectionClass(AnonymousFrontendUser::class))->newInstanceWithoutConstructor();
+        $this->setProperty($this->controller, 'request', $request);
+        $this->setProperty($this->controller, 'settings', ['pids' => ['Login' => 42]]);
+        $this->authenticationService->expects(self::once())->method('checkAuthorization')
+            ->with($forum, Access::TYPE_READ)->willReturn(false);
+        $this->frontendUserRepository->expects(self::once())->method('findCurrent')->willReturn($anonymousUser);
+        $this->uriBuilder->expects(self::once())->method('reset')->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('setTargetPageUid')->with(42)->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('setArguments')
+            ->with(['redirect_url' => $requestUri])->willReturnSelf();
+        $this->uriBuilder->expects(self::once())->method('buildFrontendUri')
+            ->willReturn('https://example.test/login?redirect_url=' . rawurlencode($requestUri));
+        $this->topicRepository->expects(self::never())->method('findForIndex');
         $this->view->expects(self::never())->method('assignMultiple');
         $this->view->expects(self::never())->method('render');
-        $this->expectException(NoAccessException::class);
-        $this->expectExceptionCode(1284709852);
-        $this->controller->showAction($forum);
+
+        $response = $this->controller->showAction($forum);
+
+        self::assertSame(303, $response->getStatusCode());
+        self::assertSame(
+            'https://example.test/login?redirect_url=' . rawurlencode($requestUri),
+            $response->getHeaderLine('Location')
+        );
+        self::assertDoesNotMatchRegularExpression('/(?:id|sid|session|fe_session)=/i', $requestUri);
+    }
+
+    public function testShowReturnsClearForbiddenResponseForAuthenticatedUserWithoutAccess(): void
+    {
+        $forum = $this->forum();
+        $user = $this->createStub(FrontendUser::class);
+        $user->method('isAnonymous')->willReturn(false);
+        $this->authenticationService->expects(self::once())->method('checkAuthorization')
+            ->with($forum, Access::TYPE_READ)->willReturn(false);
+        $this->frontendUserRepository->expects(self::once())->method('findCurrent')->willReturn($user);
+        $this->topicRepository->expects(self::never())->method('findForIndex');
+        $this->view->expects(self::never())->method('assignMultiple');
+        $this->view->expects(self::never())->method('render');
+
+        $response = $this->controller->showAction($forum);
+
+        self::assertSame(403, $response->getStatusCode());
+        self::assertSame('text/html; charset=utf-8', $response->getHeaderLine('Content-Type'));
+        self::assertStringContainsString('alert-danger', (string)$response->getBody());
+        self::assertStringContainsString('Access denied', (string)$response->getBody());
     }
 
     public function testMarkReadRejectsTheAnonymousUserReturnedWhenLoggedOut(): void

@@ -21,6 +21,7 @@ plugin {
 			}
 
 			pids {
+				Login = {$plugin.tx_typo3forum.settings.pids.Login}
 				Forum = {$plugin.tx_typo3forum.settings.pids.Forum}
 				UserShow = {$plugin.tx_typo3forum.settings.pids.UserShow}
 				UserList = {$plugin.tx_typo3forum.settings.pids.UserList}

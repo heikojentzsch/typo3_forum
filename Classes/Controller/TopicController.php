@@ -136,6 +136,9 @@ class TopicController extends AbstractController
      */
     public function showAction(Topic $topic, ?Post $quote = null, int $page = 1): ResponseInterface
     {
+        if (($accessResponse = $this->readAccessFailureResponse($topic)) instanceof ResponseInterface) {
+            return $accessResponse;
+        }
         $posts = $this->postRepository->findForTopic($topic);
 
         if ($quote !== null) {
@@ -146,9 +149,6 @@ class TopicController extends AbstractController
         }
 
         $this->recordTitleProvider->setTitle($topic->getTitle());
-
-
-        $this->authenticationService->assertReadAuthorization($topic);
         $this->markTopicRead($topic);
 
         $this->view->assignMultiple([

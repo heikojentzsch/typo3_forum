@@ -15,6 +15,8 @@ plugin.tx_typo3forum {
 
 	settings {
 		pids {
+			# cat=typo3_forum: config/110/95; type=int; label=PID where frontend login is located
+			Login = 0
 			# cat=typo3_forum: config/110/100; type=int; label=PID where forum is located
 			Forum = 5
 			# cat=typo3_forum: config/110/110; type=int; label=PID where user profile is located

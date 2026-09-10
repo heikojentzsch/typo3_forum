@@ -78,6 +78,12 @@
 			<trans-unit id="Error_1335120249" xml:space="preserve">
 				<source>You need to be logged in to view your own subscriptions.</source>
 			</trans-unit>
+			<trans-unit id="Error_AccessDenied_Title" xml:space="preserve">
+				<source>Access denied</source>
+			</trans-unit>
+			<trans-unit id="Error_AccessDenied_Body" xml:space="preserve">
+				<source>You do not have permission to view this content.</source>
+			</trans-unit>
 			<trans-unit id="Error_Exception_Title" xml:space="preserve">
 				<source>Whoops!</source>
 			</trans-unit>

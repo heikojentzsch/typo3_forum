@@ -214,6 +214,7 @@ final class FixtureVerifier
         $constants = $templateConnection->fetchOne('SELECT constants FROM sys_template WHERE uid = ?', [$this->ownershipStore->uid('template.root')]);
         $expectedSettings = [
             'storagePid = ' . $this->ownershipStore->uid('page.forum_storage') . ',' . $this->ownershipStore->uid('page.users_storage'),
+            'pids.Login = ' . $this->ownershipStore->uid('page.login'),
             'pids.Forum = ' . $this->ownershipStore->uid('page.forum'),
             'pids.UserShow = ' . $this->ownershipStore->uid('page.profile'),
             'pids.UserList = ' . $this->ownershipStore->uid('page.users'),

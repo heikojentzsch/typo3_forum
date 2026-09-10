@@ -25,6 +25,8 @@ namespace Mittwald\Typo3Forum\Controller;
 *  This copyright notice MUST APPEAR in all copies of the script!      *
 *                                                                      */
 
+use Mittwald\Typo3Forum\Domain\Model\AccessibleInterface;
+use Mittwald\Typo3Forum\Domain\Model\Forum\Access;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\User\FrontendUserRepository;
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
@@ -77,6 +79,44 @@ abstract class AbstractController extends ActionController
     protected function getCurrentUser()
     {
         return $this->frontendUserRepository->findCurrent();
+    }
+
+    /**
+     * Returns null when read access is granted, a login redirect for guests,
+     * or a clear forbidden response for authenticated users.
+     */
+    protected function readAccessFailureResponse(AccessibleInterface $object): ?ResponseInterface
+    {
+        if ($this->authenticationService->checkAuthorization($object, Access::TYPE_READ)) {
+            return null;
+        }
+
+        $user = $this->getCurrentUser();
+        if (!$user instanceof FrontendUser || $user->isAnonymous()) {
+            $loginPageUid = (int)($this->settings['pids']['Login'] ?? 0);
+            if ($loginPageUid > 0) {
+                $loginUri = $this->uriBuilder
+                    ->reset()
+                    ->setTargetPageUid($loginPageUid)
+                    ->setArguments(['redirect_url' => (string)$this->request->getUri()])
+                    ->buildFrontendUri();
+
+                return $this->redirectToUri($loginUri);
+            }
+        }
+
+        $title = Localization::translate('Error_AccessDenied_Title', 'Access denied');
+        $message = Localization::translate(
+            'Error_AccessDenied_Body',
+            'You do not have permission to view this content.'
+        );
+        $html = sprintf(
+            '<section class="alert alert-danger" role="alert"><h2>%s</h2><p>%s</p></section>',
+            htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+        );
+
+        return $this->htmlResponse($html)->withStatus(403);
     }
 
     /**

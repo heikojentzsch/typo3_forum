@@ -99,6 +99,24 @@ if (!is_string($username) || !is_string($password)
 
 [$curl, $cookieFile] = createClient();
 try {
+    $protectedForumUrl = $baseUrl . '/forum/moderator-forum';
+    curl_setopt_array($curl, [
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_URL => $protectedForumUrl,
+    ]);
+    $protectedRedirectResponse = curl_exec($curl);
+    $protectedRedirectStatus = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+    $protectedLoginUrl = curl_getinfo($curl, CURLINFO_REDIRECT_URL);
+    $protectedLoginQuery = [];
+    parse_str((string)parse_url($protectedLoginUrl, PHP_URL_QUERY), $protectedLoginQuery);
+    if (!is_string($protectedRedirectResponse)
+        || $protectedRedirectStatus < 300
+        || $protectedRedirectStatus >= 400
+        || parse_url($protectedLoginUrl, PHP_URL_PATH) !== '/login'
+        || ($protectedLoginQuery['redirect_url'] ?? null) !== $protectedForumUrl) {
+        throw new RuntimeException('Anonymous protected-forum request did not redirect to login with a clean return URL.');
+    }
+
     curl_setopt_array($curl, [
         CURLOPT_FOLLOWLOCATION => false,
         CURLOPT_URL => $baseUrl . '/dashboard',
@@ -135,6 +153,18 @@ try {
     }
     if (($authenticatedXPath->query('//a[contains(@href, "/moderation")]')?->length ?? 0) !== 0) {
         throw new RuntimeException('The moderation page is visible in the member navigation.');
+    }
+
+    curl_setopt_array($curl, [
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_URL => $protectedForumUrl,
+        CURLOPT_HTTPGET => true,
+    ]);
+    $forbiddenHtml = curl_exec($curl);
+    if (!is_string($forbiddenHtml)
+        || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) !== 403
+        || (!str_contains($forbiddenHtml, 'Access denied') && !str_contains($forbiddenHtml, 'Zugriff verweigert'))) {
+        throw new RuntimeException('The authenticated member did not receive a clear forbidden response.');
     }
 
     foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/statistics', '/forum', '/forum/topic/welcome-to-the-development-forum'] as $path) {
