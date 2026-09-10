@@ -28,8 +28,6 @@ use Mittwald\Typo3Forum\Domain\Model\User\AnonymousFrontendUser;
  *                                                                      */
 
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
-use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
@@ -52,10 +50,6 @@ class AvatarUrlViewHelper extends AbstractViewHelper
             $avatarFilename = $user->getImagePath();
         }
 
-        if ($avatarFilename === null || $avatarFilename === false) {
-            $avatarFilename = PathUtility::getPublicResourceWebPath('EXT:typo3_forum/Resources/Public/Images/Icons/AvatarEmpty.png');
-        }
-
-        return $avatarFilename;
+        return is_string($avatarFilename) ? $avatarFilename : '';
     }
 }

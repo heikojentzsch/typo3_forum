@@ -176,6 +176,15 @@ final class FluidRenderingTest extends TestCase
         $this->renderBoth('<mmf:user.avatar user="{user}" width="64" height="32" alt="{alt}" />', ['user' => $user, 'alt' => '<name>'], '<img width="64" height="32" alt="&lt;name&gt;" src="/avatar.png" />');
     }
 
+    public function testMissingAvatarDoesNotRenderAPlaceholder(): void
+    {
+        $user = $this->createStub(FrontendUser::class);
+        $user->method('getImagePath')->willReturn(null);
+
+        $this->renderBoth('<mmf:user.avatar user="{user}" width="64" alt="{user.username}" />', ['user' => $user], '');
+        $this->renderBoth('<mmf:user.avatarUrl user="{user}" />', ['user' => $user], '');
+    }
+
     public function testAnonymousUserLinkIsEscaped(): void
     {
         $user = $this->createStub(AnonymousFrontendUser::class);
