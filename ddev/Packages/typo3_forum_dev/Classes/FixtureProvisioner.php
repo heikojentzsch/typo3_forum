@@ -314,6 +314,11 @@ TYPOSCRIPT;
             'description' => 'Public forum for local development.', 'slug' => 'development-forum',
             'sorting' => 100, 'hidden' => 0, 'deleted' => 0, 'crdate' => $now, 'tstamp' => $now,
         ]);
+        $moderatorForum = $this->ownershipStore->getOrCreate('forum.moderator', 'tx_typo3forum_domain_model_forum_forum', [
+            'pid' => $storagePid, 'displayed_pid' => $pages['forum'], 'forum' => $category, 'title' => 'Moderator forum',
+            'description' => 'Forum visible only to moderators.', 'slug' => 'moderator-forum',
+            'sorting' => 200, 'hidden' => 0, 'deleted' => 0, 'crdate' => $now, 'tstamp' => $now,
+        ]);
         $topic = $this->ownershipStore->getOrCreate('topic.sample', 'tx_typo3forum_domain_model_forum_topic', [
             'pid' => $storagePid, 'forum' => $forum, 'subject' => 'Welcome to the development forum',
             'slug' => 'welcome-to-the-development-forum', 'author' => $identities['member'], 'post_count' => 1,
@@ -326,29 +331,34 @@ TYPOSCRIPT;
         ]);
 
         $forumConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_forum');
-        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET children = 1 WHERE uid = ? AND children = 0', [$category]);
+        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET children = 2 WHERE uid = ? AND children < 2', [$category]);
         $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET topics = 1, topic_count = 1, post_count = 1, last_topic = ?, last_post = ? WHERE uid = ? AND topics = 0', [$topic, $post, $forum]);
         $topicConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_topic');
         $topicConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_topic SET posts = 1, last_post = ? WHERE uid = ? AND posts = 0', [$post, $topic]);
 
-        $access = static fn (string $operation, int $level, int $group = 0): array => [
-            'pid' => $storagePid, 'forum' => $forum, 'operation' => $operation, 'login_level' => $level,
-            'affected_group' => $group, 'negate' => 0, 'hidden' => 0, 'deleted' => 0, 'crdate' => $now, 'tstamp' => $now,
+        $access = static fn (int $targetForum, string $operation, int $level, int $group = 0, bool $negate = false): array => [
+            'pid' => $storagePid, 'forum' => $targetForum, 'operation' => $operation, 'login_level' => $level,
+            'affected_group' => $group, 'negate' => $negate ? 1 : 0, 'hidden' => 0, 'deleted' => 0,
+            'crdate' => $now, 'tstamp' => $now,
         ];
         $rules = [
-            'read.everyone' => $access('read', 0),
-            'topic.member' => $access('newTopic', 2, $identities['member_group']),
-            'post.member' => $access('newPost', 2, $identities['member_group']),
-            'moderate.moderator' => $access('moderate', 2, $identities['moderator_group']),
-            'delete-topic.moderator' => $access('deleteTopic', 2, $identities['moderator_group']),
-            'delete-post.moderator' => $access('deletePost', 2, $identities['moderator_group']),
-            'edit-post.moderator' => $access('editPost', 2, $identities['moderator_group']),
-            'solution.moderator' => $access('solution', 2, $identities['moderator_group']),
+            'read.everyone' => $access($forum, 'read', 0),
+            'topic.member' => $access($forum, 'newTopic', 2, $identities['member_group']),
+            'post.member' => $access($forum, 'newPost', 2, $identities['member_group']),
+            'moderate.moderator' => $access($forum, 'moderate', 2, $identities['moderator_group']),
+            'delete-topic.moderator' => $access($forum, 'deleteTopic', 2, $identities['moderator_group']),
+            'delete-post.moderator' => $access($forum, 'deletePost', 2, $identities['moderator_group']),
+            'edit-post.moderator' => $access($forum, 'editPost', 2, $identities['moderator_group']),
+            'solution.moderator' => $access($forum, 'solution', 2, $identities['moderator_group']),
+            // ACLs are evaluated in persistence order. Grant moderators before denying all other visitors.
+            'moderator-forum.read.moderator' => $access($moderatorForum, 'read', 2, $identities['moderator_group']),
+            'moderator-forum.read.deny-everyone' => $access($moderatorForum, 'read', 0, 0, true),
         ];
         foreach ($rules as $key => $data) {
             $this->ownershipStore->getOrCreate('acl.' . $key, 'tx_typo3forum_domain_model_forum_access', $data);
         }
         $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET acls = 8 WHERE uid = ? AND acls = 0', [$forum]);
+        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET acls = 2 WHERE uid = ? AND acls < 2', [$moderatorForum]);
     }
 
     private function provisionStorage(): void

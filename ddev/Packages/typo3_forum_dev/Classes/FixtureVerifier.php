@@ -55,11 +55,26 @@ final class FixtureVerifier
         }
         $forumConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_forum');
         $forumUid = $this->ownershipStore->uid('forum.public');
+        $categoryUid = $this->ownershipStore->uid('forum.category');
+        $moderatorForumUid = $this->ownershipStore->uid('forum.moderator');
         $topicUid = $this->ownershipStore->uid('topic.sample');
         $forum = $forumConnection->fetchAssociative('SELECT forum, topics, acls FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?', [$forumUid]);
-        if ($forum === false || (int)$forum['forum'] !== $this->ownershipStore->uid('forum.category')
+        $categoryChildren = $forumConnection->fetchOne(
+            'SELECT children FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?',
+            [$categoryUid],
+        );
+        $moderatorForum = $forumConnection->fetchAssociative(
+            'SELECT forum, slug, topics, acls FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?',
+            [$moderatorForumUid],
+        );
+        if ($forum === false || (int)$forum['forum'] !== $categoryUid
             || (int)$forum['topics'] < 1 || (int)$forum['acls'] < 8) {
             throw new RuntimeException('The managed forum relationships or counters are inconsistent.');
+        }
+        if ((int)$categoryChildren < 2 || $moderatorForum === false
+            || (int)$moderatorForum['forum'] !== $categoryUid || $moderatorForum['slug'] !== 'moderator-forum'
+            || (int)$moderatorForum['topics'] !== 0 || (int)$moderatorForum['acls'] < 2) {
+            throw new RuntimeException('The managed moderator forum is missing or inconsistent.');
         }
         $topicConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_topic');
         $topic = $topicConnection->fetchAssociative(
@@ -74,7 +89,7 @@ final class FixtureVerifier
             || (int)$samplePostTopic !== $topicUid) {
             throw new RuntimeException('The managed sample topic or post relationship is inconsistent.');
         }
-        $checks[] = 'forum, sample topic and sample post';
+        $checks[] = 'public and moderator forums, sample topic and sample post';
 
         $summaryConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_stats_summary');
         foreach (['stats.post', 'stats.topic', 'stats.user'] as $summaryKey) {
@@ -145,7 +160,28 @@ final class FixtureVerifier
                 throw new RuntimeException(sprintf('Managed ACL %s is inconsistent.', $key));
             }
         }
-        $checks[] = 'member, moderator and scoped ACL records';
+        $moderatorReadAclUid = $this->ownershipStore->uid('acl.moderator-forum.read.moderator');
+        $denyReadAclUid = $this->ownershipStore->uid('acl.moderator-forum.read.deny-everyone');
+        $moderatorReadAcl = $aclConnection->fetchAssociative(
+            'SELECT forum, operation, login_level, affected_group, negate FROM tx_typo3forum_domain_model_forum_access WHERE uid = ? AND deleted = 0',
+            [$moderatorReadAclUid],
+        );
+        $denyReadAcl = $aclConnection->fetchAssociative(
+            'SELECT forum, operation, login_level, affected_group, negate FROM tx_typo3forum_domain_model_forum_access WHERE uid = ? AND deleted = 0',
+            [$denyReadAclUid],
+        );
+        if ($moderatorReadAcl === false || $denyReadAcl === false
+            || $moderatorReadAclUid >= $denyReadAclUid
+            || (int)$moderatorReadAcl['forum'] !== $moderatorForumUid
+            || $moderatorReadAcl['operation'] !== 'read' || (int)$moderatorReadAcl['login_level'] !== 2
+            || (int)$moderatorReadAcl['affected_group'] !== $this->ownershipStore->uid('group.moderator')
+            || (int)$moderatorReadAcl['negate'] !== 0
+            || (int)$denyReadAcl['forum'] !== $moderatorForumUid
+            || $denyReadAcl['operation'] !== 'read' || (int)$denyReadAcl['login_level'] !== 0
+            || (int)$denyReadAcl['affected_group'] !== 0 || (int)$denyReadAcl['negate'] !== 1) {
+            throw new RuntimeException('The moderator-only forum ACLs are missing, inconsistent or ordered incorrectly.');
+        }
+        $checks[] = 'member, moderator and scoped forum ACL records';
 
         $storageConnection = $this->connectionPool->getConnectionForTable('sys_file_storage');
         if ((int)$storageConnection->fetchOne("SELECT COUNT(*) FROM sys_file_storage WHERE is_default = 1 AND is_online = 1 AND is_writable = 1 AND driver = 'Local' AND configuration LIKE '%fileadmin%' AND deleted = 0") !== 1) {
@@ -194,7 +230,9 @@ final class FixtureVerifier
         if ((string)$dashboardGroup !== (string)$this->ownershipStore->uid('group.member')
             || (string)$moderationGroup !== (string)$this->ownershipStore->uid('group.moderator')
             || !str_contains($site, 'errorHandler: LoginRedirect')
-            || !str_contains($site, 'loginRedirectParameter: redirect_url')) {
+            || !str_contains($site, 'loginRedirectParameter: redirect_url')
+            || !str_contains($site, 'locale: de_DE.UTF-8')
+            || !str_contains($site, 'hreflang: de-DE')) {
             throw new RuntimeException('Restricted page or login redirect configuration is missing or stale.');
         }
         $checks[] = 'site routing, TypoScript and generated UIDs';
