@@ -168,9 +168,11 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
     public function testParentForumReturnsTheLastPostFromItsChildren(): void
     {
         $this->authenticationService->method('checkAuthorization')->willReturn(true);
-        $parent = new Forum();
+        $parent = (new \ReflectionClass(Forum::class))->newInstanceWithoutConstructor();
+        $parent->ensureObjectStorages();
         $parent->injectAuthenticationService($this->authenticationService);
-        $child = new Forum();
+        $child = (new \ReflectionClass(Forum::class))->newInstanceWithoutConstructor();
+        $child->ensureObjectStorages();
         $child->injectAuthenticationService($this->authenticationService);
         $lastPost = $this->createStub(Post::class);
         $lastPost->method('getTimestamp')->willReturn(new \DateTime());
