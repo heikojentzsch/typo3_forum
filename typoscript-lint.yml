@@ -8,6 +8,6 @@ sniffs:
   - class: RepeatingRValue
     disabled: true
 paths:
-  - Configuration/TSConfig
+  - Configuration/TSconfig
+  - Configuration/page.tsconfig
   - Configuration/TypoScript
-

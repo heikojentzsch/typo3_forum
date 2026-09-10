@@ -4,6 +4,8 @@ namespace Mittwald\Typo3Forum\TextParser\Service;
 use Mittwald\Typo3Forum\Domain\Model\Format\Smiley;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Repository\Format\SmileyRepository;
+use TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface;
+use TYPO3\CMS\Core\SystemResource\SystemResourceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 /*                                                                      *
@@ -77,9 +79,10 @@ class SmileyParserService extends AbstractTextParserService
      */
     protected function getSmileyIcon(Smiley $smiley): string
     {
-
+        $resource = GeneralUtility::makeInstance(SystemResourceFactory::class)->createPublicResource($smiley->getImagePath());
+        $uri = GeneralUtility::makeInstance(SystemResourcePublisherInterface::class)->generateUri($resource, $GLOBALS['TYPO3_REQUEST'] ?? null);
         return '<i class="tx-typo3forum-smiley"><img src="'
-            . PathUtility::getPublicResourceWebPath($smiley->getImagePath())
+            . $uri
             . '" /></i>'
         ;
     }
