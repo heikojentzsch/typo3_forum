@@ -161,9 +161,11 @@ PHP
         self::assertStringNotContainsString('ddev delete', $wrapper);
 
         $loginCheck = (string)file_get_contents($root . '/Build/Ddev/login-check.php');
-        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics'] as $path) {
+        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
             self::assertStringContainsString("'{$path}'", $loginCheck);
         }
+        self::assertStringContainsString("\$path === '/users'", $loginCheck);
+        self::assertStringContainsString('$moderatorUsername', $loginCheck);
 
         $guard = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php');
         self::assertStringContainsString("Environment::getContext()->isDevelopment()", $guard);
@@ -188,8 +190,13 @@ PHP
         self::assertStringContainsString('PasswordHashFactory', $provisioner);
         self::assertStringContainsString('tx_typo3forum_domain_model_forum_access', $provisioner);
         self::assertStringContainsString('styles.content.loginform.pid = %d', $provisioner);
+        self::assertStringContainsString('persistence.storagePid = %d,%d', $provisioner);
         self::assertStringNotContainsString('plugin.tx_felogin_login.settings.pages', $provisioner);
         self::assertStringContainsString("fetchOne('SELECT constants FROM sys_template WHERE uid = ?'", $provisioner);
+
+        $frontendUserTca = (string)file_get_contents($root . '/Configuration/TCA/Overrides/fe_users.php');
+        self::assertStringContainsString("'allowed' => 'tx_typo3forum_domain_model_forum_forum'", $frontendUserTca);
+        self::assertStringContainsString("'allowed' => 'tx_typo3forum_domain_model_forum_topic'", $frontendUserTca);
 
         $schema = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/ext_tables.sql');
         self::assertStringContainsString('UNIQUE KEY logical_key', $schema);

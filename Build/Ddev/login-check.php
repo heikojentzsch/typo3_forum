@@ -11,7 +11,8 @@ $baseUrl = rtrim($argv[1], '/');
 $credentials = json_decode((string)file_get_contents($argv[2]), true, 512, JSON_THROW_ON_ERROR);
 $username = $credentials['member']['username'] ?? null;
 $password = $credentials['member']['password'] ?? null;
-if (!is_string($username) || !is_string($password)) {
+$moderatorUsername = $credentials['moderator']['username'] ?? null;
+if (!is_string($username) || !is_string($password) || !is_string($moderatorUsername)) {
     throw new RuntimeException('Member credentials are unavailable.');
 }
 
@@ -93,11 +94,14 @@ try {
         throw new RuntimeException('Frontend login completed without recognizable authenticated content.');
     }
 
-    foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics'] as $path) {
+    foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
         curl_setopt($curl, CURLOPT_URL, $baseUrl . $path);
         $pageHtml = curl_exec($curl);
         if (!is_string($pageHtml) || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) !== 200) {
             throw new RuntimeException(sprintf('Authenticated frontend page failed: %s%s', $baseUrl, $path));
+        }
+        if ($path === '/users' && !str_contains($pageHtml, $moderatorUsername)) {
+            throw new RuntimeException('The frontend user list does not contain the managed moderator.');
         }
     }
 } finally {
