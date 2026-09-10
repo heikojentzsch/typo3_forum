@@ -395,13 +395,39 @@ TYPOSCRIPT;
         }
         if (is_file($targetPath)) {
             $existing = (string)file_get_contents($targetPath);
-            if (!str_contains($existing, '# TYPO3 Forum DDEV managed site')) {
+            if (!self::isManagedSiteConfiguration($existing, $rootPageUid)) {
                 throw new RuntimeException('An unmanaged forum-dev site configuration already exists.');
             }
         }
         if (file_put_contents($targetPath, $configuration, LOCK_EX) === false) {
             throw new RuntimeException('Unable to write the managed site configuration.');
         }
+    }
+
+    private static function isManagedSiteConfiguration(string $configuration, int $rootPageUid): bool
+    {
+        if (str_contains($configuration, '# TYPO3 Forum DDEV managed site')) {
+            return true;
+        }
+
+        try {
+            $site = Yaml::parse($configuration);
+        } catch (\Throwable) {
+            return false;
+        }
+        if (!is_array($site)
+            || (int)($site['rootPageId'] ?? 0) !== $rootPageUid
+            || ($site['websiteTitle'] ?? null) !== 'TYPO3 Forum development') {
+            return false;
+        }
+        foreach ($site['imports'] ?? [] as $import) {
+            if (is_array($import)
+                && ($import['resource'] ?? null) === 'EXT:typo3_forum/Configuration/Routing/Routing.yaml') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function writeDevelopmentMailConfiguration(): void

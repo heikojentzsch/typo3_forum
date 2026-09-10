@@ -220,6 +220,23 @@ PHP
         self::assertStringContainsString('UNIQUE KEY phase', $schema);
     }
 
+    public function testProvisionerRecognizesACommentlessGeneratedSiteConfiguration(): void
+    {
+        $path = dirname(__DIR__, 2) . '/ddev/Packages/typo3_forum_dev/Classes/FixtureProvisioner.php';
+        require_once $path;
+        $method = new \ReflectionMethod(\Pottkinder\Typo3ForumDev\FixtureProvisioner::class, 'isManagedSiteConfiguration');
+        $configuration = <<<'YAML'
+rootPageId: 17
+websiteTitle: 'TYPO3 Forum development'
+imports:
+  - resource: 'EXT:typo3_forum/Configuration/Routing/Routing.yaml'
+YAML;
+
+        self::assertTrue($method->invoke(null, $configuration, 17));
+        self::assertFalse($method->invoke(null, $configuration, 18));
+        self::assertFalse($method->invoke(null, str_replace('TYPO3 Forum development', 'Existing site', $configuration), 17));
+    }
+
     public function testGeneratedAndDevelopmentFilesAreIgnoredAndOutsideReleaseAllowlist(): void
     {
         $root = dirname(__DIR__, 2);
