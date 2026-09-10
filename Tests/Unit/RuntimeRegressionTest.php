@@ -104,7 +104,7 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
 
     public function testNotificationLinksUseTheCurrentFrontendRequestWithoutSessionState(): void
     {
-        $request = new ServerRequest('GET', 'https://example.test/forum?FE_SESSION_KEY=must-not-leak');
+        $request = new ServerRequest('https://example.test/forum?FE_SESSION_KEY=must-not-leak');
         $previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? null;
         $GLOBALS['TYPO3_REQUEST'] = $request;
         try {
