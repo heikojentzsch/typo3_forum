@@ -8,9 +8,6 @@
 		<ul class="list-group list-group-flush rounded-bottom">
 			<f:for each="{attachments}" as="attachment">
 				<li class="list-group-item list-group-item-action">
-					<f:link.action controller="Post" pluginName="Forum" action="downloadAttachment" arguments="{attachment: attachment}" pageUid="{settings.pids.Forum}" class="stretched-link">
-					</f:link.action>
-
 					<div class="row">
 						<f:if condition="{argumentName}">
 							<label class="col-auto d-flex" style="z-index: 500;" for="attachment-{attachment.uid}">
@@ -40,7 +37,9 @@
 							</div>
 						</f:if>
 						<div class="col d-flex align-items-center">
-							{attachment.name}
+							<f:link.action controller="Post" pluginName="Forum" action="downloadAttachment" arguments="{attachment: attachment}" pageUid="{settings.pids.Forum}" class="stretched-link">
+								{attachment.name}
+							</f:link.action>
 						</div>
 						<div class="col-2 justify-content-end d-flex align-items-center">
 							<mmf:format.fileSize>{attachment.fileReference.originalResource.size}</mmf:format.fileSize>

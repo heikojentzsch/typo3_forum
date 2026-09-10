@@ -189,6 +189,16 @@ final class FluidRenderingTest extends TestCase
         $this->renderBoth('<mmf:format.fileSize decimals="1" decimalSeparator=".">1536</mmf:format.fileSize>', [], '1.5 KiB');
     }
 
+    public function testAttachmentNameIsRenderedInsideDownloadLink(): void
+    {
+        $source = (string)file_get_contents(dirname(__DIR__, 2) . '/Resources/Private/Partials/Bootstrap/Attachment/List.html');
+
+        self::assertMatchesRegularExpression(
+            '~<f:link\.action\b[^>]*action="downloadAttachment"[^>]*>\s*\{attachment\.name\}\s*</f:link\.action>~s',
+            $source
+        );
+    }
+
     public function testAllPublicCustomViewHelpersRegisterArguments(): void
     {
         $context = $this->context();
