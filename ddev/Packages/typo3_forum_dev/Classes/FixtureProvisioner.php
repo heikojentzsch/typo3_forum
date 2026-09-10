@@ -353,12 +353,14 @@ TYPOSCRIPT;
             // ACLs are evaluated in persistence order. Grant moderators before denying all other visitors.
             'moderator-forum.read.moderator' => $access($moderatorForum, 'read', 2, $identities['moderator_group']),
             'moderator-forum.read.deny-everyone' => $access($moderatorForum, 'read', 0, 0, true),
+            'moderator-forum.topic.moderator' => $access($moderatorForum, 'newTopic', 2, $identities['moderator_group']),
+            'moderator-forum.post.moderator' => $access($moderatorForum, 'newPost', 2, $identities['moderator_group']),
         ];
         foreach ($rules as $key => $data) {
             $this->ownershipStore->getOrCreate('acl.' . $key, 'tx_typo3forum_domain_model_forum_access', $data);
         }
         $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET acls = 8 WHERE uid = ? AND acls = 0', [$forum]);
-        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET acls = 2 WHERE uid = ? AND acls < 2', [$moderatorForum]);
+        $forumConnection->executeStatement('UPDATE tx_typo3forum_domain_model_forum_forum SET acls = 4 WHERE uid = ? AND acls < 4', [$moderatorForum]);
     }
 
     private function provisionStorage(): void
