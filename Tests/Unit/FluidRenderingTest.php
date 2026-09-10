@@ -207,6 +207,11 @@ final class FluidRenderingTest extends TestCase
             $source
         );
         self::assertStringContainsString('pageType="43568276"', $source);
+        self::assertStringContainsString('tx-typo3forum-attachment-row', $source);
+        self::assertMatchesRegularExpression(
+            '~\{attachment\.name\}.*tx-typo3forum-attachment-separator.*format\.fileSize.*tx-typo3forum-attachment-separator.*Post_Show_Attachment_DownloadCount~s',
+            $source
+        );
     }
 
     public function testPostMenuShowsIconsAndLabelsInTheRequestedOrder(): void

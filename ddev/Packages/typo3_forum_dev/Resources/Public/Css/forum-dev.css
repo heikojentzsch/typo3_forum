@@ -167,6 +167,22 @@ table thead {
     border-top: 1px solid #e2e8f0;
 }
 
+.tx-typo3forum-attachment-row,
+.tx-typo3forum-attachment-details {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.tx-typo3forum-attachment-details {
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.tx-typo3forum-attachment-separator {
+    color: #94a3b8;
+}
+
 .tx-typo3forum-post-menu {
     display: flex;
     flex-wrap: wrap;
@@ -324,5 +340,10 @@ textarea {
     .tx-typo3forum-post-author {
         border-right: 0;
         border-bottom: 1px solid #e2e8f0;
+    }
+
+    .tx-typo3forum-attachment-details {
+        flex-wrap: wrap;
+        white-space: normal;
     }
 }

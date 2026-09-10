@@ -8,9 +8,9 @@
 		<ul class="list-group list-group-flush rounded-bottom">
 			<f:for each="{attachments}" as="attachment">
 				<li class="list-group-item list-group-item-action">
-					<div class="row">
+					<div class="tx-typo3forum-attachment-row">
 						<f:if condition="{argumentName}">
-							<label class="col-auto d-flex" style="z-index: 500;" for="attachment-{attachment.uid}">
+							<label class="d-flex" style="z-index: 500;" for="attachment-{attachment.uid}">
 								<div class="justify-content-center d-flex align-items-center">
 									<f:form.checkbox
 										id="attachment-{attachment.uid}"
@@ -23,7 +23,7 @@
 							</label>
 						</f:if>
 						<f:if condition="{settings.forum.post.showImagesInline}">
-							<div class="col-auto justify-content-center d-flex align-items-center">
+							<div class="justify-content-center d-flex align-items-center">
 								<f:alias map="{mimeType: attachment.fileReference.originalResource.mimeType}">
 									<f:if condition="{mimeType} == 'image/jpeg' || {mimeType} == 'image/png' || {mimeType} == 'image/gif'">
 										<f:image
@@ -36,16 +36,14 @@
 								</f:alias>
 							</div>
 						</f:if>
-						<div class="col d-flex align-items-center">
+						<div class="tx-typo3forum-attachment-details">
 							<f:link.action controller="Post" pluginName="Forum" action="downloadAttachment" arguments="{attachment: attachment}" pageUid="{settings.pids.Forum}" pageType="43568276" class="stretched-link">
 								{attachment.name}
 							</f:link.action>
-						</div>
-						<div class="col-2 justify-content-end d-flex align-items-center">
-							<mmf:format.fileSize>{attachment.fileReference.originalResource.size}</mmf:format.fileSize>
-						</div>
-						<div class="col-3 justify-content-end d-flex align-items-center">
-							<f:translate key="Post_Show_Attachment_DownloadCount" arguments="{0: attachment.downloadCount}"/>
+							<span class="tx-typo3forum-attachment-separator" aria-hidden="true">|</span>
+							<span><mmf:format.fileSize>{attachment.fileReference.originalResource.size}</mmf:format.fileSize></span>
+							<span class="tx-typo3forum-attachment-separator" aria-hidden="true">|</span>
+							<span><f:translate key="Post_Show_Attachment_DownloadCount" arguments="{0: attachment.downloadCount}"/></span>
 						</div>
 					</div>
 				</li>
