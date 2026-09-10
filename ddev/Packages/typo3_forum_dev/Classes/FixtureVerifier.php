@@ -64,7 +64,7 @@ final class FixtureVerifier
             [$categoryUid],
         );
         $moderatorForum = $forumConnection->fetchAssociative(
-            'SELECT forum, slug, topics, acls FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?',
+            'SELECT forum, slug, acls FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?',
             [$moderatorForumUid],
         );
         if ($forum === false || (int)$forum['forum'] !== $categoryUid
@@ -73,7 +73,7 @@ final class FixtureVerifier
         }
         if ((int)$categoryChildren < 2 || $moderatorForum === false
             || (int)$moderatorForum['forum'] !== $categoryUid || $moderatorForum['slug'] !== 'moderator-forum'
-            || (int)$moderatorForum['topics'] !== 0 || (int)$moderatorForum['acls'] < 4) {
+            || (int)$moderatorForum['acls'] < 4) {
             throw new RuntimeException('The managed moderator forum is missing or inconsistent.');
         }
         $topicConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_topic');
@@ -214,6 +214,7 @@ final class FixtureVerifier
         $constants = $templateConnection->fetchOne('SELECT constants FROM sys_template WHERE uid = ?', [$this->ownershipStore->uid('template.root')]);
         $expectedSettings = [
             'storagePid = ' . $this->ownershipStore->uid('page.forum_storage') . ',' . $this->ownershipStore->uid('page.users_storage'),
+            'pids.Login = ' . $this->ownershipStore->uid('page.login'),
             'pids.Forum = ' . $this->ownershipStore->uid('page.forum'),
             'pids.UserShow = ' . $this->ownershipStore->uid('page.profile'),
             'pids.UserList = ' . $this->ownershipStore->uid('page.users'),

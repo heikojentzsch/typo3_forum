@@ -176,7 +176,9 @@ class PostController extends AbstractController
 
     public function showAction(Post $post, ?Post $quote = null): ResponseInterface
     {
-        $this->authenticationService->assertReadAuthorization($post);
+        if (($accessResponse = $this->readAccessFailureResponse($post)) instanceof ResponseInterface) {
+            return $accessResponse;
+        }
 
         $topic = $post->getTopic();
         $pageWithPost = 1;

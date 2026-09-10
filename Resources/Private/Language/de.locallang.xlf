@@ -79,6 +79,14 @@
 				<source>You need to be logged in to view your own subscriptions.</source>
 				<target>Sie müssen eingeloggt sein um Ihre Abonnements einzusehen</target>
 			</trans-unit>
+			<trans-unit id="Error_AccessDenied_Title" xml:space="preserve" approved="yes">
+				<source>Access denied</source>
+				<target>Zugriff verweigert</target>
+			</trans-unit>
+			<trans-unit id="Error_AccessDenied_Body" xml:space="preserve" approved="yes">
+				<source>You do not have permission to view this content.</source>
+				<target>Sie haben keine Berechtigung, diesen Inhalt aufzurufen.</target>
+			</trans-unit>
 			<trans-unit id="Error_Exception_Title" xml:space="preserve" approved="yes">
 				<source>Whoops!</source>
 				<target>Fehler!</target>

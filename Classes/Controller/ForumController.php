@@ -72,8 +72,10 @@ class ForumController extends AbstractController
      */
     public function showAction(Forum $forum, int $page = 1): ResponseInterface
     {
+        if (($accessResponse = $this->readAccessFailureResponse($forum)) instanceof ResponseInterface) {
+            return $accessResponse;
+        }
         $topics = $this->topicRepository->findForIndex($forum);
-        $this->authenticationService->assertReadAuthorization($forum);
         $this->view->assignMultiple([
             'forum' => $forum,
             'topics' => $topics,

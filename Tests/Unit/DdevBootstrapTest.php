@@ -167,6 +167,8 @@ PHP
         self::assertStringContainsString("\$path === '/users'", $loginCheck);
         self::assertStringContainsString("\$path === '/statistics'", $loginCheck);
         self::assertStringContainsString('The moderation page is visible in the member navigation.', $loginCheck);
+        self::assertStringContainsString('Anonymous protected-forum request did not redirect to login with a clean return URL.', $loginCheck);
+        self::assertStringContainsString('The authenticated member did not receive a clear forbidden response.', $loginCheck);
         self::assertStringContainsString('The moderator-only forum is visible to the regular member.', $loginCheck);
         self::assertStringContainsString('The moderator-only forum is not visible to the moderator.', $loginCheck);
         self::assertStringContainsString('The moderator cannot create a topic in the moderator-only forum.', $loginCheck);
@@ -198,6 +200,7 @@ PHP
         self::assertStringContainsString('styles.content.loginform.pid = %d', $provisioner);
         self::assertStringContainsString('styles.content.loginform.redirectMode = getpost,login', $provisioner);
         self::assertStringContainsString('persistence.storagePid = %d,%d', $provisioner);
+        self::assertStringContainsString('settings.pids.Login = %d', $provisioner);
         self::assertStringNotContainsString('plugin.tx_felogin_login.settings.pages', $provisioner);
         self::assertStringContainsString("fetchAssociative(", $provisioner);
         self::assertStringContainsString('SELECT constants, config FROM sys_template WHERE uid = ?', $provisioner);
@@ -224,6 +227,7 @@ PHP
             self::assertStringContainsString("'{$summaryKey}'", $verifier);
         }
         self::assertStringContainsString("uid('forum.moderator')", $verifier);
+        self::assertStringNotContainsString("\$moderatorForum['topics']", $verifier);
         self::assertStringContainsString('The moderator-only forum ACLs are missing', $verifier);
         self::assertStringContainsString("(int)\$forum['topics'] < 1", $verifier);
         self::assertStringContainsString("(int)\$samplePostTopic !== \$topicUid", $verifier);
