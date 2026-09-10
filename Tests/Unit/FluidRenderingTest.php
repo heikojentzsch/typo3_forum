@@ -200,6 +200,22 @@ final class FluidRenderingTest extends TestCase
         self::assertStringContainsString('pageType="43568276"', $source);
     }
 
+    public function testPostMenuShowsIconsAndLabelsInTheRequestedOrder(): void
+    {
+        $source = (string)file_get_contents(dirname(__DIR__, 2) . '/Resources/Private/Partials/Bootstrap/Post/Menu.html');
+        $previousPosition = -1;
+        foreach (['Button_Like', 'Button_Quote', 'Button_Report', 'Button_Edit', 'Button_Delete'] as $key) {
+            $position = strpos($source, '<f:translate key="' . $key . '"');
+            if ($position === false) {
+                self::fail(sprintf('Missing visible post-menu label %s.', $key));
+            }
+            self::assertGreaterThan($previousPosition, $position);
+            $previousPosition = $position;
+        }
+        self::assertStringContainsString('tx-typo3forum-post-menu-action', $source);
+        self::assertStringContainsString('aria-hidden="true"', $source);
+    }
+
     public function testAllPublicCustomViewHelpersRegisterArguments(): void
     {
         $context = $this->context();

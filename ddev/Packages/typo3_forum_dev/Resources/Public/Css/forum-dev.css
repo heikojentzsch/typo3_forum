@@ -167,6 +167,35 @@ table thead {
     border-top: 1px solid #e2e8f0;
 }
 
+.tx-typo3forum-post-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.tx-typo3forum-post-menu-action {
+    display: inline-flex;
+    gap: .35rem;
+    align-items: center;
+    padding: .4rem .65rem;
+    border: 1px solid #cbd5e1;
+    border-radius: .35rem;
+    background: #fff;
+    color: #1d4ed8;
+    line-height: 1.2;
+    text-decoration: none;
+}
+
+.tx-typo3forum-post-menu-action:hover,
+.tx-typo3forum-post-menu-action:focus-visible {
+    border-color: #1d4ed8;
+    background: #eff6ff;
+}
+
 .btn,
 button,
 input[type="submit"] {
