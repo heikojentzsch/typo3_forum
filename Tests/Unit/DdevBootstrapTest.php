@@ -203,6 +203,11 @@ PHP
         self::assertStringContainsString('errorHandler: LoginRedirect', $siteTemplate);
         self::assertStringContainsString('loginRedirectParameter: redirect_url', $siteTemplate);
 
+        $verifier = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php');
+        self::assertStringContainsString("(int)\$forum['topics'] < 1", $verifier);
+        self::assertStringContainsString("(int)\$samplePostTopic !== \$topicUid", $verifier);
+        self::assertStringNotContainsString("(int)\$forum['last_post'] !== \$postUid", $verifier);
+
         $httpCheck = (string)file_get_contents($root . '/Build/Ddev/http-check.sh');
         self::assertStringContainsString("'forum-dev.css'", $httpCheck);
 

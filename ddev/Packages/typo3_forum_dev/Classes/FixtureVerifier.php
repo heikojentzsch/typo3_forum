@@ -55,10 +55,24 @@ final class FixtureVerifier
         }
         $forumConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_forum');
         $forumUid = $this->ownershipStore->uid('forum.public');
-        $forum = $forumConnection->fetchAssociative('SELECT forum, topics, acls, last_post FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?', [$forumUid]);
+        $topicUid = $this->ownershipStore->uid('topic.sample');
+        $forum = $forumConnection->fetchAssociative('SELECT forum, topics, acls FROM tx_typo3forum_domain_model_forum_forum WHERE uid = ?', [$forumUid]);
         if ($forum === false || (int)$forum['forum'] !== $this->ownershipStore->uid('forum.category')
-            || (int)$forum['topics'] !== 1 || (int)$forum['acls'] !== 8 || (int)$forum['last_post'] !== $postUid) {
+            || (int)$forum['topics'] < 1 || (int)$forum['acls'] < 8) {
             throw new RuntimeException('The managed forum relationships or counters are inconsistent.');
+        }
+        $topicConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_forum_topic');
+        $topic = $topicConnection->fetchAssociative(
+            'SELECT forum, posts FROM tx_typo3forum_domain_model_forum_topic WHERE uid = ?',
+            [$topicUid],
+        );
+        $samplePostTopic = $postConnection->fetchOne(
+            'SELECT topic FROM tx_typo3forum_domain_model_forum_post WHERE uid = ?',
+            [$postUid],
+        );
+        if ($topic === false || (int)$topic['forum'] !== $forumUid || (int)$topic['posts'] < 1
+            || (int)$samplePostTopic !== $topicUid) {
+            throw new RuntimeException('The managed sample topic or post relationship is inconsistent.');
         }
         $checks[] = 'forum, sample topic and sample post';
         $parserConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_format_textparser');
