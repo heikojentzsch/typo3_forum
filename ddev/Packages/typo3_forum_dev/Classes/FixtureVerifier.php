@@ -33,7 +33,7 @@ final class FixtureVerifier
         if (!$this->packageManager->isPackageActive('typo3_forum') || !$this->packageManager->isPackageActive('typo3_forum_dev')) {
             throw new RuntimeException('The forum or its development provisioner is not active.');
         }
-        foreach (['pages', 'identities', 'content', 'parser', 'forum', 'storage', 'configuration'] as $phase) {
+        foreach (['pages', 'identities', 'content', 'parser', 'forum', 'statistics', 'storage', 'configuration'] as $phase) {
             if (!$this->ownershipStore->phaseComplete($phase)) {
                 throw new RuntimeException(sprintf('Provisioning phase %s is incomplete.', $phase));
             }
@@ -75,6 +75,23 @@ final class FixtureVerifier
             throw new RuntimeException('The managed sample topic or post relationship is inconsistent.');
         }
         $checks[] = 'forum, sample topic and sample post';
+
+        $summaryConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_stats_summary');
+        foreach (['stats.post', 'stats.topic', 'stats.user'] as $summaryKey) {
+            $this->assertRecord(
+                'tx_typo3forum_domain_model_stats_summary',
+                $this->ownershipStore->uid($summaryKey),
+                ['pid' => $this->ownershipStore->uid('page.forum_storage'), 'deleted' => 0],
+            );
+        }
+        if ((int)$summaryConnection->fetchOne(
+            'SELECT COUNT(*) FROM tx_typo3forum_domain_model_stats_summary WHERE pid = ? AND deleted = 0',
+            [$this->ownershipStore->uid('page.forum_storage')],
+        ) < 3) {
+            throw new RuntimeException('The managed statistics summaries are incomplete.');
+        }
+        $checks[] = 'post, topic and member statistics summaries';
+
         $parserConnection = $this->connectionPool->getConnectionForTable('tx_typo3forum_domain_model_format_textparser');
         if ((int)$parserConnection->fetchOne('SELECT COUNT(*) FROM tx_typo3forum_domain_model_format_textparser WHERE deleted = 0') === 0) {
             throw new RuntimeException('TYPO3 Forum parser defaults were not imported by extension setup.');
@@ -170,10 +187,15 @@ final class FixtureVerifier
             'SELECT fe_group FROM pages WHERE uid = ?',
             [$this->ownershipStore->uid('page.dashboard')],
         );
+        $moderationGroup = $this->connectionPool->getConnectionForTable('pages')->fetchOne(
+            'SELECT fe_group FROM pages WHERE uid = ?',
+            [$this->ownershipStore->uid('page.moderation')],
+        );
         if ((string)$dashboardGroup !== (string)$this->ownershipStore->uid('group.member')
+            || (string)$moderationGroup !== (string)$this->ownershipStore->uid('group.moderator')
             || !str_contains($site, 'errorHandler: LoginRedirect')
             || !str_contains($site, 'loginRedirectParameter: redirect_url')) {
-            throw new RuntimeException('Dashboard login redirect configuration is missing or stale.');
+            throw new RuntimeException('Restricted page or login redirect configuration is missing or stale.');
         }
         $checks[] = 'site routing, TypoScript and generated UIDs';
 

@@ -114,8 +114,11 @@ try {
         || (!$logoutField instanceof DOMElement && !str_contains($authenticatedHtml, $username))) {
         throw new RuntimeException('Frontend login completed without recognizable authenticated content.');
     }
+    if (($authenticatedXPath->query('//a[contains(@href, "/moderation")]')?->length ?? 0) !== 0) {
+        throw new RuntimeException('The moderation page is visible in the member navigation.');
+    }
 
-    foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
+    foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
         curl_setopt($curl, CURLOPT_URL, $baseUrl . $path);
         $pageHtml = curl_exec($curl);
         if (!is_string($pageHtml) || curl_getinfo($curl, CURLINFO_RESPONSE_CODE) !== 200) {
@@ -123,6 +126,10 @@ try {
         }
         if ($path === '/users' && !str_contains($pageHtml, $moderatorUsername)) {
             throw new RuntimeException('The frontend user list does not contain the managed moderator.');
+        }
+        if ($path === '/statistics'
+            && (!str_contains($pageHtml, 'Posts') || !str_contains($pageHtml, 'Topics') || !str_contains($pageHtml, 'Members'))) {
+            throw new RuntimeException('The statistics page does not contain the managed summaries.');
         }
     }
 } finally {

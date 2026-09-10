@@ -161,10 +161,12 @@ PHP
         self::assertStringNotContainsString('ddev delete', $wrapper);
 
         $loginCheck = (string)file_get_contents($root . '/Build/Ddev/login-check.php');
-        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/moderation', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
+        foreach (['/profile', '/users', '/dashboard', '/tags', '/topics', '/posts', '/statistics', '/forum/topic/welcome-to-the-development-forum'] as $path) {
             self::assertStringContainsString("'{$path}'", $loginCheck);
         }
         self::assertStringContainsString("\$path === '/users'", $loginCheck);
+        self::assertStringContainsString("\$path === '/statistics'", $loginCheck);
+        self::assertStringContainsString('The moderation page is visible in the member navigation.', $loginCheck);
         self::assertStringContainsString('$moderatorUsername', $loginCheck);
 
         $guard = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php');
@@ -197,13 +199,18 @@ PHP
         self::assertStringContainsString('SELECT constants, config FROM sys_template WHERE uid = ?', $provisioner);
         self::assertStringContainsString('EXT:typo3_forum_dev/Resources/Public/Css/forum-dev.css', $provisioner);
         self::assertStringContainsString('20.wrap = <main>|</main>', $provisioner);
-        self::assertStringContainsString("'fe_group' => (string)\$memberGroupUid", $provisioner);
+        self::assertStringContainsString("\$pages['dashboard'] => \$identities['member_group']", $provisioner);
+        self::assertStringContainsString("\$pages['moderation'] => \$identities['moderator_group']", $provisioner);
+        self::assertStringContainsString("getOrCreate('stats.' . \$key", $provisioner);
 
         $siteTemplate = (string)file_get_contents($root . '/ddev/Configuration/site.template.yaml');
         self::assertStringContainsString('errorHandler: LoginRedirect', $siteTemplate);
         self::assertStringContainsString('loginRedirectParameter: redirect_url', $siteTemplate);
 
         $verifier = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/FixtureVerifier.php');
+        foreach (['stats.post', 'stats.topic', 'stats.user'] as $summaryKey) {
+            self::assertStringContainsString("'{$summaryKey}'", $verifier);
+        }
         self::assertStringContainsString("(int)\$forum['topics'] < 1", $verifier);
         self::assertStringContainsString("(int)\$samplePostTopic !== \$topicUid", $verifier);
         self::assertStringNotContainsString("(int)\$forum['last_post'] !== \$postUid", $verifier);

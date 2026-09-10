@@ -33,7 +33,7 @@ final class FixtureProvisioner
         $this->ensureBackendAdministrator($credentials);
         $identities = $this->provisionIdentities($pages['users_storage'], $credentials);
         $this->ownershipStore->completePhase('identities');
-        $this->protectDashboard($pages['dashboard'], $identities['member_group']);
+        $this->protectRestrictedPages($pages, $identities);
         $this->provisionContent($pages);
         $this->ownershipStore->completePhase('content');
         $this->failForSmokeTestAfter('content');
@@ -41,6 +41,8 @@ final class FixtureProvisioner
         $this->ownershipStore->completePhase('parser');
         $this->provisionForum($pages, $identities);
         $this->ownershipStore->completePhase('forum');
+        $this->provisionStatistics($pages);
+        $this->ownershipStore->completePhase('statistics');
         $this->provisionStorage();
         $this->ownershipStore->completePhase('storage');
         $this->writeSiteConfiguration($pages['root'], $pages['login']);
@@ -196,13 +198,22 @@ final class FixtureProvisioner
         }
     }
 
-    private function protectDashboard(int $dashboardPageUid, int $memberGroupUid): void
+    /** @param array<string, int> $pages
+     *  @param array<string, int> $identities
+     */
+    private function protectRestrictedPages(array $pages, array $identities): void
     {
-        $this->connectionPool->getConnectionForTable('pages')->update(
-            'pages',
-            ['fe_group' => (string)$memberGroupUid, 'tstamp' => time()],
-            ['uid' => $dashboardPageUid],
-        );
+        $connection = $this->connectionPool->getConnectionForTable('pages');
+        foreach ([
+            $pages['dashboard'] => $identities['member_group'],
+            $pages['moderation'] => $identities['moderator_group'],
+        ] as $pageUid => $groupUid) {
+            $connection->update(
+                'pages',
+                ['fe_group' => (string)$groupUid, 'tstamp' => time()],
+                ['uid' => $pageUid],
+            );
+        }
     }
 
     /** @param array<string, mixed> $data */
@@ -371,6 +382,51 @@ TYPOSCRIPT;
             'is_public' => 1, 'is_writable' => 1, 'is_online' => 1, 'auto_extract_metadata' => 1,
             'processingfolder' => '_processed_', 'deleted' => 0, 'crdate' => time(), 'tstamp' => time(),
         ]);
+    }
+
+    /** @param array<string, int> $pages */
+    private function provisionStatistics(array $pages): void
+    {
+        $summaryTable = 'tx_typo3forum_domain_model_stats_summary';
+        $summaryConnection = $this->connectionPool->getConnectionForTable($summaryTable);
+        /** @var array<string, array{type: class-string, table: string, pid: int}> $statistics */
+        $statistics = [
+            'post' => [
+                'type' => \Mittwald\Typo3Forum\Domain\Model\Forum\Post::class,
+                'table' => 'tx_typo3forum_domain_model_forum_post',
+                'pid' => $pages['forum_storage'],
+            ],
+            'topic' => [
+                'type' => \Mittwald\Typo3Forum\Domain\Model\Forum\Topic::class,
+                'table' => 'tx_typo3forum_domain_model_forum_topic',
+                'pid' => $pages['forum_storage'],
+            ],
+            'user' => [
+                'type' => \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser::class,
+                'table' => 'fe_users',
+                'pid' => $pages['users_storage'],
+            ],
+        ];
+
+        foreach ($statistics as $key => $statistic) {
+            $sourceConnection = $this->connectionPool->getConnectionForTable($statistic['table']);
+            $amount = (int)$sourceConnection->fetchOne(
+                'SELECT COUNT(*) FROM ' . $sourceConnection->quoteIdentifier($statistic['table']) . ' WHERE pid = ? AND deleted = 0',
+                [$statistic['pid']],
+            );
+            $summaryUid = $this->ownershipStore->getOrCreate('stats.' . $key, $summaryTable, [
+                'pid' => $pages['forum_storage'],
+                'type' => $statistic['type'],
+                'amount' => $amount,
+                'deleted' => 0,
+                'tstamp' => time(),
+            ]);
+            $summaryConnection->update(
+                $summaryTable,
+                ['amount' => $amount, 'tstamp' => time()],
+                ['uid' => $summaryUid],
+            );
+        }
     }
 
     private function writeSiteConfiguration(int $rootPageUid, int $loginPageUid): void
