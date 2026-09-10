@@ -7,3 +7,5 @@ parameters:
     paths:
         - Configuration
         - Classes
+    scanFiles:
+        - Resources/Private/Libraries/GeSHi/geshi.php

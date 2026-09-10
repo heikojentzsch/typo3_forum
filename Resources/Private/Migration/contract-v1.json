@@ -1,0 +1,75 @@
+{
+  "format_version": "1.0",
+  "rule_version": "1.0.0",
+  "standard_plugins": {
+    "typo3forum_forum": "typo3forum_forum",
+    "typo3forum_userprofile": "typo3forum_userprofile",
+    "typo3forum_moderationreports": "typo3forum_moderationreports",
+    "typo3forum_userlist": "typo3forum_userlist",
+    "typo3forum_dashboard": "typo3forum_dashboard",
+    "typo3forum_taglist": "typo3forum_taglist",
+    "typo3forum_postlist": "typo3forum_postlist",
+    "typo3forum_topiclist": "typo3forum_topiclist",
+    "typo3forum_statsbox": "typo3forum_statsbox"
+  },
+  "legacy_pi1": {
+    "Post->list": {
+      "target": "typo3forum_postlist",
+      "rule_id": "pi1-post-list-v10",
+      "allowed_fields": ["switchableControllerActions", "settings.listPosts"],
+      "renamed_fields": {},
+      "provenance": "AgenturPottkinder/typo3_forum@39c51ae1c406f2d3002596442a0e6b40eea8ee77:Configuration/FlexForms/Pi1.xml"
+    },
+    "Topic->list": {
+      "target": "typo3forum_topiclist",
+      "rule_id": "pi1-topic-list-v10",
+      "allowed_fields": ["switchableControllerActions", "settings.listTopics", "settings.maxTopicItems"],
+      "renamed_fields": {"settings.maxTopicItems": "settings.maxItems"},
+      "provenance": "AgenturPottkinder/typo3_forum@39c51ae1c406f2d3002596442a0e6b40eea8ee77:Configuration/FlexForms/Pi1.xml"
+    }
+  },
+  "legacy_signatures": ["typo3forum_pi1", "typo3forum_widget"],
+  "content_fields": ["uid", "pid", "CType", "list_type", "pi_flexform", "pages", "recursive", "sys_language_uid", "l18n_parent", "t3ver_oid", "t3ver_id", "t3ver_wsid", "t3ver_state", "hidden", "deleted", "starttime", "endtime", "sorting", "colPos", "header"],
+  "integrity_tables": [
+    "tx_typo3forum_domain_model_format_textparser",
+    "tx_typo3forum_domain_model_forum_access",
+    "tx_typo3forum_domain_model_forum_attachment",
+    "tx_typo3forum_domain_model_forum_forum",
+    "tx_typo3forum_domain_model_forum_post",
+    "tx_typo3forum_domain_model_forum_topic",
+    "tx_typo3forum_domain_model_moderation_report",
+    "tx_typo3forum_domain_model_moderation_reportcomment",
+    "tx_typo3forum_domain_model_moderation_reportworkflowstatus",
+    "tx_typo3forum_domain_model_moderation_reportworkflowstatus_mm",
+    "tx_typo3forum_domain_model_user_forumsubscription",
+    "tx_typo3forum_domain_model_user_readforum",
+    "tx_typo3forum_domain_model_user_readtopic",
+    "tx_typo3forum_domain_model_user_supportpost",
+    "tx_typo3forum_domain_model_user_topicsubscription",
+    "tx_typo3forum_domain_model_user_userfield_userfield",
+    "tx_typo3forum_domain_model_user_userfield_value",
+    "tx_typo3forum_domain_model_user_rank",
+    "tx_typo3forum_domain_model_user_notification",
+    "tx_typo3forum_domain_model_stats_summary",
+    "tx_typo3forum_domain_model_forum_tag",
+    "tx_typo3forum_domain_model_forum_color",
+    "tx_typo3forum_domain_model_forum_tag_mm"
+  ],
+  "relations": [
+    ["tx_typo3forum_domain_model_forum_post", "topic", "tx_typo3forum_domain_model_forum_topic", "uid", false],
+    ["tx_typo3forum_domain_model_forum_post", "author", "fe_users", "uid", true],
+    ["tx_typo3forum_domain_model_forum_topic", "forum", "tx_typo3forum_domain_model_forum_forum", "uid", false],
+    ["tx_typo3forum_domain_model_forum_topic", "author", "fe_users", "uid", true],
+    ["tx_typo3forum_domain_model_forum_topic", "last_post", "tx_typo3forum_domain_model_forum_post", "uid", true],
+    ["tx_typo3forum_domain_model_forum_topic", "solution", "tx_typo3forum_domain_model_forum_post", "uid", true],
+    ["tx_typo3forum_domain_model_forum_attachment", "post", "tx_typo3forum_domain_model_forum_post", "uid", false],
+    ["tx_typo3forum_domain_model_moderation_report", "post", "tx_typo3forum_domain_model_forum_post", "uid", true],
+    ["tx_typo3forum_domain_model_moderation_report", "feuser", "fe_users", "uid", true],
+    ["tx_typo3forum_domain_model_user_forumsubscription", "uid_local", "fe_users", "uid", false],
+    ["tx_typo3forum_domain_model_user_forumsubscription", "uid_foreign", "tx_typo3forum_domain_model_forum_forum", "uid", false],
+    ["tx_typo3forum_domain_model_user_readtopic", "uid_local", "fe_users", "uid", false],
+    ["tx_typo3forum_domain_model_user_readtopic", "uid_foreign", "tx_typo3forum_domain_model_forum_topic", "uid", false],
+    ["tx_typo3forum_domain_model_user_topicsubscription", "uid_local", "fe_users", "uid", false],
+    ["tx_typo3forum_domain_model_user_topicsubscription", "uid_foreign", "tx_typo3forum_domain_model_forum_topic", "uid", false]
+  ]
+}
