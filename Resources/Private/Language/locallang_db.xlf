@@ -15,6 +15,48 @@
 			<trans-unit id="tx_typo3forum_domain_model_forum_forum.description" xml:space="preserve">
 				<source>Description</source>
 			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_section" xml:space="preserve">
+				<source>Email notifications</source>
+			</trans-unit>
+			<trans-unit id="notification_override.inherit" xml:space="preserve">
+				<source>Inherit</source>
+			</trans-unit>
+			<trans-unit id="notification_override.enabled" xml:space="preserve">
+				<source>Enabled</source>
+			</trans-unit>
+			<trans-unit id="notification_override.disabled" xml:space="preserve">
+				<source>Disabled</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_name_in_subject" xml:space="preserve">
+				<source>Forum name in subject</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_name_in_subject.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default.</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_post_text" xml:space="preserve">
+				<source>Full post text</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_post_text.description" xml:space="preserve">
+				<source>When enabled, complete forum content is transferred into and stored in recipient email inboxes. Inherit uses the nearest parent value or the global default.</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_link" xml:space="preserve">
+				<source>Forum link</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_link.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default.</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_topic_link" xml:space="preserve">
+				<source>Topic or reply link</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_topic_link.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default.</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_unsubscribe_link" xml:space="preserve">
+				<source>Unsubscribe link</source>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_unsubscribe_link.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default. Hiding the link does not end a subscription.</source>
+			</trans-unit>
 			<trans-unit id="tx_typo3forum_domain_model_forum_forum.children" xml:space="preserve">
 				<source>Children</source>
 			</trans-unit>

@@ -19,7 +19,7 @@ return [
         'iconfile' => 'EXT:typo3_forum/Resources/Public/Icons/Forum/Forum.png',
     ],
     'types' => [
-        '1' => ['showitem' => 'hidden,title,slug,description,children,acls,topics,last_topic,last_post,forum,subscribers,readers'],
+        '1' => ['showitem' => 'hidden,title,slug,description,children,acls,topics,last_topic,last_post,forum,subscribers,readers,--div--;LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_section,notification_include_forum_name_in_subject,notification_include_post_text,notification_include_forum_link,notification_include_topic_link,notification_include_unsubscribe_link'],
     ],
     'palettes' => [
         'language' => ['showitem' => 'sys_language_uid, l18n_parent'],
@@ -109,6 +109,81 @@ return [
                 'type' => 'input',
                 'size' => 30,
                 'eval' => 'trim',
+            ],
+        ],
+        'notification_include_forum_name_in_subject' => [
+            'exclude' => 1,
+            'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_forum_name_in_subject',
+            'description' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_forum_name_in_subject.description',
+            'config' => [
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'items' => [
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.inherit', 0],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.enabled', 1],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.disabled', 2],
+                ],
+                'default' => 0,
+            ],
+        ],
+        'notification_include_post_text' => [
+            'exclude' => 1,
+            'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_post_text',
+            'description' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_post_text.description',
+            'config' => [
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'items' => [
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.inherit', 0],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.enabled', 1],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.disabled', 2],
+                ],
+                'default' => 0,
+            ],
+        ],
+        'notification_include_forum_link' => [
+            'exclude' => 1,
+            'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_forum_link',
+            'description' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_forum_link.description',
+            'config' => [
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'items' => [
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.inherit', 0],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.enabled', 1],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.disabled', 2],
+                ],
+                'default' => 0,
+            ],
+        ],
+        'notification_include_topic_link' => [
+            'exclude' => 1,
+            'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_topic_link',
+            'description' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_topic_link.description',
+            'config' => [
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'items' => [
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.inherit', 0],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.enabled', 1],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.disabled', 2],
+                ],
+                'default' => 0,
+            ],
+        ],
+        'notification_include_unsubscribe_link' => [
+            'exclude' => 1,
+            'label' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_unsubscribe_link',
+            'description' => 'LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:tx_typo3forum_domain_model_forum_forum.notification_include_unsubscribe_link.description',
+            'config' => [
+                'type' => 'select',
+                'renderType' => 'selectSingle',
+                'items' => [
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.inherit', 0],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.enabled', 1],
+                    ['LLL:EXT:typo3_forum/Resources/Private/Language/locallang_db.xlf:notification_override.disabled', 2],
+                ],
+                'default' => 0,
             ],
         ],
         'children' => [
