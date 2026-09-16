@@ -57,6 +57,7 @@ typo3_forum
 	:glob:
 
 	BasicInstallation/Index
+	Notifications/Index
 	Migration/Index
 	UserAndGroups/Index
 	Report/Index

@@ -72,6 +72,7 @@ The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP
 - [x] Fix broken backend TCA icon references.
 - [x] Add explicit handling for installations without a default FAL storage.
 - [x] Add a verified installation-migration path with standalone preflight, validated plans, four CLI commands, a native TYPO3 v14 wizard, journaled/repeatable writes and integrity verification.
+- [x] Add configurable content for forum subscription notification emails, with global defaults, hierarchical forum overrides, safe full-text rendering and independent forum/topic/unsubscribe links.
 
 ### Deliberate TYPO3 v14 decisions
 
@@ -111,6 +112,50 @@ Implemented fixes include:
 No frontend redesign, Bootstrap upgrade, pagination redesign, repository/domain refactor or LazyLoadingProxy migration was performed. Mail subjects/bodies use language strings and mailing services, not separate Fluid mail templates.
 
 This completes the repository-level Fluid audit, **not real-site acceptance testing**.
+
+## Configurable subscription notification emails
+
+The two subscription notification types (new topic in a subscribed forum and
+new reply in a subscribed topic) use five extension settings as global
+fallbacks:
+
+| Key | Default |
+| --- | --- |
+| `notifications.includeForumNameInSubject` | `0` |
+| `notifications.includePostText` | `0` |
+| `notifications.includeForumLink` | `1` |
+| `notifications.includeTopicLink` | `1` |
+| `notifications.includeUnsubscribeLink` | `1` |
+
+Each forum can override every value independently with **Inherit** (`0`),
+**Enabled** (`1`) or **Disabled** (`2`) in its **Email notifications** section.
+Resolution starts at the forum containing the content; the nearest explicit
+value from that forum or its parents wins, followed by the global fallback.
+Existing forums default to **Inherit** after the additive schema update. A
+root-level **Inherit** therefore uses the global value. Invalid values and
+parent cycles fail diagnostically instead of silently selecting defaults.
+
+The full-text switch includes the complete triggering reply or, for a new
+topic, its initial post. It deliberately defaults to off because protected
+content then leaves the website and remains in recipient mailboxes. Content is
+HTML-escaped and rendered as readable text; frontend quote/BBCode parsers are
+not run and no remote resources or attachments are fetched.
+
+For parent-forum subscriptions, configuration, subject and navigation links
+use the actual content forum/topic. The subscription object does not override
+the content forum's settings; it identifies only the unsubscribe target. Thus
+a mail may use child forum `7` and topic `14548` for content and links while
+correctly using parent subscription `1` for unsubscribe. Hiding the unsubscribe block
+does not end any subscription. Link switches govern generated navigation only;
+author-written URLs in an enabled full-text block are not censored.
+
+Custom language overrides can use the new structural block markers while all
+established value markers remain supported. Legacy overrides receive plain
+forum/topic names when generated links are disabled and lose the entire line
+containing a disabled unsubscribe marker. Arbitrary hard-coded URLs in custom
+HTML cannot be controlled by these semantic switches. See the
+[notification configuration guide](Documentation/Notifications/Index.rst) for
+the marker contract, parent-subscription example and synthetic output.
 
 ## Completed TYPO3 v14 legacy/deprecation scan
 
@@ -235,11 +280,11 @@ Run `composer install` first. Composer is the canonical local and CI interface:
 | Command | Purpose / last local result |
 | --- | --- |
 | `composer validate` | Valid metadata. |
-| `composer php-lint` | 217 PHP files pass syntax checks, including root metadata, application, configuration, tests and build helpers. |
-| `composer test` | 145 tests, 1,215 assertions, one explicitly gated MariaDB test skipped. |
-| `composer phpstan` | PHPStan 2.2.13, level 6, zero findings. |
+| `composer php-lint` | 229 PHP files pass syntax checks, including root metadata, application, configuration, tests and build helpers. |
+| `composer test` | 244 tests, 1,891 assertions, one explicitly gated MariaDB test skipped. The suite includes all 32 notification-option combinations for both events and hierarchical resolver coverage. |
+| `composer phpstan` | PHPStan 2.2.14, level 6, zero findings. |
 | `composer typoscript-lint` | Four real files scanned; exit 0 with 12 existing warnings. |
-| `composer cs-check` | PHP-CS-Fixer 3.95.25, non-mutating dry run; exit 8, findings in 139 of 206 files. |
+| `composer cs-check` | PHP-CS-Fixer 3.95.25, non-mutating dry run; exit 8, findings in 139 of 218 files. New notification classes and focused tests pass the formatter rules. |
 | `composer ci` | Runs all of the above, with style last; currently exits 8 because of style debt. |
 
 All newly added PHP helpers/tests pass the style rules. Existing application files have not been globally reformatted; normalization remains separate work. GitLab reports the style job as advisory only for exit 8. Other style tool/configuration failures and all core QA failures still block the pipeline.
@@ -251,6 +296,12 @@ Psalm 4 failed under PHP 8.4 before analysis and had no demonstrated distinct co
 The separately authorized PHPStan follow-up also fixes confirmed defects: mail delivery now calls TYPO3's injected mailer; missing userfield values return an empty array; slug queries use DBAL 4's integer parameter enum; solution-point defaults are applied before casting. Targeted regression tests cover these cases. Existing storage-PID behavior is preserved.
 
 Composer metadata decisions: retain `pottkinder/typo3forum`, `typo3-ter/typo3_forum` replacement, `.Build/vendor`, `.Build/bin`, the TYPO3 installer/alias-loader plugin permissions and supported `.Build/Web` web-dir. All dependencies resolve through Packagist, so the additional composer.typo3.org repository was removed. Prefer dist archives; remove the stale `dev-master` alias and unused `cms-package-dir` extra. As before, this extension does not track a root lock file: each runtime resolves compatible dependencies. Archive reproducibility refers to identical source bytes, not permanently frozen dependency resolution. The verified local install uses TYPO3 14.3.7; Composer audit reports no advisories.
+
+The current notification-feature verification ran on PHP 8.3.6 with TYPO3
+14.3.7. Docker and DDEV were unavailable, so the extension-settings backend UI
+and real Mailpit messages were not exercised. PHPUnit captured generated HTML
+mail through the injected TYPO3 mailer without external delivery; a real
+DDEV/Mailpit check remains installation acceptance, not a completed item.
 
 ### CI and publication
 
