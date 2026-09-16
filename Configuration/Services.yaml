@@ -360,6 +360,17 @@ services:
             $htmlMailingService: '@Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService'
             $contentObjectRenderer: '@TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer'
             $configurationBuilder: '@Mittwald\Typo3Forum\Configuration\ConfigurationBuilder'
+            $notificationConfigurationResolver: '@Mittwald\Typo3Forum\Configuration\NotificationConfigurationResolver'
+            $notificationEmailRenderer: '@Mittwald\Typo3Forum\Service\Notification\NotificationEmailRenderer'
+
+    Mittwald\Typo3Forum\Configuration\NotificationEmailConfiguration:
+        autowire: true
+
+    Mittwald\Typo3Forum\Configuration\NotificationEmailConfigurationInterface:
+        alias: 'Mittwald\Typo3Forum\Configuration\NotificationEmailConfiguration'
+
+    Mittwald\Typo3Forum\Configuration\NotificationConfigurationResolver:
+        autowire: true
 
 
     Mittwald\Typo3Forum\ViewHelpers\Form\ForumSelectViewHelper:

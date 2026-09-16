@@ -983,29 +983,93 @@
 				<source>New post in one of your subscribed topics!</source>
 			</trans-unit>
 			<trans-unit id="Mail_Subscribe_NewPost_Body" xml:space="preserve">
-				<source>Hello ###RECIPIENT###,
+				<source>###GREETING###
 
-###POST_AUTHOR### answered in one of your subscribed topics: ###POST_LINK###.
+###EVENT_DESCRIPTION###
 
-If you don't want to get more notifications about this topic, you can unsubscribe from this topic in the forum or using this link: ###UNSUBSCRIBE_LINK###
+###POST_TEXT_BLOCK###
+###FORUM_LINK_BLOCK###
+###TOPIC_LINK_BLOCK###
+###UNSUBSCRIBE_BLOCK###
 
-
-Yours sincerely,
-Your ###FORUM_TEAM###-Team</source>
+###SIGNATURE###</source>
 			</trans-unit>
 			<trans-unit id="Mail_Subscribe_NewTopic_Body" xml:space="preserve">
-				<source>Hello ###RECIPIENT###,
+				<source>###GREETING###
 
-###POST_AUTHOR### created a new topic &quot;###TOPIC_LINK###&quot; in one of your subscribed forums: ###FORUM_LINK###.
+###EVENT_DESCRIPTION###
 
-If you don't want to get more notifications about this forum, you can unsubscribe from this forum in the forum or using this link: ###UNSUBSCRIBE_LINK###
+###POST_TEXT_BLOCK###
+###FORUM_LINK_BLOCK###
+###TOPIC_LINK_BLOCK###
+###UNSUBSCRIBE_BLOCK###
 
-
-Yours sincerely,
-Your ###FORUM_TEAM###-Team</source>
+###SIGNATURE###</source>
 			</trans-unit>
 			<trans-unit id="Mail_Subscribe_NewTopic_Subject" xml:space="preserve" approved="yes">
 				<source>New topic in one of your subscribed forums!</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_Greeting" xml:space="preserve">
+				<source>Hello ###RECIPIENT###,</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewPost_Event" xml:space="preserve">
+				<source>###POST_AUTHOR### posted a new reply in the topic &quot;###TOPIC_NAME###&quot; in forum &quot;###FORUM_NAME###&quot;.</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewTopic_Event" xml:space="preserve">
+				<source>###POST_AUTHOR### created the new topic &quot;###TOPIC_NAME###&quot; in forum &quot;###FORUM_NAME###&quot;.</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_PostTextBlock" xml:space="preserve">
+				<source>Post text:
+###POST_TEXT###</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_ForumLinkBlock" xml:space="preserve">
+				<source>Open forum: ###FORUM_LINK###</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewPost_TopicLinkBlock" xml:space="preserve">
+				<source>Open reply: ###POST_LINK###</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewTopic_TopicLinkBlock" xml:space="preserve">
+				<source>Open topic: ###TOPIC_LINK###</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewPost_UnsubscribeBlock" xml:space="preserve">
+				<source>This link unsubscribes only this topic subscription: ###UNSUBSCRIBE_LINK###</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewTopic_UnsubscribeBlock" xml:space="preserve">
+				<source>This link unsubscribes only the forum subscription that triggered this message: ###UNSUBSCRIBE_LINK###</source>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_Signature" xml:space="preserve">
+				<source>Yours sincerely,
+Your ###FORUM_TEAM### team</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumNameInSubject" xml:space="preserve">
+				<source>Include forum name in subject</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumNameInSubject.description" xml:space="preserve">
+				<source>Prefixes subscription notification subjects with the actual content forum name.</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includePostText" xml:space="preserve">
+				<source>Include full post text</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includePostText.description" xml:space="preserve">
+				<source>Includes the complete triggering post. Protected content then leaves the website and is stored in recipient mailboxes.</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumLink" xml:space="preserve">
+				<source>Include forum link</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumLink.description" xml:space="preserve">
+				<source>Includes an automatically generated link to the actual content forum.</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeTopicLink" xml:space="preserve">
+				<source>Include topic link</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeTopicLink.description" xml:space="preserve">
+				<source>Includes an automatically generated topic link or reply deep link.</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeUnsubscribeLink" xml:space="preserve">
+				<source>Include unsubscribe link</source>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeUnsubscribeLink.description" xml:space="preserve">
+				<source>Includes the complete localized unsubscribe block. Hiding it does not end any subscription.</source>
 			</trans-unit>
 		</body>
 	</file>

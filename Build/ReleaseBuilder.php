@@ -23,7 +23,7 @@ final class ReleaseBuilder
                 throw new RuntimeException('Numeric prerelease identifiers must not have leading zeroes.');
             }
         }
-        $files = ['composer.json', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql', 'LICENSE.txt', 'README.md'];
+        $files = ['composer.json', 'ext_conf_template.txt', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql', 'LICENSE.txt', 'README.md'];
         foreach (['ext_tables.php', 'ext_tables_static+adt.sql', 'ext_icon.gif'] as $optional) {
             if (is_file($root . '/' . $optional)) {
                 $files[] = $optional;

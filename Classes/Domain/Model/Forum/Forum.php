@@ -109,6 +109,11 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     protected ObjectStorage $visibleChildren;
     protected AuthenticationServiceInterface $authenticationService;
     protected int $sorting = 0;
+    protected int $notificationIncludeForumNameInSubject = 0;
+    protected int $notificationIncludePostText = 0;
+    protected int $notificationIncludeForumLink = 0;
+    protected int $notificationIncludeTopicLink = 0;
+    protected int $notificationIncludeUnsubscribeLink = 0;
 
     public function __construct()
     {
@@ -165,6 +170,61 @@ class Forum // NOSONAR we are not going reduce the amount of functions
     public function getSlug(): string
     {
         return $this->slug;
+    }
+
+    public function getNotificationIncludeForumNameInSubject(): int
+    {
+        return $this->notificationIncludeForumNameInSubject;
+    }
+
+    public function setNotificationIncludeForumNameInSubject(int $value): self
+    {
+        $this->notificationIncludeForumNameInSubject = $value;
+        return $this;
+    }
+
+    public function getNotificationIncludePostText(): int
+    {
+        return $this->notificationIncludePostText;
+    }
+
+    public function setNotificationIncludePostText(int $value): self
+    {
+        $this->notificationIncludePostText = $value;
+        return $this;
+    }
+
+    public function getNotificationIncludeForumLink(): int
+    {
+        return $this->notificationIncludeForumLink;
+    }
+
+    public function setNotificationIncludeForumLink(int $value): self
+    {
+        $this->notificationIncludeForumLink = $value;
+        return $this;
+    }
+
+    public function getNotificationIncludeTopicLink(): int
+    {
+        return $this->notificationIncludeTopicLink;
+    }
+
+    public function setNotificationIncludeTopicLink(int $value): self
+    {
+        $this->notificationIncludeTopicLink = $value;
+        return $this;
+    }
+
+    public function getNotificationIncludeUnsubscribeLink(): int
+    {
+        return $this->notificationIncludeUnsubscribeLink;
+    }
+
+    public function setNotificationIncludeUnsubscribeLink(int $value): self
+    {
+        $this->notificationIncludeUnsubscribeLink = $value;
+        return $this;
     }
 
     public function setSlug(string $slug): self

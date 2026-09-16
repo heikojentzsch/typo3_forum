@@ -1,0 +1,18 @@
+#############################
+### NOTIFICATION CONTENT ####
+#############################
+
+# cat=Notifications/Content; type=boolean; label=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeForumNameInSubject; description=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeForumNameInSubject.description
+notifications.includeForumNameInSubject = 0
+
+# cat=Notifications/Content; type=boolean; label=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includePostText; description=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includePostText.description
+notifications.includePostText = 0
+
+# cat=Notifications/Content; type=boolean; label=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeForumLink; description=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeForumLink.description
+notifications.includeForumLink = 1
+
+# cat=Notifications/Content; type=boolean; label=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeTopicLink; description=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeTopicLink.description
+notifications.includeTopicLink = 1
+
+# cat=Notifications/Content; type=boolean; label=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeUnsubscribeLink; description=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeUnsubscribeLink.description
+notifications.includeUnsubscribeLink = 1

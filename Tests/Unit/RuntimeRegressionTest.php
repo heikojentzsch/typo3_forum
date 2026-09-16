@@ -3,6 +3,9 @@ declare(strict_types=1);
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
+use Mittwald\Typo3Forum\Configuration\NotificationEmailConfigurationInterface;
+use Mittwald\Typo3Forum\Configuration\NotificationEmailOptions;
+use Mittwald\Typo3Forum\Configuration\NotificationConfigurationResolver;
 use Mittwald\Typo3Forum\Controller\{AjaxController, PostController, ReportController, TopicController};
 use Mittwald\Typo3Forum\Domain\Factory\Forum\{PostFactory, TopicFactory};
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Access, Forum, Post, RootForum, Topic};
@@ -10,6 +13,7 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService;
 use Mittwald\Typo3Forum\Service\Notification\NotificationService;
+use Mittwald\Typo3Forum\Service\Notification\NotificationEmailRenderer;
 use Mittwald\Typo3Forum\Service\{AttachmentService, TagService};
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -94,13 +98,27 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $post = $this->createStub(Post::class);
         $post->method('getAuthor')->willReturn($users[2]);
         $topic = $this->createStub(Topic::class);
-        $topic->method('getLastPost')->willReturn($post);
+        $topic->method('getFirstPost')->willReturn($post);
         $mail = $this->createMock(HTMLMailingService::class);
         $recipients = [];
-        $mail->expects(self::exactly(2))->method('sendMail')->willReturnCallback(function ($user) use (&$recipients): void { $recipients[] = $user->getUid(); });
-        $service = new class($mail, $this->createStub(ContentObjectRenderer::class), $this->createStub(ConfigurationBuilder::class)) extends NotificationService {
-            protected function getMessage(Forum $forum, Topic $topic, Post $post, string $messageTemplate, string $unsubscribeLink): string { return 'Hello ###RECIPIENT###'; }
-            protected function getForumUnsubscribeLink(Forum $forum): string { return '/unsubscribe'; }
+        $mail->expects(self::exactly(2))->method('sendMail')->willReturnCallback(function ($user) use (&$recipients): void {
+            $recipients[] = $user->getUid();
+        });
+        $configuration = new class () implements NotificationEmailConfigurationInterface {
+            public function getOptions(): NotificationEmailOptions
+            {
+                return new NotificationEmailOptions(false, false, true, true, true);
+            }
+        };
+        $service = new class ($mail, $this->createStub(ContentObjectRenderer::class), $this->createStub(ConfigurationBuilder::class), new NotificationConfigurationResolver($configuration), new NotificationEmailRenderer()) extends NotificationService {
+            protected function getMessage(string $event, string $recipient, Forum $contentForum, Topic $topic, Post $post, string $unsubscribeLink, NotificationEmailOptions $options): string
+            {
+                return 'Hello ' . $recipient;
+            }
+            protected function getForumUnsubscribeLink(Forum $forum): string
+            {
+                return '/unsubscribe';
+            }
         };
         $service->notifySubscribers($forum, $topic);
         self::assertSame([1, 4], $recipients, 'Author 2 and users 3/5 without origin-forum access are excluded even when subscribed to an accessible parent; user 1 is not duplicated.');
@@ -129,7 +147,13 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
             $configuration->method('getSettings')->willReturn(['pids.' => ['Forum' => 23]]);
             $topic = $this->createStub(Topic::class);
             $topic->method('getUid')->willReturn(42);
-            $service = new class($this->createStub(HTMLMailingService::class), $contentObjectRenderer, $configuration) extends NotificationService {
+            $notificationConfiguration = new class () implements NotificationEmailConfigurationInterface {
+                public function getOptions(): NotificationEmailOptions
+                {
+                    return new NotificationEmailOptions(false, false, true, true, true);
+                }
+            };
+            $service = new class ($this->createStub(HTMLMailingService::class), $contentObjectRenderer, $configuration, new NotificationConfigurationResolver($notificationConfiguration), new NotificationEmailRenderer()) extends NotificationService {
                 public function topicUnsubscribeLink(Topic $topic): string
                 {
                     return $this->getTopicUnsubscribeLink($topic);

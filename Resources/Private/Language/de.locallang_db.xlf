@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+	<file source-language="en" target-language="de" datatype="plaintext" original="messages" product-name="typo3_forum">
+		<header/>
+		<body>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_section" xml:space="preserve">
+				<source>Email notifications</source>
+				<target>E-Mail-Benachrichtigungen</target>
+			</trans-unit>
+			<trans-unit id="notification_override.inherit" xml:space="preserve">
+				<source>Inherit</source>
+				<target>Erben</target>
+			</trans-unit>
+			<trans-unit id="notification_override.enabled" xml:space="preserve">
+				<source>Enabled</source>
+				<target>Aktiviert</target>
+			</trans-unit>
+			<trans-unit id="notification_override.disabled" xml:space="preserve">
+				<source>Disabled</source>
+				<target>Deaktiviert</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_name_in_subject" xml:space="preserve">
+				<source>Forum name in subject</source>
+				<target>Forumname im Betreff</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_name_in_subject.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default.</source>
+				<target>Erbt vom nächsten Elternforum oder vom globalen Extension-Default.</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_post_text" xml:space="preserve">
+				<source>Full post text</source>
+				<target>Vollständiger Beitragstext</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_post_text.description" xml:space="preserve">
+				<source>When enabled, complete forum content is transferred into and stored in recipient email inboxes. Inherit uses the nearest parent value or the global default.</source>
+				<target>Wenn aktiviert, werden vollständige Forumsinhalte in die E-Mail-Postfächer der Empfänger übertragen und dort gespeichert. Erben verwendet den nächsten Elternwert oder den globalen Default.</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_link" xml:space="preserve">
+				<source>Forum link</source>
+				<target>Forumlink</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_forum_link.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default.</source>
+				<target>Erbt vom nächsten Elternforum oder vom globalen Extension-Default.</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_topic_link" xml:space="preserve">
+				<source>Topic or reply link</source>
+				<target>Themen- oder Beitragslink</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_topic_link.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default.</source>
+				<target>Erbt vom nächsten Elternforum oder vom globalen Extension-Default.</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_unsubscribe_link" xml:space="preserve">
+				<source>Unsubscribe link</source>
+				<target>Abmeldelink</target>
+			</trans-unit>
+			<trans-unit id="tx_typo3forum_domain_model_forum_forum.notification_include_unsubscribe_link.description" xml:space="preserve">
+				<source>Inherit from the nearest parent forum or the global extension default. Hiding the link does not end a subscription.</source>
+				<target>Erbt vom nächsten Elternforum oder vom globalen Extension-Default. Das Ausblenden beendet kein Abonnement.</target>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
