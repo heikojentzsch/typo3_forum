@@ -25,6 +25,8 @@
 namespace Mittwald\Typo3Forum\Service\Notification;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
+use Mittwald\Typo3Forum\Configuration\NotificationConfigurationResolver;
+use Mittwald\Typo3Forum\Configuration\NotificationEmailOptions;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Forum;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
@@ -46,6 +48,8 @@ class NotificationService extends AbstractService implements NotificationService
     protected HTMLMailingService $htmlMailingService;
     protected ContentObjectRenderer $contentObjectRenderer;
     protected ConfigurationBuilder $configurationBuilder;
+    protected NotificationConfigurationResolver $notificationConfigurationResolver;
+    protected NotificationEmailRenderer $notificationEmailRenderer;
 
     /** @var array<string, mixed> */
     protected array $settings;
@@ -53,11 +57,15 @@ class NotificationService extends AbstractService implements NotificationService
     public function __construct(
         HTMLMailingService $htmlMailingService,
         ContentObjectRenderer $contentObjectRenderer,
-        ConfigurationBuilder $configurationBuilder
+        ConfigurationBuilder $configurationBuilder,
+        NotificationConfigurationResolver $notificationConfigurationResolver,
+        NotificationEmailRenderer $notificationEmailRenderer
     ) {
         $this->htmlMailingService = $htmlMailingService;
         $this->contentObjectRenderer = $contentObjectRenderer;
         $this->configurationBuilder = $configurationBuilder;
+        $this->notificationConfigurationResolver = $notificationConfigurationResolver;
+        $this->notificationEmailRenderer = $notificationEmailRenderer;
         $this->settings = $this->configurationBuilder->getSettings();
     }
 
@@ -80,8 +88,10 @@ class NotificationService extends AbstractService implements NotificationService
         if ($subscriptionObject instanceof Forum && $notificationObject instanceof Topic) {
             $forum = $subscriptionObject;
             $topic = $notificationObject;
-            $post = $topic->getLastPost();
-            $this->notifyForumSubscribers($forum, $topic, $post);
+            $post = $topic->getFirstPost();
+            if ($post instanceof Post) {
+                $this->notifyForumSubscribers($forum, $topic, $post);
+            }
         } elseif ($subscriptionObject instanceof Topic && $notificationObject instanceof Post) {
             $topic = $subscriptionObject;
             $forum = $topic->getForum();
@@ -95,18 +105,20 @@ class NotificationService extends AbstractService implements NotificationService
      */
     protected function notifyTopicSubscribers(Forum $forum, Topic $topic, Post $post): void
     {
-        $subject = Localization::translate('Mail_Subscribe_NewPost_Subject');
-        $message = $this->getMessage(
-            $forum,
-            $topic,
-            $post,
-            Localization::translate('Mail_Subscribe_NewPost_Body'),
-            $this->getTopicUnsubscribeLink($topic)
-        );
+        $options = $this->notificationConfigurationResolver->resolve($forum);
+        $subject = $this->getSubject('Mail_Subscribe_NewPost_Subject', $forum, $options);
         $postAuthorUid = $post->getAuthor()->getUid();
         foreach ($topic->getSubscribers() as $subscriber) {
             if ($forum->checkReadAccess($subscriber) && $subscriber->getUid() !== $postAuthorUid) {
-                $subscriberMessage = nl2br(str_replace('###RECIPIENT###', $subscriber->getUsername(), $message));
+                $subscriberMessage = $this->getMessage(
+                    'NewPost',
+                    $subscriber->getUsername(),
+                    $forum,
+                    $topic,
+                    $post,
+                    $options->includeUnsubscribeLink ? $this->getTopicUnsubscribeLink($topic) : '',
+                    $options
+                );
                 $this->htmlMailingService->sendMail($subscriber, $subject, $subscriberMessage);
             }
         }
@@ -117,23 +129,29 @@ class NotificationService extends AbstractService implements NotificationService
      */
     protected function notifyForumSubscribers(Forum $forum, Topic $topic, Post $post): void
     {
-        $originForum = $forum;
-        $subject = Localization::translate('Mail_Subscribe_NewTopic_Subject');
-        $messageTemplate = Localization::translate('Mail_Subscribe_NewTopic_Body');
+        $contentForum = $forum;
+        $options = $this->notificationConfigurationResolver->resolve($contentForum);
+        $subject = $this->getSubject('Mail_Subscribe_NewTopic_Subject', $contentForum, $options);
         $postAuthorUid = $post->getAuthor()->getUid();
 
         $notifiedSubscribers = [];
 
         while ($forum) {
-            $message = $this->getMessage($forum, $topic, $post, $messageTemplate, $this->getForumUnsubscribeLink($forum));
-
             foreach ($forum->getSubscribers() as $subscriber) {
                 if (!isset($notifiedSubscribers[$subscriber->getUid()])) {
                     if ($subscriber->getUid() !== $postAuthorUid
-                        && $originForum->checkReadAccess($subscriber)
-                        && ($forum === $originForum || $forum->checkReadAccess($subscriber))
+                        && $contentForum->checkReadAccess($subscriber)
+                        && ($forum === $contentForum || $forum->checkReadAccess($subscriber))
                     ) {
-                        $subscriberMessage = nl2br(str_replace('###RECIPIENT###', $subscriber->getUsername(), $message));
+                        $subscriberMessage = $this->getMessage(
+                            'NewTopic',
+                            $subscriber->getUsername(),
+                            $contentForum,
+                            $topic,
+                            $post,
+                            $options->includeUnsubscribeLink ? $this->getForumUnsubscribeLink($forum) : '',
+                            $options
+                        );
                         $this->htmlMailingService->sendMail($subscriber, $subject, $subscriberMessage);
                         $notifiedSubscribers[$subscriber->getUid()] = true;
                     }
@@ -148,24 +166,87 @@ class NotificationService extends AbstractService implements NotificationService
         }
     }
 
-    protected function getMessage(Forum $forum, Topic $topic, Post $post, string $messageTemplate, string $unsubscribeLink): string
+    protected function getSubject(string $translationKey, Forum $contentForum, NotificationEmailOptions $options): string
     {
-        $marker = [
-            '###POST_AUTHOR###' => $post->getAuthor()->getUsername(),
-            '###FORUM_NAME###' => $forum->getTitle(),
-            '###FORUM_LINK###' => $this->getForumLink($topic->getForum()),
-            '###TOPIC_NAME###' => $topic->getName(),
-            '###TOPIC_LINK###' => $this->getTopicLink($topic),
-            '###POST_LINK###' => $this->getPostLink($post),
-            '###UNSUBSCRIBE_LINK###' => $unsubscribeLink,
-            '###FORUM_TEAM###' => $this->settings['mailing.']['sender.']['name']
+        $subject = $this->notificationEmailRenderer->sanitizeSubject($this->translate($translationKey));
+        $forumName = $this->notificationEmailRenderer->sanitizeSubject($contentForum->getTitle());
+        if ($options->includeForumNameInSubject && $forumName !== '') {
+            $subject = '[' . $forumName . '] ' . $subject;
+        }
+        return $subject;
+    }
+
+    protected function getMessage(
+        string $event,
+        string $recipient,
+        Forum $contentForum,
+        Topic $topic,
+        Post $post,
+        string $unsubscribeLink,
+        NotificationEmailOptions $options
+    ): string {
+        $forumName = $contentForum->getTitle();
+        $topicName = $topic->getName();
+        $plainMarkers = [
+            '###RECIPIENT###' => $this->notificationEmailRenderer->escape($recipient),
+            '###POST_AUTHOR###' => $this->notificationEmailRenderer->escape($post->getAuthorName()),
+            '###FORUM_NAME###' => $this->notificationEmailRenderer->escape($forumName),
+            '###TOPIC_NAME###' => $this->notificationEmailRenderer->escape($topicName),
+            '###POST_TEXT###' => $options->includePostText
+                ? $this->notificationEmailRenderer->escape($post->getText())
+                : '',
+            '###FORUM_TEAM###' => $this->notificationEmailRenderer->escape((string)($this->settings['mailing.']['sender.']['name'] ?? '')),
         ];
-        $message = $messageTemplate;
-        foreach ($marker as $name => $value) {
-            $message = str_replace($name, $value, $message);
+        $markers = $plainMarkers + [
+            '###FORUM_LINK###' => $options->includeForumLink ? $this->getForumLink($contentForum) : $plainMarkers['###FORUM_NAME###'],
+            '###TOPIC_LINK###' => $options->includeTopicLink ? $this->getTopicLink($topic) : $plainMarkers['###TOPIC_NAME###'],
+            '###POST_LINK###' => $options->includeTopicLink ? $this->getPostLink($post) : $plainMarkers['###TOPIC_NAME###'],
+            '###UNSUBSCRIBE_LINK###' => $options->includeUnsubscribeLink ? $unsubscribeLink : '',
+        ];
+
+        $fragments = [
+            '###GREETING###' => $this->renderFragment('Mail_Subscribe_Greeting', $markers),
+            '###EVENT_DESCRIPTION###' => $this->renderFragment('Mail_Subscribe_' . $event . '_Event', $markers),
+            '###POST_TEXT_BLOCK###' => $options->includePostText
+                ? $this->renderFragment('Mail_Subscribe_PostTextBlock', $markers)
+                : '',
+            '###FORUM_LINK_BLOCK###' => $options->includeForumLink
+                ? $this->renderFragment('Mail_Subscribe_ForumLinkBlock', $markers)
+                : '',
+            '###TOPIC_LINK_BLOCK###' => $options->includeTopicLink
+                ? $this->renderFragment('Mail_Subscribe_' . $event . '_TopicLinkBlock', $markers)
+                : '',
+            '###UNSUBSCRIBE_BLOCK###' => $options->includeUnsubscribeLink
+                ? $this->renderFragment('Mail_Subscribe_' . $event . '_UnsubscribeBlock', $markers)
+                : '',
+            '###SIGNATURE###' => $this->renderFragment('Mail_Subscribe_Signature', $markers),
+        ];
+
+        $messageTemplate = $this->translate('Mail_Subscribe_' . $event . '_Body');
+        if ($options->includePostText
+            && !str_contains($messageTemplate, '###POST_TEXT###')
+            && !str_contains($messageTemplate, '###POST_TEXT_BLOCK###')
+        ) {
+            $messageTemplate .= "\n\n###POST_TEXT_BLOCK###";
         }
 
-        return $message;
+        return $this->notificationEmailRenderer->render(
+            $messageTemplate,
+            $markers + $fragments,
+            $options->includeUnsubscribeLink,
+            $options->includePostText
+        );
+    }
+
+    /** @param array<string, string> $markers */
+    private function renderFragment(string $translationKey, array $markers): string
+    {
+        return $this->notificationEmailRenderer->renderFragment($this->translate($translationKey), $markers);
+    }
+
+    protected function translate(string $key): string
+    {
+        return (string)Localization::translate($key, $key);
     }
 
     protected function getForumLink(Forum $forum): string
@@ -178,7 +259,7 @@ class NotificationService extends AbstractService implements NotificationService
 
         $forumLink = $this->buildAbsoluteLink($arguments);
 
-        return '<a href="' . $forumLink . '">"' . $forum->getTitle() . '"</a>';
+        return $this->notificationEmailRenderer->link($forumLink, $forum->getTitle());
     }
 
     /** @return string */
@@ -192,7 +273,7 @@ class NotificationService extends AbstractService implements NotificationService
 
         $topicLink = $this->buildAbsoluteLink($arguments);
 
-        return '<a href="' . $topicLink . '">' . $topic->getTitle() . '</a>';
+        return $this->notificationEmailRenderer->link($topicLink, $topic->getTitle());
     }
 
     protected function getPostLink(Post $post): string
@@ -205,7 +286,7 @@ class NotificationService extends AbstractService implements NotificationService
 
         $postLink = $this->buildAbsoluteLink($arguments);
 
-        return '<a href="' . $postLink . '">"' . $post->getTopic()->getSubject() . '"</a>';
+        return $this->notificationEmailRenderer->link($postLink, $post->getTopic()?->getSubject() ?? '');
     }
 
     protected function getForumUnsubscribeLink(Forum $forum): string
@@ -217,7 +298,7 @@ class NotificationService extends AbstractService implements NotificationService
             'tx_typo3forum_forum[unsubscribe]' => 1,
         ]);
 
-        return '<a href="' . $unSubscribeLink . '">' . Localization::translate('Button_Unsubscribe') . '</a>';
+        return $this->notificationEmailRenderer->link($unSubscribeLink, $this->translate('Button_Unsubscribe'));
     }
 
     protected function getTopicUnsubscribeLink(Topic $topic): string
@@ -229,7 +310,7 @@ class NotificationService extends AbstractService implements NotificationService
             'tx_typo3forum_forum[unsubscribe]' => 1,
         ]);
 
-        return '<a href="' . $unSubscribeLink . '">' . Localization::translate('Button_Unsubscribe') . '</a>';
+        return $this->notificationEmailRenderer->link($unSubscribeLink, $this->translate('Button_Unsubscribe'));
     }
 
     /** @param array<string, int|string> $arguments */

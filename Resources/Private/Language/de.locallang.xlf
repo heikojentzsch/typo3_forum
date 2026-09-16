@@ -1125,15 +1125,16 @@ If you don't want to get more notifications about this topic, you can unsubscrib
 
 Yours sincerely,
 Your ###FORUM_TEAM###-Team</source>
-				<target>Hallo ###RECIPIENT###,
+				<target>###GREETING###
 
-###POST_AUTHOR### hat einen Beitrag in dem von dir abonnierten Thema ###TOPIC_LINK### erstellt.
+###EVENT_DESCRIPTION###
 
-Falls Du keine Benachrichtigungen zu diesem Thema mehr erhalten möchtest, kannst Du diese im Forum oder mit folgendem Link abbestellen: ###UNSUBSCRIBE_LINK###
+###POST_TEXT_BLOCK###
+###FORUM_LINK_BLOCK###
+###TOPIC_LINK_BLOCK###
+###UNSUBSCRIBE_BLOCK###
 
-
-Liebe Grüße,
-Dein ###FORUM_TEAM###-Team</target>
+###SIGNATURE###</target>
 			</trans-unit>
 			<trans-unit id="Mail_Subscribe_NewTopic_Body" xml:space="preserve" approved="yes">
 				<source>Hello ###RECIPIENT###,
@@ -1145,19 +1146,104 @@ If you don't want to get more notifications about this forum, you can unsubscrib
 
 Yours sincerely,
 Your ###FORUM_TEAM###-Team</source>
-				<target>Hallo ###RECIPIENT###,
+				<target>###GREETING###
 
-###POST_AUTHOR### hat das Thema &quot;###TOPIC_NAME###&quot; in dem von dir abonnierten Forum ###FORUM_LINK### erstellt.
+###EVENT_DESCRIPTION###
 
-Falls Du keine Benachrichtigungen zu diesem Forum mehr erhalten möchtest, kannst Du diese im Forum oder mit folgendem Link abbestellen: ###UNSUBSCRIBE_LINK###
+###POST_TEXT_BLOCK###
+###FORUM_LINK_BLOCK###
+###TOPIC_LINK_BLOCK###
+###UNSUBSCRIBE_BLOCK###
 
-
-Liebe Grüße,
-Dein ###FORUM_TEAM###-Team</target>
+###SIGNATURE###</target>
 			</trans-unit>
 			<trans-unit id="Mail_Subscribe_NewTopic_Subject" xml:space="preserve" approved="yes">
 				<source></source>
 				<target>Neues Thema in einem von Dir abonnierten Forum!</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_Greeting" xml:space="preserve" approved="yes">
+				<source>Hello ###RECIPIENT###,</source>
+				<target>Hallo ###RECIPIENT###,</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewPost_Event" xml:space="preserve" approved="yes">
+				<source>###POST_AUTHOR### posted a new reply in the topic &quot;###TOPIC_NAME###&quot; in forum &quot;###FORUM_NAME###&quot;.</source>
+				<target>###POST_AUTHOR### hat einen neuen Beitrag im Thema &quot;###TOPIC_NAME###&quot; im Forum &quot;###FORUM_NAME###&quot; erstellt.</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewTopic_Event" xml:space="preserve" approved="yes">
+				<source>###POST_AUTHOR### created the new topic &quot;###TOPIC_NAME###&quot; in forum &quot;###FORUM_NAME###&quot;.</source>
+				<target>###POST_AUTHOR### hat das neue Thema &quot;###TOPIC_NAME###&quot; im Forum &quot;###FORUM_NAME###&quot; erstellt.</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_PostTextBlock" xml:space="preserve" approved="yes">
+				<source>Post text:
+###POST_TEXT###</source>
+				<target>Beitragstext:
+###POST_TEXT###</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_ForumLinkBlock" xml:space="preserve" approved="yes">
+				<source>Open forum: ###FORUM_LINK###</source>
+				<target>Forum öffnen: ###FORUM_LINK###</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewPost_TopicLinkBlock" xml:space="preserve" approved="yes">
+				<source>Open reply: ###POST_LINK###</source>
+				<target>Beitrag öffnen: ###POST_LINK###</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewTopic_TopicLinkBlock" xml:space="preserve" approved="yes">
+				<source>Open topic: ###TOPIC_LINK###</source>
+				<target>Thema öffnen: ###TOPIC_LINK###</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewPost_UnsubscribeBlock" xml:space="preserve" approved="yes">
+				<source>This link unsubscribes only this topic subscription: ###UNSUBSCRIBE_LINK###</source>
+				<target>Dieser Link beendet nur dieses Themenabonnement: ###UNSUBSCRIBE_LINK###</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_NewTopic_UnsubscribeBlock" xml:space="preserve" approved="yes">
+				<source>This link unsubscribes only the forum subscription that triggered this message: ###UNSUBSCRIBE_LINK###</source>
+				<target>Dieser Link beendet nur das Forumabonnement, das diese Nachricht ausgelöst hat: ###UNSUBSCRIBE_LINK###</target>
+			</trans-unit>
+			<trans-unit id="Mail_Subscribe_Signature" xml:space="preserve" approved="yes">
+				<source>Yours sincerely,
+Your ###FORUM_TEAM### team</source>
+				<target>Liebe Grüße,
+Dein ###FORUM_TEAM###-Team</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumNameInSubject" xml:space="preserve" approved="yes">
+				<source>Include forum name in subject</source>
+				<target>Forumname im Betreff anzeigen</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumNameInSubject.description" xml:space="preserve" approved="yes">
+				<source>Prefixes subscription notification subjects with the actual content forum name.</source>
+				<target>Stellt dem Betreff den Namen des tatsächlichen Inhaltsforums voran.</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includePostText" xml:space="preserve" approved="yes">
+				<source>Include full post text</source>
+				<target>Vollständigen Beitragstext anzeigen</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includePostText.description" xml:space="preserve" approved="yes">
+				<source>Includes the complete triggering post. Protected content then leaves the website and is stored in recipient mailboxes.</source>
+				<target>Fügt den vollständigen auslösenden Beitrag ein. Geschützte Inhalte verlassen dadurch die Website und werden in den Postfächern der Empfänger gespeichert.</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumLink" xml:space="preserve" approved="yes">
+				<source>Include forum link</source>
+				<target>Forumlink anzeigen</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeForumLink.description" xml:space="preserve" approved="yes">
+				<source>Includes an automatically generated link to the actual content forum.</source>
+				<target>Fügt einen automatisch erzeugten Link zum tatsächlichen Inhaltsforum ein.</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeTopicLink" xml:space="preserve" approved="yes">
+				<source>Include topic link</source>
+				<target>Themenlink anzeigen</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeTopicLink.description" xml:space="preserve" approved="yes">
+				<source>Includes an automatically generated topic link or reply deep link.</source>
+				<target>Fügt einen automatisch erzeugten Themenlink oder direkten Link zum Beitrag ein.</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeUnsubscribeLink" xml:space="preserve" approved="yes">
+				<source>Include unsubscribe link</source>
+				<target>Abmeldelink anzeigen</target>
+			</trans-unit>
+			<trans-unit id="config.notifications.includeUnsubscribeLink.description" xml:space="preserve" approved="yes">
+				<source>Includes the complete localized unsubscribe block. Hiding it does not end any subscription.</source>
+				<target>Fügt den vollständigen lokalisierten Abmeldeblock ein. Das Ausblenden beendet kein Abonnement.</target>
 			</trans-unit>
 		</body>
 	</file>
