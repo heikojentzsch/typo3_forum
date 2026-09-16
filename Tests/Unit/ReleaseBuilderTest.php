@@ -18,8 +18,9 @@ final class ReleaseBuilderTest extends TestCase
     {
         $this->root = sys_get_temp_dir() . '/forum-package-test-' . bin2hex(random_bytes(8));
         mkdir($this->root);
-        foreach (['Classes/test.php', 'Configuration/test.php', 'Resources/test.txt', 'Resources/Private/Migration/preflight.php', 'Resources/Private/Migration/contract-v1.json', 'Documentation/test.rst',
-            'composer.json', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql', 'LICENSE.txt', 'README.md',
+        foreach (['Classes/test.php', 'Classes/Configuration/NotificationEmailConfiguration.php', 'Classes/Service/Notification/NotificationEmailRenderer.php',
+            'Configuration/test.php', 'Resources/test.txt', 'Resources/Private/Language/locallang.xlf', 'Resources/Private/Migration/preflight.php', 'Resources/Private/Migration/contract-v1.json', 'Documentation/test.rst',
+            'composer.json', 'ext_conf_template.txt', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql', 'LICENSE.txt', 'README.md',
             '.git/config', '.github/workflows/ci.yml', '.Build/vendor/test.php', 'Tests/test.php', 'ddev/test.yml',
             'ddev/Packages/typo3_forum_dev/Classes/Fixture.php', 'ddev/.bootstrap/credentials.json',
             'ddev/config/system/additional.php', 'ddev/config/sites/forum-dev/config.yaml',
@@ -58,7 +59,24 @@ final class ReleaseBuilderTest extends TestCase
             $names[] = $zip->getNameIndex($index);
         }
         $zip->close();
-        self::assertSame(['Classes/test.php', 'Configuration/test.php', 'Documentation/test.rst', 'LICENSE.txt', 'README.md', 'Resources/Private/Migration/contract-v1.json', 'Resources/Private/Migration/preflight.php', 'Resources/test.txt', 'composer.json', 'ext_emconf.php', 'ext_localconf.php', 'ext_tables.sql'], $names);
+        self::assertSame([
+            'Classes/Configuration/NotificationEmailConfiguration.php',
+            'Classes/Service/Notification/NotificationEmailRenderer.php',
+            'Classes/test.php',
+            'Configuration/test.php',
+            'Documentation/test.rst',
+            'LICENSE.txt',
+            'README.md',
+            'Resources/Private/Language/locallang.xlf',
+            'Resources/Private/Migration/contract-v1.json',
+            'Resources/Private/Migration/preflight.php',
+            'Resources/test.txt',
+            'composer.json',
+            'ext_conf_template.txt',
+            'ext_emconf.php',
+            'ext_localconf.php',
+            'ext_tables.sql',
+        ], $names);
     }
 
     public static function invalidVersions(): iterable
@@ -81,5 +99,29 @@ final class ReleaseBuilderTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Missing or linked runtime file: composer.json');
         ReleaseBuilder::build($this->root, $this->root . '/dist', '14.0.0');
+    }
+
+    public function testRepositoryReleaseContainsNotificationConfigurationAndRuntime(): void
+    {
+        $archive = ReleaseBuilder::build(dirname(__DIR__, 2), $this->root . '/repository-release', '14.0.0-test');
+        $zip = new \ZipArchive();
+        self::assertTrue($zip->open($archive));
+        try {
+            foreach ([
+                'ext_conf_template.txt',
+                'Classes/Configuration/NotificationEmailConfiguration.php',
+                'Classes/Configuration/NotificationConfigurationResolver.php',
+                'Classes/Service/Notification/NotificationEmailRenderer.php',
+                'Resources/Private/Language/locallang.xlf',
+                'Resources/Private/Language/de.locallang.xlf',
+                'Resources/Private/Language/de.locallang_db.xlf',
+                'Documentation/Notifications/Index.rst',
+            ] as $requiredFile) {
+                self::assertNotFalse($zip->locateName($requiredFile), $requiredFile);
+            }
+            self::assertFalse($zip->locateName('Tests/Unit/NotificationServiceTest.php'));
+        } finally {
+            $zip->close();
+        }
     }
 }
