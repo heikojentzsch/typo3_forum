@@ -108,7 +108,7 @@
 								<mmf:user.link user="{comment.author}" />
 							</td>
 							<td class="tx-typo3forum-parsed-text align-middle">
-								<mmf:format.textParser content="{comment.text}" />
+							<mmf:format.textParser content="{comment.text}" html="{comment.textHtml}" />
 							</td>
 							<td class="text-center align-middle">
 								<f:format.date format="{settings.format.dateTimeFormat}">{comment.timestamp}</f:format.date>

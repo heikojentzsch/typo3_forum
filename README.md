@@ -23,9 +23,47 @@ The `v14` branch is an active, **pure TYPO3 v14 migration**. It intentionally do
 - PHP `^8.2`
 - TYPO3 CMS `^14.3`
 - PHPUnit `^11.5`
+- MySQL/MariaDB: `utf8mb4` for forum/user text columns and database connections
 - Extension key: `typo3_forum`
 
 The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP 8.2+.
+
+## Editors, emoji and HTML migration
+
+The v14 frontend uses **TinyMCE**, self-hosted under its GPL license, without
+the optional "Powered by Tiny" branding. There is no editor selector or editor
+configuration to maintain. A failed editor load keeps the original text field
+available for editing and submission.
+
+The editor uses a server-sanitized HTML vocabulary and real Unicode
+emoji. Basic formatting, lists, links, quotations and code are supported. The
+emoji dropdown offers German/English search, categories and skin-tone variants
+from Emoji 17.0 on desktop and mobile. Its catalog is self-hosted and loads on
+demand; the device's emoji keyboard and pasted Unicode also remain supported.
+Quotes are framed and link to the original post when a post reference exists.
+New links receive HTTPS automatically when no protocol is entered and always
+open in a new tab/window; the target selection is hidden.
+
+The existing migration check/plan/apply/verify workflow now converts BBCode into
+separate nullable HTML fields for posts, moderation comments and signatures.
+Original source text remains unchanged during migration. Unknown/custom
+formatting, group restrictions, unsupported URLs and custom smileys require
+review. MySQL/MariaDB `utf8mb3` connections or textual columns block migration
+and rich-text writes. Character-set conversion is an administrator operation;
+the extension does not alter database collations automatically.
+
+Apply additive schema changes, satisfy `utf8mb4`, regenerate and review the
+migration plan, run the dry-run, apply with its checksum and verify. Existing
+site-specific Fluid/TypoScript overrides must adopt the new editor field and
+HTML preview semantics. See [editor setup, migration and testing](Documentation/Editors/Index.rst)
+and the [migration runbook](Documentation/Migration/Index.rst).
+
+Editor build sources and the npm lockfile are in `Resources/Private/Editor`;
+generated runtime assets and license notices are in `Resources/Public/Editor`.
+Node.js is only needed to rebuild/test assets, not to run the forum. PHP tests
+cover conversion and migration; browser tests cover editing and loading
+failure on desktop and mobile viewports. Real iOS/Android device acceptance and
+production migration remain deployment responsibilities.
 
 ## Migration status
 
@@ -52,7 +90,7 @@ The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP
 - [x] Fix invalid repository calls and modernize repository query handling.
 - [x] Modernize repository persistence/query settings while preserving storage-page behavior.
 - [x] Modernize the unit and repository test infrastructure for PHPUnit 11.
-- [x] Modernize the active BBCode AJAX preview:
+- [x] Modernize the AJAX preview (now accepts sanitized HTML):
   - keep the existing `typeNum = 43568275` request contract,
   - replace direct `Extbase\Core\Bootstrap->run` usage with `EXTBASEPLUGIN`,
   - keep the existing `tx_typo3forum_ajax[text]` request namespace,
@@ -77,13 +115,13 @@ The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP
 ### Deliberate TYPO3 v14 decisions
 
 - `TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy` is **intentionally retained**. TYPO3 v14.3 still contains and uses it; replacing it belongs to a later TYPO3 v15 migration, not to this branch.
-- The BBCode preview continues to use the existing frontend `PAGE` / `typeNum` endpoint. The migration removes the legacy direct Extbase bootstrap call without introducing a new routing subsystem or changing the public request contract.
+- The preview retains the existing frontend `PAGE` / `typeNum` endpoint and argument name. Its input is now HTML rather than BBCode.
 - Repository query property names use Extbase **domain property names**, not raw database column names, except where deliberately using QueryBuilder / SQL.
 - TYPO3 v14-specific APIs are preferred over backwards-compatibility shims.
 - Refactors and unrelated latent bug fixes are kept separate from migration work whenever possible.
 - `clearCachePostProc` was reviewed against TYPO3 14.3 and is **intentionally retained**. TYPO3 v14 still invokes this hook and no semantically equivalent migration is required.
 - `ConfigurableEntityTrait` and `FrontendUser` retain selected `GeneralUtility::makeInstance()` fallbacks because Extbase hydration can instantiate entities without their constructors and later call `initializeObject()`. Removing these fallbacks would change currently supported construction paths.
-- `QuoteParserService` intentionally retains `TypoScriptService::convertTypoScriptArrayToPlainArray()`. The API is internal, but the available public TYPO3 14.3 alternatives do not provide equivalent conversion semantics for the evaluated `plugin.tx_typo3forum.settings` subtree. This dependency should be reconsidered in a future TYPO3 major-version migration rather than replaced with another internal API or an incomplete custom converter.
+- Legacy parser classes/definitions remain available for migration inspection, but the default rendering path uses the safe converter for legacy text and the HTML sanitizer for migrated content.
 
 ## Completed Fluid / frontend-rendering audit
 
@@ -99,7 +137,7 @@ Implemented fixes include:
 - escaped user/rootline links using the correct plugin targets;
 - core textarea/select rendering from the custom form ViewHelpers;
 - correct Extbase field names, selections and form-token registration;
-- preservation of the existing markItUp editor and AJAX preview contract, including empty/zero text handling;
+- replacement of markItUp in shipped forms by TinyMCE fields, with the existing preview endpoint now accepting HTML;
 - missing user-report rendering;
 - type-specific moderation forms;
 - tag validation feedback;
@@ -109,7 +147,9 @@ Implemented fixes include:
 - TYPO3 v14 storage repository and duplication enum usage;
 - stale frontend/report resource paths.
 
-No frontend redesign, Bootstrap upgrade, pagination redesign, repository/domain refactor or LazyLoadingProxy migration was performed. Mail subjects/bodies use language strings and mailing services, not separate Fluid mail templates.
+The earlier rendering audit did not redesign the frontend or upgrade Bootstrap.
+The subsequent editor replacement is described above. Mail subjects/bodies use
+language strings and mailing services, not separate Fluid mail templates.
 
 This completes the repository-level Fluid audit, **not real-site acceptance testing**.
 
@@ -381,7 +421,7 @@ Before releasing the v14 branch, test at least:
 - execution and repeatability of the `list_type` -> `CType` data migration;
 - frontend forum rendering;
 - forum/topic/post CRUD flows;
-- BBCode preview in a real browser;
+- HTML preview and TinyMCE editing in the deployed frontend;
 - quote rendering with real TypoScript overrides;
 - attachments upload/download;
 - FAL storage configuration and permissions;
@@ -476,7 +516,7 @@ Repository-level tests do not yet prove:
 - `list_type` -> `CType` migration on production data;
 - configured frontend routing/page IDs;
 - real FAL storage permissions;
-- browser-side markItUp behavior;
+- editor behavior on real iOS/Android devices;
 - real frontend TypoScript overrides;
 - moderation authorization and workflows;
 - mail delivery;

@@ -3,6 +3,10 @@
 	<file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2020-12-13T08:05:57Z" product-name="typo3_forum">
 		<header/>
 		<body>
+            <trans-unit id="quote.originalPost"><source>Original post</source><target>Zum Originalbeitrag</target></trans-unit>
+            <trans-unit id="editor.loading"><source>Loading editor…</source><target>Editor wird geladen…</target></trans-unit>
+            <trans-unit id="editor.ready"><source>Editor ready.</source><target>Editor bereit.</target></trans-unit>
+            <trans-unit id="editor.error"><source>The editor could not be loaded. Your text is preserved in the text field.</source><target>Der Editor konnte nicht geladen werden. Dein Text bleibt im Textfeld erhalten.</target></trans-unit>
 			<trans-unit id="Button_Back" xml:space="preserve" approved="yes">
 				<source>Back</source>
 				<target>Zurück</target>
@@ -265,7 +269,7 @@
 			</trans-unit>
 			<trans-unit id="Post_New_Attachments" xml:space="preserve" approved="yes">
 				<source>Attachments</source>
-				<target>Anhang</target>
+				<target>Anhänge:</target>
 			</trans-unit>
 			<trans-unit id="Post_New_Author" xml:space="preserve" approved="yes">
 				<source>Your name</source>
@@ -469,7 +473,7 @@
 			</trans-unit>
 			<trans-unit id="Topic_New_Attachments" xml:space="preserve" approved="yes">
 				<source>Attachments</source>
-				<target>Anhänge</target>
+				<target>Anhänge:</target>
 			</trans-unit>
 			<trans-unit id="Topic_New_Error_Post_Text_1221560718" xml:space="preserve" approved="yes">
 				<source>Please specify a content for the new topic.</source>

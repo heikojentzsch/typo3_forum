@@ -3,6 +3,10 @@
 	<file source-language="en" datatype="plaintext" original="messages" date="2020-12-13T08:05:53Z" product-name="typo3_forum">
 		<header/>
 		<body>
+            <trans-unit id="quote.originalPost"><source>Original post</source></trans-unit>
+            <trans-unit id="editor.loading"><source>Loading editor…</source></trans-unit>
+            <trans-unit id="editor.ready"><source>Editor ready.</source></trans-unit>
+            <trans-unit id="editor.error"><source>The editor could not be loaded. Your text is preserved in the text field.</source></trans-unit>
 			<trans-unit id="Button_Back" xml:space="preserve">
 				<source>Back</source>
 			</trans-unit>

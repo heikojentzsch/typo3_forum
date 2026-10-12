@@ -93,6 +93,9 @@ return [
             'signature' => [
                 'fieldName' => 'tx_typo3forum_signature'
             ],
+            'signatureHtml' => [
+                'fieldName' => 'tx_typo3forum_signature_html'
+            ],
             'postCount' => [
                 'fieldName' => 'tx_typo3forum_post_count'
             ],

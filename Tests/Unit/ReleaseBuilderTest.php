@@ -116,10 +116,18 @@ final class ReleaseBuilderTest extends TestCase
                 'Resources/Private/Language/de.locallang.xlf',
                 'Resources/Private/Language/de.locallang_db.xlf',
                 'Documentation/Notifications/Index.rst',
+                'Documentation/Editors/Index.rst',
+                'Resources/Public/Editor/editor.js',
+                'Resources/Public/Editor/tinymce/tinymce.min.js',
+                'Resources/Public/Editor/tinymce/license.md',
+                'Resources/Public/Editor/EMOJIBASE-LICENSE.txt',
+                'Resources/Private/Editor/package-lock.json',
+                'Resources/Private/Editor/emojis.js',
             ] as $requiredFile) {
                 self::assertNotFalse($zip->locateName($requiredFile), $requiredFile);
             }
             self::assertFalse($zip->locateName('Tests/Unit/NotificationServiceTest.php'));
+            self::assertFalse($zip->locateName('Resources/Private/Editor/node_modules/tinymce/package.json'));
         } finally {
             $zip->close();
         }

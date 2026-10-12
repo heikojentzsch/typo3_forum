@@ -47,6 +47,17 @@ class Post extends AbstractEntity implements AccessibleInterface, NotifiableInte
      */
     #[Validate(validator: 'NotEmpty')]
     protected string $text = '';
+    protected ?string $textHtml = null;
+
+    public function getTextHtml(): ?string
+    {
+        return $this->textHtml;
+    }
+
+    public function getEditorText(): string
+    {
+        return $this->textHtml ?? (new \Mittwald\Typo3Forum\RichText\LegacyConverter())->convert($this->text)['html'];
+    }
     protected ?FrontendUser $author = null;
     /**
      * The author's username. Necessary for anonymous postings.
@@ -311,7 +322,9 @@ class Post extends AbstractEntity implements AccessibleInterface, NotifiableInte
      */
     public function setText(string $text): self
     {
-        $this->text = $text;
+        $html = new \Mittwald\Typo3Forum\RichText\Html();
+        $this->textHtml = $html->sanitize($text);
+        $this->text = $html->plainText($this->textHtml);
 
         return $this;
     }

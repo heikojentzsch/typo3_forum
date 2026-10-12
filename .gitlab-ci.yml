@@ -48,6 +48,17 @@ style:
   allow_failure:
     exit_codes: [8]
 
+editors:
+  image: node:24-bookworm
+  stage: qa
+  script:
+    - cd Resources/Private/Editor
+    - npm ci
+    - npm run build
+    - git diff --exit-code -- ../../Public/Editor
+    - npx playwright install --with-deps chromium
+    - npm test
+
 package:
   extends: .php
   stage: package

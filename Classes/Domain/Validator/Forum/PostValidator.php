@@ -45,7 +45,7 @@ class PostValidator extends AbstractValidator
     */
     protected function isValid($post):void
     {
-        if (trim($post->getText()) === '') {
+        if (trim(str_replace("\u{00A0}", ' ', $post->getText())) === '') {
             $this->addError('The post can\'t be empty!.', 1221560718);
         }
 

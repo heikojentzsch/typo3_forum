@@ -88,10 +88,9 @@ class TextParserService extends AbstractService
         string $text,
         ?Post $post = null
     ): string {
-        foreach ($this->parsingServices as $parsingService) {
-            $text = $parsingService->getParsedText($text, $post);
+        if ($post !== null && $post->getTextHtml() !== null) {
+            return (new \Mittwald\Typo3Forum\RichText\Html())->sanitize($post->getTextHtml());
         }
-
-        return $text;
+        return (new \Mittwald\Typo3Forum\RichText\LegacyConverter())->convert($text)['html'];
     }
 }

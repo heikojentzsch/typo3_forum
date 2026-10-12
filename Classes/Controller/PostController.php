@@ -226,6 +226,7 @@ class PostController extends AbstractController
         ?Post $quote = null
     ): ResponseInterface {
         $this->authenticationService->assertNewPostAuthorization($topic);
+        \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Mittwald\Typo3Forum\RichText\CharsetRequirement::class)->assertReady();
 
         if ($post === null) {
             $post = ($quote !== null)
@@ -311,6 +312,7 @@ class PostController extends AbstractController
      * @phpstan-param list<int|string> $tags
      */
     public function updateAction(
+        #[Validate(validator: PostValidator::class)]
         Post $post,
         array $newAttachments = [],
         array $keepAttachments = [],
@@ -326,6 +328,7 @@ class PostController extends AbstractController
         }
 
         $keepAttachments = array_map('intval', $keepAttachments);
+        \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Mittwald\Typo3Forum\RichText\CharsetRequirement::class)->assertReady();
 
         foreach ($post->getAttachments()->toArray() as $existingAttachment) {
             if (!in_array($existingAttachment->getUid(), $keepAttachments)) {

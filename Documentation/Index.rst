@@ -59,6 +59,7 @@ typo3_forum
 	BasicInstallation/Index
 	Notifications/Index
 	Migration/Index
+	Editors/Index
 	UserAndGroups/Index
 	Report/Index
 

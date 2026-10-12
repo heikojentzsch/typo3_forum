@@ -438,3 +438,26 @@ i.tx-typo3forum-smiley {
 .markItUpHeader ul ul a:hover {
 	background-color: #f7f7f7;
 }
+.tx-typo3forum blockquote,
+.tx-typo3forum-parsed-text blockquote {
+    margin: 1rem 0;
+    padding: 1rem 1.25rem;
+    border: 1px solid #bdc9d6;
+    border-left: 4px solid #607d9d;
+    border-radius: 6px;
+    background: #f5f7fa;
+    color: #334155;
+    overflow-wrap: anywhere;
+}
+.tx-typo3forum blockquote > :first-child,
+.tx-typo3forum-parsed-text blockquote > :first-child { margin-top: 0; }
+.tx-typo3forum blockquote > :last-child,
+.tx-typo3forum-parsed-text blockquote > :last-child { margin-bottom: 0; }
+.forum-quote-source {
+    padding-bottom: .5rem;
+    margin-bottom: .75rem;
+    border-bottom: 1px solid #d5dde5;
+    font-size: .875rem;
+    font-weight: 600;
+}
+.forum-quote-source a { text-decoration: underline; }

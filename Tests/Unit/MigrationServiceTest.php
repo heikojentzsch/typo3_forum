@@ -54,6 +54,65 @@ final class MigrationServiceTest extends DatabaseTestCase
         self::assertSame('ALREADY_MIGRATED', $this->service->plan()['status']);
     }
 
+    public function testRichTextMigrationPreservesSourcesAndIsJournaledAndRepeatable(): void
+    {
+        $table = 'tx_typo3forum_domain_model_forum_post';
+        $this->connection->executeStatement('CREATE TABLE ' . $table . ' (uid INTEGER PRIMARY KEY, topic INTEGER, author INTEGER, author_name TEXT, text TEXT, text_html TEXT DEFAULT NULL)');
+        $source = '[quote=7][b]Hello[/b] :)[/quote]';
+        $this->connection->insert($table, ['uid' => 42, 'topic' => 0, 'author' => 0, 'author_name' => '', 'text' => $source]);
+        $plan = $this->service->plan();
+        self::assertSame('READY', $plan['status']);
+        self::assertSame('bbcode-to-html-v1', $plan['operations'][0]['rule_id']);
+        self::assertSame('READY', $this->service->dryRun($plan)['status']);
+        self::assertNull($this->connection->fetchOne('SELECT text_html FROM ' . $table));
+        self::assertSame('SUCCESS', $this->service->apply($plan, $plan['checksum'])['status']);
+        self::assertSame($source, $this->connection->fetchOne('SELECT text FROM ' . $table));
+        self::assertSame('<blockquote data-post="7"><strong>Hello</strong> 🙂</blockquote>', $this->connection->fetchOne('SELECT text_html FROM ' . $table));
+        self::assertSame('SUCCESS', $this->service->verify($plan)['status']);
+        self::assertSame('ALREADY_MIGRATED', $this->service->check()['status']);
+        self::assertSame(1, $this->service->apply($plan, $plan['checksum'])['resumed']);
+        $this->connection->update($table, ['text_html' => '<p>tampered</p>'], ['uid' => 42]);
+        self::assertSame('BLOCKED', $this->service->verify($plan)['status']);
+    }
+
+    public function testRichTextMigrationBlocksUnknownBbcodeAndMissingTargetSchema(): void
+    {
+        $table = 'tx_typo3forum_domain_model_forum_post';
+        $this->connection->executeStatement('CREATE TABLE ' . $table . ' (uid INTEGER PRIMARY KEY, topic INTEGER, author INTEGER, author_name TEXT, text TEXT)');
+        $this->connection->insert($table, ['uid' => 1, 'topic' => 0, 'author' => 0, 'author_name' => '', 'text' => '[custom]x[/custom]']);
+        self::assertContains('RICH_TEXT_SCHEMA_REQUIRED', array_column($this->service->check()['findings'], 'code'));
+        $this->connection->executeStatement('ALTER TABLE ' . $table . ' ADD COLUMN text_html TEXT DEFAULT NULL');
+        self::assertContains('BBCODE_REVIEW_REQUIRED', array_column($this->service->check()['findings'], 'code'));
+        self::assertSame([], $this->service->plan()['operations']);
+    }
+
+    public function testRichTextMigrationDoesNotOverwriteConcurrentEdits(): void
+    {
+        $table = 'tx_typo3forum_domain_model_forum_post';
+        $this->connection->executeStatement('CREATE TABLE ' . $table . ' (uid INTEGER PRIMARY KEY, topic INTEGER, author INTEGER, author_name TEXT, text TEXT, text_html TEXT DEFAULT NULL)');
+        $this->connection->insert($table, ['uid' => 1, 'topic' => 0, 'author' => 0, 'author_name' => '', 'text' => '[b]old[/b]']);
+        $plan = $this->service->plan();
+        $this->connection->update($table, ['text' => '[b]new[/b]'], ['uid' => 1]);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Source conflict');
+        $this->service->apply($plan, $plan['checksum']);
+    }
+
+    public function testRichTextMigrationRejectsRehashedArbitraryHtml(): void
+    {
+        $table = 'tx_typo3forum_domain_model_forum_post';
+        $this->connection->executeStatement('CREATE TABLE ' . $table . ' (uid INTEGER PRIMARY KEY, topic INTEGER, author INTEGER, author_name TEXT, text TEXT, text_html TEXT DEFAULT NULL)');
+        $this->connection->insert($table, ['uid' => 1, 'topic' => 0, 'author' => 0, 'author_name' => '', 'text' => '[b]old[/b]']);
+        $plan = $this->service->plan();
+        $plan['operations'][0]['after']['text_html'] = '<p>arbitrary replacement</p>';
+        $plan['operations'][0]['after_fingerprint'] = CanonicalJson::checksum($plan['operations'][0]['after']);
+        unset($plan['checksum']);
+        $plan['checksum'] = CanonicalJson::checksum($plan);
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('deterministic conversion');
+        $this->service->apply($plan, $plan['checksum']);
+    }
+
     public function testKnownPi1PostAndTopicRulesAreMigratedAndUnknownFieldsArePreservedByBlocking(): void
     {
         $post = $this->legacyFlexForm('Post->list', ['settings.listPosts' => '2']);
@@ -210,7 +269,7 @@ final class MigrationServiceTest extends DatabaseTestCase
         $this->connection->executeStatement('CREATE TABLE fe_users (uid INTEGER PRIMARY KEY, password TEXT)');
         $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_forum (uid INTEGER PRIMARY KEY, title TEXT)');
         $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_topic (uid INTEGER PRIMARY KEY, forum INTEGER, author INTEGER, last_post INTEGER, solution INTEGER, subject TEXT)');
-        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_post (uid INTEGER PRIMARY KEY, topic INTEGER, author INTEGER, author_name TEXT, text TEXT)');
+        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_post (uid INTEGER PRIMARY KEY, topic INTEGER, author INTEGER, author_name TEXT, text TEXT, text_html TEXT DEFAULT NULL)');
         $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_attachment (uid INTEGER PRIMARY KEY, post INTEGER, name TEXT)');
         $this->connection->executeStatement('CREATE TABLE sys_file_reference (uid INTEGER PRIMARY KEY, uid_local INTEGER, uid_foreign INTEGER, tablenames TEXT, fieldname TEXT)');
         $this->connection->insert('fe_users', ['uid' => 7, 'password' => '$argon2id$preserve']);
@@ -432,7 +491,7 @@ final class MigrationServiceTest extends DatabaseTestCase
 
     public function testSourceBlockerAndNullVersusEmptyRemainVisible(): void
     {
-        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_post (uid INTEGER PRIMARY KEY, topic INTEGER, text TEXT, author INTEGER, author_name TEXT)');
+        $this->connection->executeStatement('CREATE TABLE tx_typo3forum_domain_model_forum_post (uid INTEGER PRIMARY KEY, topic INTEGER, text TEXT, author INTEGER, author_name TEXT, text_html TEXT DEFAULT NULL)');
         $this->connection->insert('tx_typo3forum_domain_model_forum_post', ['uid' => 1, 'topic' => 0, 'text' => null, 'author' => 0, 'author_name' => 'anonymous']);
         $preflight = $this->preflight([['severity' => 'blocker', 'code' => 'PROJECT_SOURCE_BLOCKER']]);
         self::assertSame('BLOCKED', $this->service->check($preflight)['status']);

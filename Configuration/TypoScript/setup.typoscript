@@ -411,7 +411,6 @@ page {
 	includeJSFooterlibs {
 		jQuery = https://code.jquery.com/jquery-3.6.4.js
 		jQuery.external = 1
-		typo3forum_markitup = EXT:typo3_forum/Resources/Public/Javascript/markitup/jquery.markitup.js
 	}
 }
 

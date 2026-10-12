@@ -12,7 +12,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Upgrades\AbstractListTypeToCTypeUpdate;
 
 #[UpgradeWizard('typo3ForumVerifiedPluginMigration')]
-final class ForumPluginMigrationUpdate extends AbstractListTypeToCTypeUpdate
+final class ForumPluginMigrationUpdate extends AbstractListTypeToCTypeUpdate implements \TYPO3\CMS\Core\Upgrades\RepeatableInterface
 {
     public function __construct(
         ConnectionPool $connectionPool,
@@ -29,12 +29,12 @@ final class ForumPluginMigrationUpdate extends AbstractListTypeToCTypeUpdate
 
     public function getTitle(): string
     {
-        return '[typo3_forum]: Verified migration to dedicated content types';
+        return '[typo3_forum]: Verified v14 plugin and rich-text migration';
     }
 
     public function getDescription(): string
     {
-        return 'Plans, validates and migrates known forum plugins while preserving records, FlexForms and equivalent backend permissions. Unknown legacy states block execution.';
+        return 'Checks utf8mb4, migrates forum plugins and converts BBCode into separate HTML fields while preserving source text, FlexForms and equivalent backend permissions. Unknown legacy states block execution. Existing plans must be regenerated for rich-text migration.';
     }
 
     public function updateNecessary(): bool

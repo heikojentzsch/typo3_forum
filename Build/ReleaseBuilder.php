@@ -6,6 +6,7 @@ namespace Typo3Forum\Build;
 
 use FilesystemIterator;
 use RecursiveDirectoryIterator;
+use RecursiveCallbackFilterIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
 use ZipArchive;
@@ -33,7 +34,10 @@ final class ReleaseBuilder
             if (!is_dir($root . '/' . $directory) || is_link($root . '/' . $directory)) {
                 throw new RuntimeException('Missing or linked runtime directory: ' . $directory);
             }
-            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS));
+            $iterator = new RecursiveIteratorIterator(new RecursiveCallbackFilterIterator(
+                new RecursiveDirectoryIterator($root . '/' . $directory, FilesystemIterator::SKIP_DOTS),
+                static fn (\SplFileInfo $file): bool => $file->getFilename() !== 'node_modules'
+            ));
             foreach ($iterator as $file) {
                 if ($file->isLink()) {
                     throw new RuntimeException('Release sources must not contain symlinks: ' . $file->getPathname());

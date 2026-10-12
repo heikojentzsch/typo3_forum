@@ -69,7 +69,9 @@ class PostFactory extends AbstractFactory
     {
         /** @var Post $post */
         $post = $this->getClassInstance();
-        $post->setText('[quote=' . $quotedPost->getUid() . ']' . $quotedPost->getText() . '[/quote]');
+        $post->setText('<blockquote data-post="' . $quotedPost->getUid() . '"><p>'
+            . \Mittwald\Typo3Forum\RichText\Html::escape($quotedPost->getAuthor()->getUsername())
+            . ':</p>' . $quotedPost->getEditorText() . '</blockquote><p></p>');
 
         return $post;
     }

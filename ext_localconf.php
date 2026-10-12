@@ -123,6 +123,9 @@ defined('TYPO3') || die();
 );
 
 // TCE-Main hook for clearing all typo3_forum caches
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][]
+    = \Mittwald\Typo3Forum\RichText\DataHandlerHook::class;
+
 $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clearCachePostProc'][]
     = 'Mittwald\\Typo3Forum\\Cache\\CacheManager->clearAll';
 

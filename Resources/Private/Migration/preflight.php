@@ -204,6 +204,14 @@ try {
     }
     $expectedLegacyUids = array_values(array_unique($expectedLegacyUids));
     $findings = [];
+    if ($driver === 'mysql') {
+        $charsetColumns = $pdo->query('SELECT TABLE_NAME, COLUMN_NAME, CHARACTER_SET_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND CHARACTER_SET_NAME IS NOT NULL');
+        foreach ($charsetColumns ?: [] as $column) {
+            if (($column['TABLE_NAME'] === 'fe_users' || in_array($column['TABLE_NAME'], $contract['integrity_tables'], true)) && $column['CHARACTER_SET_NAME'] !== 'utf8mb4') {
+                $findings[] = ['severity' => 'warning', 'code' => 'UTF8MB4_TARGET_UPGRADE_REQUIRED', 'table' => $column['TABLE_NAME'], 'column' => $column['COLUMN_NAME']];
+            }
+        }
+    }
     $records = [];
     $counts = ['standard' => [], 'legacy_pi1' => 0, 'migrated' => [], 'unknown' => 0];
     $listTypeState = 'missing';

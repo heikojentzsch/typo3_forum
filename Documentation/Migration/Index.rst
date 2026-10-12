@@ -4,6 +4,12 @@ TYPO3 v14 forum migration
 Purpose and responsibility boundaries
 -------------------------------------
 
+The v14 migration now also checks the utf8mb4 prerequisite and populates separate
+HTML fields for posts, moderation comments and signatures. The same check,
+plan, dry-run, apply, journal and verify commands cover these writes. Regenerate
+plans created before rich-text support. See ``../Editors/Index.rst`` for supported
+BBCode, review blockers, source preservation and the editor acceptance checklist.
+
 This runbook migrates an existing ``typo3_forum`` data set to the dedicated
 TYPO3 v14 content types. It is not a new installation and never invokes the
 DDEV demo provisioner. It does not upgrade the complete website, migrate
@@ -15,9 +21,10 @@ The implementation status is:
   resume, verification, four TYPO3 CLI commands, and a native upgrade wizard.
 * **AUTOMATICALLY TESTED:** synthetic SQLite cases in the PHPUnit suite,
   including readiness, evidence, permissions, journals and repeatability.
-* **NOT EXECUTED IN THIS IMPLEMENTATION ENVIRONMENT:** DDEV, the opt-in
-  MariaDB row-lock test, an actual TYPO3 v12 to v14 site upgrade, and
-  browser/frontend acceptance.
+* **EDITOR ACCEPTANCE TESTED:** DDEV HTTP/login checks, the authenticated topic
+  form with TinyMCE, and isolated desktop/mobile viewport editing tests.
+* **ACCEPTANCE STILL REQUIRED:** the opt-in MariaDB row-lock test, an actual
+  TYPO3 v12 to v14 site upgrade, and full browser/device acceptance after migration.
 * **PROJECT-SPECIFIC DECISION OPEN:** unknown pi1 actions, aggregate pi1
   permissions, Page TSconfig, Backend Layout, Content Defender/container,
   routes, Fluid/TypoScript overrides, remote FAL and third-party login/profile

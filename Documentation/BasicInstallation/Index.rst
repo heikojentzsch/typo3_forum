@@ -5,7 +5,10 @@ Basis Installation
 
 System
 ------
-In this documentation a Typo3 version10 in Composer mode is used.
+The v14 branch requires TYPO3 14.3+, PHP 8.2+ and full Unicode storage.
+MySQL/MariaDB installations must use utf8mb4 for forum/user text columns and
+connections. See ``../Editors/Index.rst`` for the editor setup and migration
+requirements. Some installation screenshots below show an older TYPO3 backend.
 
 
 Installation

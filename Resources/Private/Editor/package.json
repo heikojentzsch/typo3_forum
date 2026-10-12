@@ -1,0 +1,17 @@
+{
+  "name": "typo3-forum-editors",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "emojibase-data": "17.0.0",
+    "tinymce": "8.9.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "esbuild": "0.25.12"
+  }
+}

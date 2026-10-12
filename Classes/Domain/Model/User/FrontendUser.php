@@ -608,6 +608,12 @@ class FrontendUser extends AbstractEntity
     protected int $helpfulCount = 0;
     protected int $questionCount = 0;
     protected string $signature = '';
+    protected ?string $signatureHtml = null;
+
+    public function getSignatureHtml(): ?string
+    {
+        return $this->signatureHtml;
+    }
     protected string $facebook = '';
     protected string $twitter = '';
     protected string $google = '';

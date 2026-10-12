@@ -44,6 +44,12 @@ class ReportComment extends AbstractEntity
      * @var string
      */
     protected $text;
+    protected ?string $textHtml = null;
+
+    public function getTextHtml(): ?string
+    {
+        return $this->textHtml;
+    }
 
     /**
      * The report this comment belongs to.
@@ -112,6 +118,7 @@ class ReportComment extends AbstractEntity
     public function setText($text)
     {
         $this->text = $text;
+        $this->textHtml = (new \Mittwald\Typo3Forum\RichText\LegacyConverter())->convert((string)$text)['html'];
     }
 
     /**

@@ -35,7 +35,8 @@ final class MigrationService
     {
         $this->validatePreflight($preflight);
         $schema = $this->schema();
-        $findings = [];
+        $findings = (new \Mittwald\Typo3Forum\RichText\CharsetRequirement($this->connectionPool))->findings();
+        $richText = (new RichTextMigration($this->connectionPool))->inventory($schema, $findings);
         $resolutions = [];
         $content = [];
         $counts = ['standard' => [], 'legacy_pi1' => 0, 'migrated' => [], 'unknown' => 0];
@@ -154,7 +155,7 @@ final class MigrationService
             $status = 'BLOCKED';
         } elseif ($this->hasSeverity($findings, ['indeterminate'])) {
             $status = 'INDETERMINATE';
-        } elseif ($oldCount === 0 && $pendingPermissions === 0) {
+        } elseif ($oldCount === 0 && $pendingPermissions === 0 && $richText === []) {
             $status = 'ALREADY_MIGRATED';
         }
 
@@ -164,7 +165,7 @@ final class MigrationService
             'captured_at' => gmdate('c'),
             'status' => $status,
             'schema' => ['tt_content_list_type' => $hasListType ? 'present' : 'missing'],
-            'inventory' => ['counts' => $counts, 'pending_permission_conversions' => $pendingPermissions, 'content_records' => $content, 'backend_permissions' => $permissions],
+            'inventory' => ['counts' => $counts, 'pending_permission_conversions' => $pendingPermissions, 'content_records' => $content, 'backend_permissions' => $permissions, 'rich_text' => $richText],
             'integrity' => $integrity,
             'findings' => $findings,
             'resolutions' => $resolutions,
@@ -181,6 +182,11 @@ final class MigrationService
         $check = $this->check($preflight);
         $operations = [];
         if (in_array($check['status'], ['READY', 'ALREADY_MIGRATED'], true)) {
+            foreach ($check['inventory']['rich_text'] as $record) {
+                $after = $record['source'];
+                $after[$record['field']] = $record['html'];
+                $operations[] = $this->operation($record['table'], $record['uid'], 'bbcode-to-html-v1', 'Convert BBCode to sanitized HTML; retain original source', [$record['field']], $record['source'], $after);
+            }
             foreach ($check['inventory']['content_records'] as $record) {
                 if (!in_array($record['classification'], ['standard', 'legacy_pi1'], true)) {
                     continue;
@@ -213,7 +219,7 @@ final class MigrationService
             'created_at' => gmdate('c'),
             'status' => $check['status'],
             'versions' => ['source' => $preflight['source'] ?? null, 'target' => ['typo3' => '14.3', 'extension' => '14.x']],
-            'scope' => ['tables' => [self::CONTENT_TABLE, self::GROUP_TABLE], 'operation' => 'validated_field_update'],
+            'scope' => ['tables' => [self::CONTENT_TABLE, self::GROUP_TABLE, ...array_keys(RichTextMigration::FIELDS)], 'operation' => 'validated_field_update'],
             'preflight_checksum' => $check['preflight_checksum'],
             'source_evidence' => $preflight,
             'assurance' => $check['assurance'],
@@ -814,6 +820,9 @@ final class MigrationService
     {
         $operationKeys = ['operation', 'table', 'uid', 'rule_id', 'rule_version', 'reason', 'fields', 'before', 'after', 'before_fingerprint', 'after_fingerprint'];
         $allowedFields = [self::CONTENT_TABLE => ['CType', 'list_type', 'pi_flexform'], self::GROUP_TABLE => ['explicit_allowdeny']];
+        foreach (RichTextMigration::FIELDS as $table => [$source, $target]) {
+            $allowedFields[$table] = [$target];
+        }
         if (array_diff(array_keys($operation), $operationKeys) !== [] || ($operation['operation'] ?? null) !== 'update_record' || !isset($allowedFields[$operation['table'] ?? '']) || !is_int($operation['uid'] ?? null)
             || !is_array($operation['fields'] ?? null) || array_diff($operation['fields'], $allowedFields[$operation['table']]) !== [] || ($operation['rule_version'] ?? null) !== $this->contract->version()) {
             throw new RuntimeException('The plan contains an unsupported operation.');
@@ -828,6 +837,10 @@ final class MigrationService
             if (!in_array($field, $operation['fields'], true) && ($operation['after'][$field] ?? null) !== $value) {
                 throw new RuntimeException('The plan changes a field outside its declared scope.');
             }
+        }
+        if (isset(RichTextMigration::FIELDS[$operation['table']])) {
+            (new RichTextMigration($this->connectionPool))->validate($operation);
+            return;
         }
         if ($operation['table'] === self::CONTENT_TABLE && array_diff(array_unique([...array_keys($operation['before']), ...array_keys($operation['after'])]), $this->contract->contentFields()) !== []) {
             throw new RuntimeException('The plan contains unsupported content fields.');

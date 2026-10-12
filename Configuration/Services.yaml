@@ -7,6 +7,10 @@ services:
     Mittwald\Typo3Forum\:
         resource: '../Classes/*'
 
+    Mittwald\Typo3Forum\RichText\CharsetRequirement:
+        autowire: true
+        public: true
+
     Mittwald\Typo3Forum\Domain\Repository\:
         resource: '../Classes/Domain/Repository/*'
         autowire: true

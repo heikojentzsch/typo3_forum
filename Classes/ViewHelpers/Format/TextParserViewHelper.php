@@ -48,6 +48,7 @@ class TextParserViewHelper extends AbstractViewHelper
     public function initializeArguments(): void
     {
         parent::initializeArguments();
+        $this->registerArgument('html', 'string', 'Explicit HTML v1 content; never auto-detected.', false, null);
 
         $this->registerArgument(
             'configuration',
@@ -76,23 +77,42 @@ class TextParserViewHelper extends AbstractViewHelper
 
     public function render(): string
     {
-        $this->textParserService->loadConfiguration(
-            $this->arguments['configuration']
-        );
-
+        if ($this->arguments['html'] !== null) {
+            return $this->renderQuotes($this->arguments['html']);
+        }
         /** @var ?Post $post */
         $post = $this->arguments['post'];
 
         if ($post !== null) {
-            return $this->textParserService->parseText(
+            return $this->renderQuotes($this->textParserService->parseText(
                 $post->getText(),
                 $post
-            );
+            ));
         }
 
-        return $this->textParserService->parseText(
+        return $this->renderQuotes($this->textParserService->parseText(
             $this->arguments['content']
                 ?? trim((string)$this->renderChildren())
-        );
+        ));
+    }
+
+    private function renderQuotes(string $html): string
+    {
+        $html = (new \Mittwald\Typo3Forum\RichText\Html())->sanitize($html);
+        if (!str_contains($html, '<blockquote data-post="')) {
+            return $html;
+        }
+        $settings = $this->renderingContext->getVariableProvider()->get('settings');
+        $pageUid = (int)($settings['pids']['Forum'] ?? 0);
+        $label = \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('quote.originalPost', 'Typo3Forum') ?? 'Original post';
+        return (new \Mittwald\Typo3Forum\RichText\QuoteRenderer())->render($html, function (int $uid) use ($pageUid): string {
+            return (string)$this->renderingContext->getViewHelperInvoker()->invoke(
+                \TYPO3\CMS\Fluid\ViewHelpers\Uri\ActionViewHelper::class,
+                ['pageUid' => $pageUid, 'extensionName' => 'Typo3Forum', 'pluginName' => 'Forum',
+                    'controller' => 'Post', 'action' => 'show', 'arguments' => ['post' => $uid]],
+                $this->renderingContext,
+                static fn (): string => ''
+            );
+        }, $label);
     }
 }

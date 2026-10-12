@@ -171,6 +171,7 @@ class TopicController extends AbstractController
         string $subject = ''
     ): ResponseInterface {
         $this->authenticationService->assertNewTopicAuthorization($forum);
+        \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Mittwald\Typo3Forum\RichText\CharsetRequirement::class)->assertReady();
 
         $this->view->assignMultiple([
             'currentUser' => $this->frontendUserRepository->findCurrent(),

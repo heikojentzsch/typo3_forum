@@ -24,3 +24,5 @@ public/typo3/*
 var/
 
 /dist/
+
+**/node_modules/
