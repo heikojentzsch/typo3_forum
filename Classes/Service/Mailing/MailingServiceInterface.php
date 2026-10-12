@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Service\Mailing;
 
 /*                                                                      *
@@ -31,7 +32,6 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
  */
 interface MailingServiceInterface
 {
-
     /**
      * Sends a mail with a certain subject and bodytext to a recipient in form of a
      * frontend user.

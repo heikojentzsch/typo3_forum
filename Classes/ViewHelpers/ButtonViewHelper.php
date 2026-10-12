@@ -1,5 +1,7 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers;
+
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *
  *                                                                      *
@@ -25,31 +27,31 @@ namespace Mittwald\Typo3Forum\ViewHelpers;
 
 use TYPO3\CMS\Fluid\ViewHelpers\Link\ActionViewHelper;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
-use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
  * ViewHelper that renders a big button.
  */
-class ButtonViewHelper extends AbstractTagBasedViewHelper {
-
+class ButtonViewHelper extends AbstractTagBasedViewHelper
+{
     public function initializeArguments(): void
     {
 
         parent::initializeArguments();
-        $this->registerArgument('controller', 'string', 'Controller Name', TRUE);
-        $this->registerArgument('action', 'string', 'action Name', TRUE);
-        $this->registerArgument('arguments', 'array', 'arguments Name', FALSE);
-        $this->registerArgument('primary', 'boolean', 'Primary button', FALSE, FALSE);
-        $this->registerArgument('label', 'string', 'Button label', TRUE);
-        $this->registerArgument('icon', 'string', 'Icon', FALSE, NULL);
+        $this->registerArgument('controller', 'string', 'Controller Name', true);
+        $this->registerArgument('action', 'string', 'action Name', true);
+        $this->registerArgument('arguments', 'array', 'arguments Name', false);
+        $this->registerArgument('primary', 'boolean', 'Primary button', false, false);
+        $this->registerArgument('label', 'string', 'Button label', true);
+        $this->registerArgument('icon', 'string', 'Icon', false, null);
     }
 
-    public function initialize(): void {
+    public function initialize(): void
+    {
         parent::initialize();
 
         $class = 'btn';
 
-        if ($this->arguments['primary'] === TRUE) {
+        if ($this->arguments['primary'] === true) {
             $class .= ' btn-primary';
         }
 
@@ -65,11 +67,12 @@ class ButtonViewHelper extends AbstractTagBasedViewHelper {
             ActionViewHelper::class,
             $arguments,
             $this->renderingContext,
-            fn() => $this->renderChildren()
+            fn () => $this->renderChildren()
         );
     }
 
-    public function renderChildren(): mixed {
+    public function renderChildren(): mixed
+    {
         if ($this->arguments['icon']) {
             $content = '<i class="tx-typo3forum-icon-16-' . htmlspecialchars($this->arguments['icon']) . '"></i> ';
         } else {

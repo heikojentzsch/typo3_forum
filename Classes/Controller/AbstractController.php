@@ -40,6 +40,16 @@ use TYPO3\CMS\Frontend\Page\PageInformation;
 
 abstract class AbstractController extends ActionController
 {
+    /** Reject unsafe requests before argument mapping or controller side effects. */
+    public function processRequest(\TYPO3\CMS\Extbase\Mvc\RequestInterface $request): ResponseInterface
+    {
+        $guard = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Mittwald\Typo3Forum\Security\MutationGuard::class);
+        if (($response = $guard->check($request)) !== null) {
+            return $response;
+        }
+        return parent::processRequest($request);
+    }
+
     /**
      * An authentication service. Handles the authentication mechanism.
      */
@@ -151,8 +161,8 @@ abstract class AbstractController extends ActionController
      * @param array $arguments
      * @param string|null $titleKey
      * @param ContextualFeedbackSeverity $severity
-     * @return void
      * @phpstan-param array<array-key, mixed> $arguments
+     * @return void
      */
     protected function addLocalizedFlashmessage(
         $key,
@@ -214,7 +224,8 @@ abstract class AbstractController extends ActionController
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PURGE');
         curl_setopt($curl, CURLOPT_HEADER, true);
         curl_setopt($curl, CURLOPT_NOBODY, true);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, ['Host:' . $_SERVER['HTTP_HOST']]);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 2);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 5);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         $result = curl_exec($curl);
@@ -237,6 +248,16 @@ abstract class AbstractController extends ActionController
             return false;
         }
 
-        return $this->redirectToUri($referrerUri);
+        $referrer = new \TYPO3\CMS\Core\Http\Uri($referrerUri);
+        $current = $this->request->getUri();
+        if (!in_array($referrer->getScheme(), ['http', 'https'], true)
+            || $referrer->getScheme() !== $current->getScheme()
+            || $referrer->getHost() !== $current->getHost()
+            || $referrer->getPort() !== $current->getPort()
+            || $referrer->getUserInfo() !== ''
+        ) {
+            return false;
+        }
+        return $this->redirectToUri((string)$referrer);
     }
 }

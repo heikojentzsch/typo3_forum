@@ -26,11 +26,11 @@
 					</li>
 				</f:else>
 			</f:if>
-	
-	
+
+
 			<!-- Page list -->
 			<f:for each="{pagination.listOfPagesToDisplay}" as="page">
-	
+
 				<f:if condition="{page} == {pagination.currentPage}">
 					<f:then>
 						<li class="page-item active" title="{page}">
@@ -40,7 +40,7 @@
 						</li>
 					</f:then>
 					<f:else>
-	
+
 						<f:if condition="{page} == 0">
 							<f:then>
 								<li class="page-item disabled" title="{f:translate(key: 'LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:more')}">
@@ -53,13 +53,13 @@
 								</li>
 							</f:else>
 						</f:if>
-						
+
 					</f:else>
 				</f:if>
-	
+
 			</f:for>
-			
-			
+
+
 			<!-- Right side button -->
 			<f:if condition="{pagination.maxPage} != {pagination.currentPage}">
 				<f:then>
@@ -83,7 +83,7 @@
 					</li>
 				</f:else>
 			</f:if>
-			
+
 		</ul>
 	</div>
 </f:if>

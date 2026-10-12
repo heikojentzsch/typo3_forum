@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\Format;
 
 /*                                                                      *
@@ -30,7 +31,6 @@ use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 /** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Format\Smiley> */
 class SmileyRepository extends AbstractRepository
 {
-
     /**
      * @return QueryResultInterface
      * @phpstan-return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, \Mittwald\Typo3Forum\Domain\Model\Format\Smiley>

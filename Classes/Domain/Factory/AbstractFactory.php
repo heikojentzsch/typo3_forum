@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Factory;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;

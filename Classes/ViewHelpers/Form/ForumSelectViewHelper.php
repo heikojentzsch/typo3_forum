@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\Form;
 
 /*                                                                      *
@@ -27,8 +28,8 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Form;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Forum;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
 use TYPO3\CMS\Fluid\ViewHelpers\Form\AbstractFormFieldViewHelper;
-use TYPO3\CMS\Fluid\ViewHelpers\Form\SelectViewHelper;
 use TYPO3\CMS\Fluid\ViewHelpers\Form\Select\OptionViewHelper;
+use TYPO3\CMS\Fluid\ViewHelpers\Form\SelectViewHelper;
 
 /**
  * ViewHelper that renders a selectbox with a hierarchical list of all forums.
@@ -58,7 +59,7 @@ class ForumSelectViewHelper extends AbstractFormFieldViewHelper
             SelectViewHelper::class,
             array_merge($this->arguments, $this->additionalArguments),
             $this->renderingContext,
-            fn() => $this->renderOptionTags($this->getOptions())
+            fn () => $this->renderOptionTags($this->getOptions())
         );
     }
 
@@ -115,7 +116,7 @@ class ForumSelectViewHelper extends AbstractFormFieldViewHelper
                     OptionViewHelper::class,
                     ['value' => (string)$option['uid'], 'style' => $style],
                     $this->renderingContext,
-                    static fn() => htmlspecialchars($option['name'])
+                    static fn () => htmlspecialchars($option['name'])
                 ) . chr(10);
                 $content .= $this->renderOptionTags($option['_children'], $nestingLevel + 1);
             }

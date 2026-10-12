@@ -2,9 +2,9 @@
 
 namespace Mittwald\Typo3Forum\Command;
 
-use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 
 class CounterUpdateCommand extends AbstractDatabaseBasedCommand
 {

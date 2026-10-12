@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Exception\TextParser;
 
 /*                                                                      *
@@ -28,7 +29,6 @@ use Mittwald\Typo3Forum\Domain\Exception\AbstractException;
 
 class Exception extends AbstractException
 {
-
     /**
      * Exception message.
      * @var string

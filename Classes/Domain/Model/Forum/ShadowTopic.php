@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Forum;
 
 /*                                                                    - *
@@ -34,7 +35,6 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
  */
 class ShadowTopic extends Topic
 {
-
     /**
      * The target topic, i.e. the topic this shadow is pointing to.
      */

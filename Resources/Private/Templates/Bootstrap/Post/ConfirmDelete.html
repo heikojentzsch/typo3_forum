@@ -2,7 +2,7 @@
 <f:layout name="default" />
 
 <f:section name="main">
-	<f:form action="delete" id="delete">
+	<f:form action="delete" id="delete" requestToken="typo3_forum/mutation">
 		<div class="alert alert-danger">
 			<h2 class="alert-heading"><f:translate key="Post_ConfirmDelete_Header" /></h2>
 			<div>
@@ -12,8 +12,8 @@
 			<f:form.hidden name="post" value="{post}" />
 		</div>
 
-		<f:render partial="Post/Single" arguments="{post: post}" />
 	</f:form>
+	<f:render partial="Post/Single" arguments="{post: post}" />
 </f:section>
 
 <f:section name="menu">

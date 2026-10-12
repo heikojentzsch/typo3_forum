@@ -109,7 +109,9 @@ final class DdevBootstrapTest extends TestCase
         $configurationDirectory = $this->temporaryDirectory . '/config/system';
         mkdir($configurationDirectory, 0700, true);
         $path = $configurationDirectory . '/settings.php';
-        file_put_contents($path, <<<'PHP'
+        file_put_contents(
+            $path,
+            <<<'PHP'
 <?php
 return [
     'DB' => ['Connections' => ['Default' => ['driver' => 'pdo_mysql', 'host' => 'localhost', 'unix_socket' => '/tmp/mysql.sock']]],
@@ -176,7 +178,7 @@ PHP
         self::assertStringContainsString('$moderatorPassword', $loginCheck);
 
         $guard = (string)file_get_contents($root . '/ddev/Packages/typo3_forum_dev/Classes/DevelopmentGuard.php');
-        self::assertStringContainsString("Environment::getContext()->isDevelopment()", $guard);
+        self::assertStringContainsString('Environment::getContext()->isDevelopment()', $guard);
         self::assertStringContainsString("getenv('DDEV_PROJECT') !== 'typo3forum'", $guard);
         self::assertStringContainsString("'host' => 'db'", $guard);
         self::assertStringContainsString("'dbname' => 'db'", $guard);
@@ -202,7 +204,7 @@ PHP
         self::assertStringContainsString('persistence.storagePid = %d,%d', $provisioner);
         self::assertStringContainsString('settings.pids.Login = %d', $provisioner);
         self::assertStringNotContainsString('plugin.tx_felogin_login.settings.pages', $provisioner);
-        self::assertStringContainsString("fetchAssociative(", $provisioner);
+        self::assertStringContainsString('fetchAssociative(', $provisioner);
         self::assertStringContainsString('SELECT constants, config FROM sys_template WHERE uid = ?', $provisioner);
         self::assertStringContainsString('EXT:typo3_forum_dev/Resources/Public/Css/forum-dev.css', $provisioner);
         self::assertStringContainsString('20.wrap = <main>|</main>', $provisioner);
@@ -230,7 +232,7 @@ PHP
         self::assertStringNotContainsString("\$moderatorForum['topics']", $verifier);
         self::assertStringContainsString('The moderator-only forum ACLs are missing', $verifier);
         self::assertStringContainsString("(int)\$forum['topics'] < 1", $verifier);
-        self::assertStringContainsString("(int)\$samplePostTopic !== \$topicUid", $verifier);
+        self::assertStringContainsString('(int)$samplePostTopic !== $topicUid', $verifier);
         self::assertStringNotContainsString("(int)\$forum['last_post'] !== \$postUid", $verifier);
 
         $httpCheck = (string)file_get_contents($root . '/Build/Ddev/http-check.sh');

@@ -1,204 +1,36 @@
 .. _basic:
 
-Basis Installation
-==================
+Installation on v14
+===================
 
-System
-------
-The v14 branch requires TYPO3 14.3+, PHP 8.2+ and full Unicode storage.
-MySQL/MariaDB installations must use utf8mb4 for forum/user text columns and
-connections. See ``../Editors/Index.rst`` for the editor setup and migration
-requirements. Some installation screenshots below show an older TYPO3 backend.
-
-
-Installation
+Requirements
 ------------
 
-First install/activate the typo3_forum extension via the Extension Manager.
-Go to the extension manager in the page tree and check if the typo3_forum extension is installed and activated.
-
-|
-|
-
-.. image:: Images/ExtensionActivated.png
-
-|
-|
-
-When typo3_forum extension is installed and activated, in order to use the forum you need to specify a save location. It is best to create a folder for it. Ideally, they create a subfolder for the forum data and the forum user data.
-
-|
-|
-
-.. image:: Images/Subfolder.png
-
-|
-|
-
-**Installation of the basic forum:**
-
-
-Create a new record in the sub folder you just created where your forum data should be stored.
-If you have installed and activated the typo3_forum extension correctly, you should see new entries for the Typo3 forum here.
-First you need a forum, you can name this as you want.
-
-|
-|
-
-.. image:: Images/RecordForum.png
-
-|
-|
-
-Fill in the required fields, it is always recommended to include a description.
-
-|
-|
-
-.. image:: Images/ForenTitle.png
-
-|
-|
-
-The option "Children" allows them immediately in this forum entry to create a sub forum.
-Any setting for a sub forum they can set here.
-
-|
-|
-
-.. image:: Images/Children.png
-
-|
-|
-
-In the next step you have to define the Access Control Lists (ACL). For the basic installation you define the controls for "Read", "Create new Topics" and "Write Posts".
-Here you have to keep in mind that you first have to save the newly created Access Control and then you can change the Login Level. If you do not follow this sequence it can happen that two Access Controls are created.
-
-|
-|
-
-.. image:: Images/AccessConrolls.png
-
-|
-|
-
-If you have now saved everything in the correct order, press "close" and it should look like this.
-
-|
-|
-
-.. image:: Images/forumUebersicht.png
-
-|
-|
-
-Next, you need to add the static typo3_forum template to your root page. To do this, go to your root page and add the template record.
-
-|
-|
-
-.. image:: Images/StaticTemplate.png
-
-|
-|
-
-Fill in the required fields and then go to "Includes". In the tab "Includes" add the static template of typo3_forum extension. Please note that typo3_forum requires the Bootstrap templates.
-
-
-|
-|
-
-.. image:: Images/TemplatesInclued.png
-
-|
-|
-
-After adding, go back to the General tab and add the following code in the Setup field:
-
-|
-|
-
-.. code-block:: typoscript
-
-    plugin.tx_typo3forum {
-            persistence {
-                    storagePid = id from data sysfolder
-                                    }
-            settings {
-
-                    pids {
-                            Forum = id from page
-                    }
-            }
-     }
-
-|
-|
-
-.. image:: Images/Setup.png
-
-|
-|
-
-To display the forum in the Forntend, create a new content element. Create a new record on the page where you want your forum to be displayed.
-
-|
-|
-
-.. image:: Images/ContentElement.png
-
-|
-|
-
-Go to the Plugin tab and create a general plugin element.
-
-|
-|
-
-.. image:: Images/PluginContent.png
-
-|
-|
-
-In the content element settings navigate to Plugin. Here you can configure the content element. To display the forum you have to select "typo3_forum" in the drop down menu. Then confirm with "ok".
-
-|
-|
-
-.. image:: Images/ContentElemetSelectPlugin.png
-
-|
-|
-
-After this step a few more options for typo3_forum will appear.
-
-|
-|
-
-.. image:: Images/ContentOptions.png
-
-|
-|
-
-To display the forum, select Forum.
-Then you have to specify where the data for the forum should be stored, in our example it is the folder Data.
-You can specify this under the plugin options.
-.
-|
-|
-
-.. image:: Images/RecordStoragePage.png
-   :alt: some image
-
-|
-|
-
-Now your forum should be displayed on the page where you installed it.
-
-|
-|
-
-.. image:: Images/Forum.png
-
-
-
+Use TYPO3 Composer ``^14.3`` and PHP compatible with the entire site's dependency
+set (extension requirement ``^8.2``), including Fileinfo. MySQL/MariaDB connections
+and forum/user text columns require utf8mb4. See the root README and editor guide.
+
+Setup
+-----
+
+1. Install ``pottkinder/typo3forum:dev-v14`` using the VCS repository in the root
+   README. Extension key: ``typo3_forum``. Pin a reviewed revision for deployment.
+2. Apply TYPO3 database schema updates. For existing sites follow the migration
+   guide before accepting writes; a schema update alone does not convert content.
+3. Include the extension's TypoScript and configure the forum/user storage PIDs,
+   page PIDs, frontend login, FAL storage and permissions.
+4. Create the forum data folder and forum records, including parent/child forums
+   and explicit read/write/moderation ACLs for the intended frontend groups.
+5. Add the dedicated forum content element. v14 uses dedicated CType plugins;
+   do not follow the old generic list-plugin/switchableControllerActions setup.
+6. Include ``Configuration/Routing/Routing.yaml`` in the site's route configuration
+   and configure the target pages. Verify detail links and post anchors.
+7. Check anonymous/member/moderator access, topic/post creation, attachments,
+   emoji storage, mail capture/delivery and token-bearing POST forms.
+
+Local development
+-----------------
+
+Use ``Build/setup-ddev.sh`` from the repository root and ``ddev/README.md`` for
+the repeatable synthetic fixture. It is not a production installer or migrator.
+Old screenshots retained under Images are historical and do not describe v14 UI.

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model;
 
 /*                                                                      *
@@ -26,7 +27,6 @@ namespace Mittwald\Typo3Forum\Domain\Model;
 
 interface SubscribeableInterface
 {
-
     /**
      * Returns all users that have subscribed to this object.
      * @return \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\User\FrontendUser> All subscribers.

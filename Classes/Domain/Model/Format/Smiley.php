@@ -25,8 +25,6 @@ namespace Mittwald\Typo3Forum\Domain\Model\Format;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use Mittwald\Typo3Forum\TextParser\Panel\MarkItUpExportableInterface;
-
 /**
  * A smiley. This class implements the abstract AbstractTextParserElement class.
  *
@@ -35,26 +33,12 @@ use Mittwald\Typo3Forum\TextParser\Panel\MarkItUpExportableInterface;
  * @license    GNU Public License, version 2
  *             http://opensource.org/licenses/gpl-license.php
  */
-class Smiley extends AbstractTextParserElement implements MarkItUpExportableInterface
+class Smiley extends AbstractTextParserElement
 {
     /**
      * The smiley shortcut, e.g. ":)" or ":/"
      */
     protected string $smileyShortcut  = '#undefined#';
-
-    /**
-     * Exports this smiley object as a plain array, that can be used in
-     * a MarkItUp configuration object.
-     * @phpstan-return array<string, mixed>
-     */
-    public function exportForMarkItUp(): array
-    {
-        return [
-            'name' => $this->getName(),
-            'className' => $this->getEditorIconClass(),
-            'replaceWith' => $this->getSmileyShortcut()
-        ];
-    }
 
     /**
      * Gets the smiley shortcut.

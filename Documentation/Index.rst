@@ -18,7 +18,7 @@ typo3_forum
 		typo3_forum
 
 	:Version:
-		1.0.0
+		14.x (v14 branch)
 
 	:Language:
 		en
@@ -62,10 +62,15 @@ typo3_forum
 	Editors/Index
 	UserAndGroups/Index
 	Report/Index
+	Development/Index
+	Security/Index
+	Release/Index
 
 .. _introduction:
 
 Introduction
 ============
 
-The Documentation of the Extension can be found here: http://typo3-forum.readthedocs.io/en/master/
+This manual describes the v14 branch. Start with the root README for scope,
+requirements, installation, migration and changes from v12. Historical upstream
+manuals and screenshots are not authoritative for the current implementation.

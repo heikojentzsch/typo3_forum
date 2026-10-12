@@ -1,31 +1,32 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
 
 namespace Mittwald\Typo3Forum\Tests\Repository;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
+use Mittwald\Typo3Forum\Domain\Model\Forum\{Forum, Post, Tag, Topic};
+use Mittwald\Typo3Forum\Domain\Model\Moderation\{PostReport, ReportWorkflowStatus};
+use Mittwald\Typo3Forum\Domain\Model\User\{FrontendUser, Rank};
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Format\{BBCodeRepository, SmileyRepository, SyntaxHighlightingRepository};
 use Mittwald\Typo3Forum\Domain\Repository\Forum\{ColorRepository, ForumRepository, PostRepository, TagRepository, TopicRepository};
 use Mittwald\Typo3Forum\Domain\Repository\Moderation\{PostReportRepository, ReportWorkflowStatusRepository};
 use Mittwald\Typo3Forum\Domain\Repository\Stats\SummaryRepository;
 use Mittwald\Typo3Forum\Domain\Repository\User\{FrontendUserRepository, RankRepository, UserfieldRepository};
-use Mittwald\Typo3Forum\Domain\Model\Forum\{Forum, Post, Tag, Topic};
-use Mittwald\Typo3Forum\Domain\Model\User\{FrontendUser, Rank};
-use Mittwald\Typo3Forum\Domain\Model\Moderation\{PostReport, ReportWorkflowStatus};
 use Mittwald\Typo3Forum\Service\Authentication\AuthenticationServiceInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition};
+use Symfony\Component\Yaml\Yaml;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\DependencyInjection\AutowireInjectMethodsPass;
 use TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface;
-use TYPO3\CMS\Extbase\Persistence\Generic\{Query, Typo3QuerySettings};
 use TYPO3\CMS\Extbase\Persistence\Generic\Mapper\DataMapFactory;
 use TYPO3\CMS\Extbase\Persistence\Generic\Qom\QueryObjectModelFactory;
+use TYPO3\CMS\Extbase\Persistence\Generic\{Query, Typo3QuerySettings};
 use TYPO3\CMS\Extbase\Persistence\{PersistenceManagerInterface, QueryInterface, QueryResultInterface, Repository};
-use Symfony\Component\DependencyInjection\{ContainerBuilder, Definition};
-use Symfony\Component\Yaml\Yaml;
 
 /** Tests use real TYPO3 queries/settings; only persistence execution is substituted. */
 final class RepositoryModernizationTest extends TestCase
@@ -109,7 +110,7 @@ final class RepositoryModernizationTest extends TestCase
     public function testPropertyQueries(string $class, string $method, array $args, array $orderings, string $model): void
     {
         $repo = $this->repository($class);
-        $args = array_map(fn($arg) => is_string($arg) && class_exists($arg) ? $this->entity($arg) : $arg, $args);
+        $args = array_map(fn ($arg) => is_string($arg) && class_exists($arg) ? $this->entity($arg) : $arg, $args);
         $repo->$method(...$args);
         $query = $this->lastQuery();
         self::assertSame($orderings, $query->getOrderings());
@@ -151,7 +152,7 @@ final class RepositoryModernizationTest extends TestCase
 
     public static function fallbackRepositories(): array
     {
-        return array_map(fn($class) => [$class], [BBCodeRepository::class, SmileyRepository::class, SyntaxHighlightingRepository::class, ColorRepository::class, UserfieldRepository::class, ReportWorkflowStatusRepository::class]);
+        return array_map(fn ($class) => [$class], [BBCodeRepository::class, SmileyRepository::class, SyntaxHighlightingRepository::class, ColorRepository::class, UserfieldRepository::class, ReportWorkflowStatusRepository::class]);
     }
 
     #[DataProvider('fallbackRepositories')]
@@ -172,10 +173,10 @@ final class RepositoryModernizationTest extends TestCase
     public static function reportSettings(): array
     {
         return [
-            [['storagePid' => '7,9'], '12', ['7','9'], true],
+            [['storagePid' => '7,9'], '12', ['7', '9'], true],
             [['storagePid' => '0'], '12', ['0'], true],
             [['storagePid' => ''], '12', [''], true],
-            [[], '12,14', ['12','14'], true],
+            [[], '12,14', ['12', '14'], true],
             [[], '0', ['0'], false],
             [[], '', [''], false],
             [[], null, [12], false],
@@ -212,7 +213,7 @@ final class RepositoryModernizationTest extends TestCase
         $denied = $this->entity(Forum::class);
         $authentication = $this->createMock(AuthenticationServiceInterface::class);
         $authentication->expects($this->exactly(2))->method('checkModerationAuthorization')
-            ->willReturnCallback(fn(Forum $forum) => $forum === $allowed);
+            ->willReturnCallback(fn (Forum $forum) => $forum === $allowed);
         (new \ReflectionProperty(PostReportRepository::class, 'authenticationService'))->setValue($repo, $authentication);
         foreach ([4 => $allowed, 6 => $denied] as $key => $forum) {
             $topic = $this->getMockBuilder(Topic::class)->disableOriginalConstructor()->onlyMethods(['getForum'])->getMock();
@@ -237,7 +238,7 @@ final class RepositoryModernizationTest extends TestCase
             self::assertSame(1, $this->lastQuery()->getLimit());
             self::assertSame('initial', $this->lastQuery()->getConstraint()->getOperand1()->getPropertyName());
             self::assertTrue($this->lastQuery()->getConstraint()->getOperand2());
-            self::assertSame([7,9,0], array_map('intval', $this->lastQuery()->getQuerySettings()->getStoragePageIds()));
+            self::assertSame([7, 9, 0], array_map('intval', $this->lastQuery()->getQuerySettings()->getStoragePageIds()));
         }
     }
 
@@ -258,16 +259,16 @@ final class RepositoryModernizationTest extends TestCase
         $repo = $this->repository(PostRepository::class);
         $topic = $this->entity(Topic::class);
         $forum = $this->entity(Forum::class);
-        self::assertInstanceOf(QueryResultInterface::class, $repo->findByFilter(6, ['crdate'=>'DESC']));
+        self::assertInstanceOf(QueryResultInterface::class, $repo->findByFilter(6, ['crdate' => 'DESC']));
         self::assertSame(6, $this->lastQuery()->getLimit());
-        self::assertSame(['crdate'=>'DESC'], $this->lastQuery()->getOrderings());
+        self::assertSame(['crdate' => 'DESC'], $this->lastQuery()->getOrderings());
         $repo->findByUids([]);
         self::assertNull($this->lastQuery()->getConstraint());
-        $repo->findByUids([3,4]);
-        self::assertSame([3,4], $this->lastQuery()->getConstraint()->getConstraint1()->getOperand2());
+        $repo->findByUids([3, 4]);
+        self::assertSame([3, 4], $this->lastQuery()->getConstraint()->getConstraint1()->getOperand2());
         $repo->findForTopic($topic);
         self::assertSame(1000000, $this->lastQuery()->getLimit());
-        self::assertSame(['crdate'=>'ASC'], $this->lastQuery()->getOrderings());
+        self::assertSame(['crdate' => 'ASC'], $this->lastQuery()->getOrderings());
         self::assertFalse($this->lastQuery()->getQuerySettings()->getRespectSysLanguage());
         foreach (['findLastByTopic' => $topic, 'findLastByForum' => $forum] as $method => $argument) {
             foreach ([null, $this->entity(Post::class)] as $first) {
@@ -275,7 +276,7 @@ final class RepositoryModernizationTest extends TestCase
                 self::assertSame($first, $repo->$method($argument, 2));
                 self::assertSame(1, $this->lastQuery()->getLimit());
                 self::assertSame(2, $this->lastQuery()->getOffset());
-                self::assertSame(['crdate'=>'DESC'], $this->lastQuery()->getOrderings());
+                self::assertSame(['crdate' => 'DESC'], $this->lastQuery()->getOrderings());
             }
         }
         self::assertIsArray($this->repository(UserfieldRepository::class)->findAll());
@@ -290,10 +291,14 @@ final class RepositoryModernizationTest extends TestCase
         $prefix = 'Mittwald\\Typo3Forum\\Domain\\Repository\\';
         $container = new ContainerBuilder();
         foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/Classes/Domain/Repository')) as $file) {
-            if ($file->getExtension() !== 'php') { continue; }
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
             $relative = substr($file->getPathname(), strlen(dirname(__DIR__, 2) . '/Classes/Domain/Repository/'));
             $class = $prefix . str_replace(['/', '.php'], ['\\', ''], $relative);
-            if ((new \ReflectionClass($class))->isAbstract()) { continue; }
+            if ((new \ReflectionClass($class))->isAbstract()) {
+                continue;
+            }
             $config = array_replace($services['_defaults'], $services[$prefix], $services[$class] ?? []);
             self::assertTrue($config['autowire'], $class);
             self::assertTrue($config['public'], $class);
@@ -303,10 +308,14 @@ final class RepositoryModernizationTest extends TestCase
             }
             $container->setDefinition($class, $definition);
             foreach ((new \ReflectionClass($class))->getMethods() as $method) {
-                if (!$method->isConstructor() && !str_starts_with($method->name, 'inject')) { continue; }
+                if (!$method->isConstructor() && !str_starts_with($method->name, 'inject')) {
+                    continue;
+                }
                 foreach ($method->getParameters() as $parameter) {
                     $type = $parameter->getType();
-                    if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) { continue; }
+                    if (!$type instanceof \ReflectionNamedType || $type->isBuiltin()) {
+                        continue;
+                    }
                     $dependency = $type->getName();
                     if (!str_starts_with($dependency, $prefix)) {
                         $container->setDefinition($dependency, (new Definition($dependency))->setSynthetic(true)->setPublic(true));
@@ -316,7 +325,9 @@ final class RepositoryModernizationTest extends TestCase
         }
         (new AutowireInjectMethodsPass())->process($container);
         foreach ($container->getDefinitions() as $class => $definition) {
-            if (!str_starts_with($class, $prefix)) { continue; }
+            if (!str_starts_with($class, $prefix)) {
+                continue;
+            }
             $calls = array_column($definition->getMethodCalls(), 0);
             self::assertContains('injectPersistenceManager', $calls, $class);
             if (is_subclass_of($class, AbstractRepository::class)) {

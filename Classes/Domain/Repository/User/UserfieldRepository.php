@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\User;
 
 /*                                                                    - *
@@ -52,7 +53,6 @@ class UserfieldRepository extends AbstractRepository
 
         $this->objectType = AbstractUserfield::class;
     }
-
 
     /*
      * REPOSITORY METHODS

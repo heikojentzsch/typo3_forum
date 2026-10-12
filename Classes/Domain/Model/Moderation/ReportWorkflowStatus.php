@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Moderation;
 
 /*                                                                    - *
@@ -33,7 +34,6 @@ use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
  */
 class ReportWorkflowStatus extends AbstractValueObject
 {
-
     /**
      * The name.
      */

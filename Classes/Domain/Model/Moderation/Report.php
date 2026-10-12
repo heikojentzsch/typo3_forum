@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Moderation;
 
 /*                                                                    - *
@@ -42,7 +43,6 @@ use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
  */
 class Report extends AbstractEntity
 {
-
     /**
      * The frontend user that created this post.
      * @var \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser

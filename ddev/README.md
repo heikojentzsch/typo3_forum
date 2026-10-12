@@ -43,7 +43,7 @@ are:
 anything. It verifies TYPO3 14.3, the Development context, database target,
 local Composer package, managed records and relationships, TypoScript, site
 routing, users, ACLs, FAL, Mailpit, backend/login endpoints, forum and topic
-rendering, the BBCode preview contract and a published CSS or JavaScript asset.
+rendering, the sanitized HTML preview contract and a published CSS or JavaScript asset.
 
 ## Provisioned fixture
 
@@ -115,10 +115,13 @@ resumes it, runs setup again, and verifies stable UIDs/passwords plus preservati
 of an unmanaged page and developer-edited sample content. It deliberately
 refuses a nonempty database and never resets one.
 
-A DDEV executable is installed, but the Docker client and daemon were unavailable
-in the implementation environment. Bash syntax, command help, the missing-Docker
-failure path, Composer JSON syntax, PHP parsing, LF/final-newline rules and
-`git diff --check` were run. Container-based Composer validation and CI, the
-fresh/repeat DDEV bootstrap and real HTTP acceptance were **not executed**. Run
-the smoke harness in a disposable checkout before treating runtime acceptance
-as complete.
+The current v14 cleanup was checked in the running DDEV fixture with Composer
+QA and authenticated HTTP/browser checks. This does not prove the separate
+empty-project/interruption bootstrap harness: run that harness in a disposable
+checkout before accepting fresh/repeat installation behavior for a release.
+
+From `Resources/Private/Editor` inside the web container, `node site-check.mjs`
+checks the real editor and quote routes without posting content.
+`node security-check.mjs` checks subscription confirmation and CSRF rejection,
+temporarily toggles the fixture member's subscription and restores it. Use the
+managed local fixture only; these are not production acceptance commands.

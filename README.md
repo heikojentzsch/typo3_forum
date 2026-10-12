@@ -1,550 +1,261 @@
-# TYPO3 Forum
+# TYPO3 Forum — v14
 
-`typo3_forum` is a frontend discussion board extension for TYPO3. It was originally developed by Mittwald CM Service and is currently maintained by Agentur Pottkinder.
+Frontend forum extension for TYPO3. This README describes the `v14` branch of
+[heikojentzsch/typo3_forum](https://github.com/heikojentzsch/typo3_forum/tree/v14).
 
-The extension provides nine frontend plugins:
+## Contents
 
-- **Dashboard** – personal data, subscriptions, posts and notifications.
-- **Forum** – forums, subforums, topics and posts.
-- **Forum Statistics Box** – member, post and topic statistics.
-- **Moderation: Manage reports** – moderation workflow for reported content.
-- **Post List** – post listings including rendered previews.
-- **Tag List** – topic tagging and tag-based navigation.
-- **Topic List** – latest, popular and question-based topic listings.
-- **User List** – user listings including helpful and currently online users.
-- **User Profile** – user profiles, user fields, rank and activity.
+1. [Scope of this branch](#scope)
+2. [Technical requirements and local testing](#requirements)
+3. [Installation](#installation)
+4. [Migration](#migration)
+5. [Changes from v12 to v14](#changes)
+6. [Historical README information](#history)
 
-## TYPO3 v14 migration
+<a id="scope"></a>
+## 1. Scope of this branch
 
-The `v14` branch is an active, **pure TYPO3 v14 migration**. It intentionally does not provide compatibility layers for TYPO3 v12 or v13.
+`v14` targets TYPO3 14.3 and contains no v12/v13 runtime compatibility layer.
+The branch modernizes the extension, provides an explicit existing-data
+migration, and replaces the BBCode editor with TinyMCE and Unicode emoji.
 
-### Target platform
+The nine frontend content types are Forum, User Profile, Moderation Reports,
+User List, Dashboard, Tag List, Post List, Topic List and Statistics Box.
+Their identifiers are `typo3forum_forum`, `typo3forum_userprofile`,
+`typo3forum_moderationreports`, `typo3forum_userlist`, `typo3forum_dashboard`,
+`typo3forum_taglist`, `typo3forum_postlist`, `typo3forum_topiclist` and
+`typo3forum_statsbox`.
 
-- PHP `^8.2`
-- TYPO3 CMS `^14.3`
-- PHPUnit `^11.5`
-- MySQL/MariaDB: `utf8mb4` for forum/user text columns and database connections
-- Extension key: `typo3_forum`
+Repository checks and a synthetic DDEV installation are not production release
+approval. The [release checklist](Documentation/Release/Index.rst) records the
+remaining installation, migration, mobile-device and restore acceptance.
+See also the [security review](Documentation/Security/Index.rst).
 
-The Composer requirements and `ext_emconf.php` are aligned to TYPO3 14.3 and PHP 8.2+.
+<a id="requirements"></a>
+## 2. Technical requirements and local testing
 
-## Editors, emoji and HTML migration
-
-The v14 frontend uses **TinyMCE**, self-hosted under its GPL license, without
-the optional "Powered by Tiny" branding. There is no editor selector or editor
-configuration to maintain. A failed editor load keeps the original text field
-available for editing and submission.
-
-The editor uses a server-sanitized HTML vocabulary and real Unicode
-emoji. Basic formatting, lists, links, quotations and code are supported. The
-emoji dropdown offers German/English search, categories and skin-tone variants
-from Emoji 17.0 on desktop and mobile. Its catalog is self-hosted and loads on
-demand; the device's emoji keyboard and pasted Unicode also remain supported.
-Quotes are framed and link to the original post when a post reference exists.
-New links receive HTTPS automatically when no protocol is entered and always
-open in a new tab/window; the target selection is hidden.
-
-The existing migration check/plan/apply/verify workflow now converts BBCode into
-separate nullable HTML fields for posts, moderation comments and signatures.
-Original source text remains unchanged during migration. Unknown/custom
-formatting, group restrictions, unsupported URLs and custom smileys require
-review. MySQL/MariaDB `utf8mb3` connections or textual columns block migration
-and rich-text writes. Character-set conversion is an administrator operation;
-the extension does not alter database collations automatically.
-
-Apply additive schema changes, satisfy `utf8mb4`, regenerate and review the
-migration plan, run the dry-run, apply with its checksum and verify. Existing
-site-specific Fluid/TypoScript overrides must adopt the new editor field and
-HTML preview semantics. See [editor setup, migration and testing](Documentation/Editors/Index.rst)
-and the [migration runbook](Documentation/Migration/Index.rst).
-
-Editor build sources and the npm lockfile are in `Resources/Private/Editor`;
-generated runtime assets and license notices are in `Resources/Public/Editor`.
-Node.js is only needed to rebuild/test assets, not to run the forum. PHP tests
-cover conversion and migration; browser tests cover editing and loading
-failure on desktop and mobile viewports. Real iOS/Android device acceptance and
-production migration remain deployment responsibilities.
-
-## Migration status
-
-### Completed
-
-- [x] Modernize Composer QA commands and adopt PHPStan 2 at level 6.
-- [x] Replace authoritative GitLab CI and remove Travis.
-- [x] Add deterministic release packaging and gated GitLab-to-GitHub publication.
-- [x] Add minimal public GitHub verification.
-- [x] Rebuild the minimal DDEV environment for TYPO3 14.3 / PHP 8.4.
-
-- [x] Set TYPO3 v14 / PHP 8.2 platform requirements.
-- [x] Make the extension bootable on TYPO3 v14.
-- [x] Replace `static-info-tables` country handling with the TYPO3 Core Country API.
-- [x] Migrate plugins from legacy `list_type` usage to dedicated content types (`CType`).
-- [x] Migrate Extbase controller validation annotations to PHP attributes.
-- [x] Migrate Extbase model annotations to PHP attributes.
-- [x] Remove legacy TSFE usage from frontend components.
-- [x] Remove obsolete controller-context dependencies.
-- [x] Replace legacy static CObject/ViewHelper rendering with TYPO3 v14 rendering services.
-- [x] Migrate quote rendering from removed `StandaloneView` usage to `ViewFactoryInterface` / `ViewFactoryData`.
-- [x] Remove obsolete text parser legacy code.
-- [x] Replace removed / legacy Extbase repository APIs with TYPO3 v14-compatible repository calls.
-- [x] Fix invalid repository calls and modernize repository query handling.
-- [x] Modernize repository persistence/query settings while preserving storage-page behavior.
-- [x] Modernize the unit and repository test infrastructure for PHPUnit 11.
-- [x] Modernize the AJAX preview (now accepts sanitized HTML):
-  - keep the existing `typeNum = 43568275` request contract,
-  - replace direct `Extbase\Core\Bootstrap->run` usage with `EXTBASEPLUGIN`,
-  - keep the existing `tx_typo3forum_ajax[text]` request namespace,
-  - return a PSR-7 response from `AjaxController::previewAction()`.
-- [x] Resolve identified TYPO3 v14 P0 compatibility issues, including DBAL API usage, CLI TypoScript loading, upgrade-wizard APIs and PSR-7 download responses.
-- [x] Resolve identified P1 runtime/code issues, including controller responses, redirects, attachment handling, nullability, DI and subscriber notification behavior.
-- [x] Resolve identified P2 legacy-code issues, including validators, unread-topic SQL, service usage and dead utilities.
-- [x] Remove confirmed dead code and obsolete assets, including old SCEditor files, obsolete CSH files/templates and unused dependencies.
-- [x] Complete the TYPO3 14.3 Fluid/rendering graph audit and implement the demonstrated rendering compatibility fixes.
-- [x] Complete the broader repository-wide TYPO3 v14 legacy/deprecation scan and targeted cleanup.
-- [x] Remove the obsolete custom controller context (`CONTEXT_WEB`, `CONTEXT_AJAX`, `CONTEXT_CLI`, `$context`, `setContext()`).
-- [x] Remove obsolete Signal/Slot remnants while retaining active PSR-14 event behavior.
-- [x] Replace invalid temporary-array-reference patterns such as `array_shift(explode(...))`.
-- [x] Migrate `IfSubscribedViewHelper` from repository service-location to constructor DI.
-- [x] Review Extbase entity service-locator fallbacks and retain those still required for hydration/manual construction.
-- [x] Review the quote parser's internal TypoScript conversion dependency and retain it where no semantically equivalent public TYPO3 v14 API exists.
-- [x] Fix broken backend TCA icon references.
-- [x] Add explicit handling for installations without a default FAL storage.
-- [x] Add a verified installation-migration path with standalone preflight, validated plans, four CLI commands, a native TYPO3 v14 wizard, journaled/repeatable writes and integrity verification.
-- [x] Add configurable content for forum subscription notification emails, with global defaults, hierarchical forum overrides, safe full-text rendering and independent forum/topic/unsubscribe links.
-
-### Deliberate TYPO3 v14 decisions
-
-- `TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy` is **intentionally retained**. TYPO3 v14.3 still contains and uses it; replacing it belongs to a later TYPO3 v15 migration, not to this branch.
-- The preview retains the existing frontend `PAGE` / `typeNum` endpoint and argument name. Its input is now HTML rather than BBCode.
-- Repository query property names use Extbase **domain property names**, not raw database column names, except where deliberately using QueryBuilder / SQL.
-- TYPO3 v14-specific APIs are preferred over backwards-compatibility shims.
-- Refactors and unrelated latent bug fixes are kept separate from migration work whenever possible.
-- `clearCachePostProc` was reviewed against TYPO3 14.3 and is **intentionally retained**. TYPO3 v14 still invokes this hook and no semantically equivalent migration is required.
-- `ConfigurableEntityTrait` and `FrontendUser` retain selected `GeneralUtility::makeInstance()` fallbacks because Extbase hydration can instantiate entities without their constructors and later call `initializeObject()`. Removing these fallbacks would change currently supported construction paths.
-- Legacy parser classes/definitions remain available for migration inspection, but the default rendering path uses the safe converter for legacy text and the HTML sanitizer for migrated content.
-
-## Completed Fluid / frontend-rendering audit
-
-The audit covered all **65 pre-audit Fluid files** (33 templates, 31 partials, one layout), all **24 custom ViewHelpers**, every registered plugin/action, controller view assignments, TypoScript view paths, manual quote views, mail rendering, AJAX preview, forms, links, pagination and local resource references.
-
-The shipped graph now contains **59 Fluid files**: 28 templates, 30 partials and one layout. The missing `Report/NewUserReport` template was added. Seven proven dead files were removed: the backend `Update/Form` scaffold, `User/New`, `User/Edit`, `User/ListOnlineUsers`, `Post/Preview`, `Default/Error` and its exclusive `Exception` partial. All public custom ViewHelpers were retained.
-
-Implemented fixes include:
-
-- current Fluid condition, argument and variable-provider APIs;
-- safe pagination variable scopes;
-- avatar dimensions/resource URLs;
-- escaped user/rootline links using the correct plugin targets;
-- core textarea/select rendering from the custom form ViewHelpers;
-- correct Extbase field names, selections and form-token registration;
-- replacement of markItUp in shipped forms by TinyMCE fields, with the existing preview endpoint now accepting HTML;
-- missing user-report rendering;
-- type-specific moderation forms;
-- tag validation feedback;
-- broken profile/tag/subscription/pagination links;
-- quote ViewFactory settings and configured template paths while preserving intentionally parsed HTML;
-- PSR-7 upload objects through validation and FAL;
-- TYPO3 v14 storage repository and duplication enum usage;
-- stale frontend/report resource paths.
-
-The earlier rendering audit did not redesign the frontend or upgrade Bootstrap.
-The subsequent editor replacement is described above. Mail subjects/bodies use
-language strings and mailing services, not separate Fluid mail templates.
-
-This completes the repository-level Fluid audit, **not real-site acceptance testing**.
-
-## Configurable subscription notification emails
-
-The two subscription notification types (new topic in a subscribed forum and
-new reply in a subscribed topic) use five extension settings as global
-fallbacks:
-
-| Key | Default |
+| Component | Requirement |
 | --- | --- |
-| `notifications.includeForumNameInSubject` | `0` |
-| `notifications.includePostText` | `0` |
-| `notifications.includeForumLink` | `1` |
-| `notifications.includeTopicLink` | `1` |
-| `notifications.includeUnsubscribeLink` | `1` |
-
-Each forum can override every value independently with **Inherit** (`0`),
-**Enabled** (`1`) or **Disabled** (`2`) in its **Email notifications** section.
-Resolution starts at the forum containing the content; the nearest explicit
-value from that forum or its parents wins, followed by the global fallback.
-Existing forums default to **Inherit** after the additive schema update. A
-root-level **Inherit** therefore uses the global value. Invalid values and
-parent cycles fail diagnostically instead of silently selecting defaults.
-
-The full-text switch includes the complete triggering reply or, for a new
-topic, its initial post. It deliberately defaults to off because protected
-content then leaves the website and remains in recipient mailboxes. Content is
-HTML-escaped and rendered as readable text; frontend quote/BBCode parsers are
-not run and no remote resources or attachments are fetched.
-
-For parent-forum subscriptions, configuration, subject and navigation links
-use the actual content forum/topic. The subscription object does not override
-the content forum's settings; it identifies only the unsubscribe target. Thus
-a mail may use child forum `7` and topic `14548` for content and links while
-correctly using parent subscription `1` for unsubscribe. Hiding the unsubscribe block
-does not end any subscription. Link switches govern generated navigation only;
-author-written URLs in an enabled full-text block are not censored.
-
-Custom language overrides can use the new structural block markers while all
-established value markers remain supported. Legacy overrides receive plain
-forum/topic names when generated links are disabled and lose the entire line
-containing a disabled unsubscribe marker. Arbitrary hard-coded URLs in custom
-HTML cannot be controlled by these semantic switches. See the
-[notification configuration guide](Documentation/Notifications/Index.rst) for
-the marker contract, parent-subscription example and synthetic output.
-
-## Completed TYPO3 v14 legacy/deprecation scan
-
-A repository-wide follow-up scan was performed after the Fluid migration.
-
-The scan covered:
-
-- removed and deprecated TYPO3 APIs;
-- Extbase controller patterns;
-- service-locator usage;
-- DBAL patterns;
-- frontend/backend globals;
-- obsolete Signal/Slot remnants;
-- PHP temporary-reference patterns;
-- backend resource references;
-- FAL storage assumptions;
-- custom ViewHelper dependency handling;
-- intentionally retained internal TYPO3 dependencies.
-
-### Controller context
-
-The old custom controller context layer was fully removed:
-
-- `CONTEXT_WEB`
-- `CONTEXT_AJAX`
-- `CONTEXT_CLI`
-- `$context`
-- `setContext()`
-
-No production callers or configuration references remained. HTML redirects continue to use Extbase's redirect behavior while non-HTML requests preserve their existing rendered-response fallback.
-
-### Signal/Slot remnants
-
-Obsolete commented Signal/Slot dispatcher calls and already-completed migration TODOs were removed.
-
-Active PSR-14 dispatches remain unchanged.
-
-One separate `ReportController` TODO remains intentionally because the corresponding event dispatch has **not** yet been implemented. Adding a new application event would be a behavioral change and was outside the cleanup scope.
-
-### PHP temporary-array patterns
-
-Invalid or undesirable patterns such as:
-
-```php
-array_shift(explode(...));
-array_pop(explode(...));
-```
-
-were replaced with local arrays while preserving existing first-/last-element semantics.
-
-`Report::getFirstComment()` was similarly changed so that reading the first comment does not mutate the underlying `ObjectStorage`.
-
-### ViewHelper dependency injection
-
-`IfSubscribedViewHelper` now receives `FrontendUserRepository` through constructor injection.
-
-The previous `GeneralUtility::makeInstance()` repository lookup and an unused `ForumRepository` dependency were removed.
-
-Parsed and compiled Fluid rendering paths are covered by tests.
-
-### Entity dependency fallbacks
-
-Service-locator-style fallbacks in domain entities were reviewed but **not blindly removed**.
-
-Extbase's DataMapper can instantiate persisted entities without running their constructors and invoke `initializeObject()` afterwards. `FrontendUser` therefore still requires its `RankRepository` fallback when no dependency has already been assigned.
-
-`ConfigurableEntityTrait` also keeps its lazy `ConfigurationBuilder` fallback. The trait is used by `FrontendUser`, `Topic` and `Attachment`, and not every direct/manual construction path guarantees that injected settings have already been supplied.
-
-`SettingsHydrator` currently has no repository consumer or registration that guarantees hydration for every entity. Any redesign of these paths belongs in a separate architecture task.
-
-### Quote parser TypoScript configuration
-
-`QuoteParserService` still uses:
-
-```php
-TypoScriptService::convertTypoScriptArrayToPlainArray()
-```
-
-after explicit review.
-
-The following TYPO3 14.3 alternatives were examined and were not equivalent:
-
-- `FrontendTypoScript::getSetupArray()` provides the source setup but retains dotted TypoScript-array representation.
-- `FrontendTypoScript::getFlatSettings()` has different source and flattening semantics.
-- Extbase `ConfigurationManagerInterface` is itself internal and depends on Extbase request/plugin state.
-- Frontend TypoScript AST accessors are internal.
-- `ConfigurationBuilder::getSettings()` does not perform the required plain-array conversion.
-
-The current converter preserves nested values including scalar-plus-child `_typoScriptNodeValue` semantics. It therefore remains as a consciously accepted internal TYPO3 v14 dependency rather than being replaced with another internal API or a behaviorally different custom implementation.
-
-### Backend resources
-
-The two previously missing TCA icon references were repaired:
-
-- statistics summary records use TYPO3 Core `content-widget-chart.svg`;
-- notification records use TYPO3 Core `content-message.svg`.
-
-The backend configuration resource scan now resolves all **17 literal image references**.
-
-### Attachment storage
-
-`AttachmentService` now explicitly checks the result of:
-
-```php
-StorageRepository::getDefaultStorage()
-```
-
-before processing a real upload.
-
-If no default FAL storage exists, the service throws a clear `RuntimeException` instead of failing later through a null dereference.
-
-Empty uploads and `UPLOAD_ERR_NO_FILE` continue to work without requiring a configured storage.
-
-## Development and release tooling
-
-**Private GitLab is the authoritative development repository and CI/CD source of truth. GitHub is the public Open Source publication mirror. GitLab CI is authoritative; GitHub Actions provides public verification only.**
-
-### Composer and static analysis
-
-Run `composer install` first. Composer is the canonical local and CI interface:
-
-| Command | Purpose / last local result |
-| --- | --- |
-| `composer validate` | Valid metadata. |
-| `composer php-lint` | 229 PHP files pass syntax checks, including root metadata, application, configuration, tests and build helpers. |
-| `composer test` | 244 tests, 1,891 assertions, one explicitly gated MariaDB test skipped. The suite includes all 32 notification-option combinations for both events and hierarchical resolver coverage. |
-| `composer phpstan` | PHPStan 2.2.14, level 6, zero findings. |
-| `composer typoscript-lint` | Four real files scanned; exit 0 with 12 existing warnings. |
-| `composer cs-check` | PHP-CS-Fixer 3.95.25, non-mutating dry run; exit 8, findings in 139 of 218 files. New notification classes and focused tests pass the formatter rules. |
-| `composer ci` | Runs all of the above, with style last; currently exits 8 because of style debt. |
-
-All newly added PHP helpers/tests pass the style rules. Existing application files have not been globally reformatted; normalization remains separate work. GitLab reports the style job as advisory only for exit 8. Other style tool/configuration failures and all core QA failures still block the pipeline.
-
-PHPStan uses Composer autoloading, scans `Classes` and `Configuration`, and caches only in `.Build/phpstan`. The broad `.Build` source scan is removed. Tests and build helpers are covered by PHPUnit and syntax checks rather than being included in the production static-analysis scope. No baseline was generated. Collection/repository generics and missing type information were corrected. PHPDoc certainty is disabled for hydrated Extbase values; native types remain checked. Eight line-specific exceptions document the UID-zero virtual entities, retained lazy-loading/hydration paths, existing storage-PID string contract, merged userfield-array contract and intentionally disabled editor cache.
-
-Psalm 4 failed under PHP 8.4 before analysis and had no demonstrated distinct coverage; its dependency/configuration were removed. PHPMD 2.15 ran but predominantly reported historical naming, size and design noise; it was removed rather than suppressing a large report. PHPStan remains the maintained analyzer.
-
-The separately authorized PHPStan follow-up also fixes confirmed defects: mail delivery now calls TYPO3's injected mailer; missing userfield values return an empty array; slug queries use DBAL 4's integer parameter enum; solution-point defaults are applied before casting. Targeted regression tests cover these cases. Existing storage-PID behavior is preserved.
-
-Composer metadata decisions: retain `pottkinder/typo3forum`, `typo3-ter/typo3_forum` replacement, `.Build/vendor`, `.Build/bin`, the TYPO3 installer/alias-loader plugin permissions and supported `.Build/Web` web-dir. All dependencies resolve through Packagist, so the additional composer.typo3.org repository was removed. Prefer dist archives; remove the stale `dev-master` alias and unused `cms-package-dir` extra. As before, this extension does not track a root lock file: each runtime resolves compatible dependencies. Archive reproducibility refers to identical source bytes, not permanently frozen dependency resolution. The verified local install uses TYPO3 14.3.7; Composer audit reports no advisories.
-
-The current notification-feature verification ran on PHP 8.3.6 with TYPO3
-14.3.7. Docker and DDEV were unavailable, so the extension-settings backend UI
-and real Mailpit messages were not exercised. PHPUnit captured generated HTML
-mail through the injected TYPO3 mailer without external delivery; a real
-DDEV/Mailpit check remains installation acceptance, not a completed item.
-
-### CI and publication
-
-`.gitlab-ci.yml` runs core QA and TYPO3 CLI smoke checks on PHP 8.2 and 8.4, with a separate style job, a package stage and publication jobs. Official PHP CLI images are bootstrapped with the needed extensions and checksum-verified Composer 2. Composer downloads are cached by PHP version; vendor directories are not shared between runtimes. Travis and its historical release configuration are removed.
-
-Protected release tags publish internal Composer metadata through `${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/composer` using `CI_JOB_TOKEN`; the project's Package Registry must be enabled. Internal publication does not require GitHub.
-
-Public publication is opt-in and manual in GitLab. Configure protected/masked `GITHUB_TOKEN` (only the chosen public repository; Contents write and Workflows write if mirroring workflow changes), `GITHUB_REPOSITORY` (`owner/repository`) and `PUBLIC_RELEASE_ENABLED=true`. Protect release tags and permit the maintainer identity to push the public `v14` mirror. No credentials belong in repository files.
-
-After QA/package success, a maintainer runs `publish-github`. It checks the artifact checksum, verifies that the tagged commit belongs to `v14`, then atomically pushes `v14` and the exact tag without force. Divergence or existing conflicting tags fail for human resolution. It creates a draft GitHub Release with the ZIP/checksum, then publishes it (marking prerelease versions accordingly). A failure after draft creation leaves a draft for inspection; an existing release is never silently overwritten. Only `v14` and release tags are mirrored, not private development branches. No public release was executed during this task.
-
-`.github/workflows/ci.yml` runs on pull requests and pushes to `v14`: PHP 8.4 installation, Composer validation, syntax, PHPUnit, PHPStan and TypoScript lint. It has read-only permissions and no packaging/publication role. GitLab/GitHub YAML and shell syntax were validated locally; no private GitLab execution or GitHub Actions success is claimed here. PHP 8.2 is configured in CI, not locally executed.
-
-### Release archive
-
-```bash
-./build-release.sh 14.0.0
-```
-
-Requires Bash, PHP 8.2+ and ext-zip, without Composer dependencies. Outputs `dist/typo3_forum_14.0.0.zip` and `.zip.sha256`. The builder validates semantic versions, stages in a unique temporary directory, sorts names, fixes ZIP timestamps/permissions and uses stored entries to avoid compression-version differences. Temporary files are cleaned up. It does not modify tracked sources, create tags/branches, push or call publication APIs.
-
-The allowlist contains `Classes`, `Configuration`, `Resources`, `Documentation`, Composer metadata, extension metadata/configuration, SQL schemas, the extension icon, license and README. Development roots such as `.git`, `.github`, `.Build`, `Tests`, `Build` and `ddev`, plus CI/analyzer configs, are excluded. Symlinked runtime inputs are rejected. Tests verify exact contents, checksums, reproducibility despite source mtime changes, invalid versions and missing metadata. A real `14.0.0-test` build also succeeded without changing the tracked source diff.
-
-The Git tag supplies the release version. `ext_emconf.php` remains fallback extension metadata (`14.0.0-dev` on this development branch): update it deliberately in a reviewed release-preparation commit before tagging. The builder never rewrites it. Keep both separately owned release blockers open until acceptance is completed.
-
-### DDEV
-
-The TYPO3 `^14.3`, PHP 8.4 and MariaDB 10.11 development environment now has one non-interactive entry point from the repository root:
+| TYPO3 | Composer `^14.3` (14.x); extension key `typo3_forum` |
+| PHP | Composer `^8.2`, plus the extensions required by TYPO3 and Composer |
+| Database | TYPO3-supported database; MySQL/MariaDB forum/user text columns and connections must use `utf8mb4` |
+| Upload inspection | PHP Fileinfo; configure the attachment MIME/size allowlist and FAL storage |
+| Development fixture | Docker and DDEV with PHP 8.4 and MariaDB 10.11 |
+| Editor build/tests | Node.js/npm; CI uses Node.js 24 and Playwright Chromium |
+| Release packaging | Bash, PHP 8.2+ and ext-zip |
+
+The extension's declared PHP minimum does not override a higher minimum of
+other packages in the complete site's Composer dependency set.
+
+### Local DDEV setup
+
+From the repository root:
 
 ```bash
 ./Build/setup-ddev.sh
+./Build/setup-ddev.sh --check
+./Build/setup-ddev.sh --show-credentials
 ```
 
-Docker and DDEV are the only host prerequisites. The command starts DDEV, installs Composer dependencies in the container, verifies that the extension resolves to the mounted working checkout, initializes TYPO3 through the DDEV TCP database connection and provisions a usable development forum. `ddev setup-forum` calls the same implementation from the `ddev/` directory.
+The setup starts DDEV, installs the local checkout, provisions synthetic data,
+configures routing, ACLs, local FAL and Mailpit, and checks HTTP/login endpoints.
+Credentials and state live in ignored files outside the web root. Repeated runs
+preserve existing fixture identities and edited data. This is a **development
+fixture**, never a migration tool for an existing installation.
+Details: [DDEV guide](ddev/README.md).
 
-The deterministic fixture provides the current plugin content types, page and storage folders, generated page-ID TypoScript, site routing, a forum/category with sample topic and post, synthetic member/moderator accounts, scoped ACLs, default local FAL storage and Mailpit delivery. Credentials are generated once outside the webroot in an ignored file and are available with `./Build/setup-ddev.sh --show-credentials`. `./Build/setup-ddev.sh --check` performs non-mutating database, configuration and HTTP verification.
+### Checks and code style
 
-Managed records and completed phases are tracked with stable logical identifiers. Repeat and interrupted runs preserve UIDs, credentials, edited content, uploads and all unrelated records. The bootstrap refuses production context, an unexpected database target, unknown identity collisions and an unrecognized nonempty database. It never resets the database or the Git workspace. A recognized incomplete DDEV socket configuration is backed up and repaired without rerunning force setup over existing TYPO3 tables.
+For a standalone checkout with PHP/Composer available:
 
-The provisioner is a development-only extension required solely by `ddev/composer.json`; DDEV configuration, fixture code, generated settings, state and credentials remain outside the production release allowlist. See [the DDEV guide](ddev/README.md) for the fixture model, recovery behavior and isolated smoke harness.
+```bash
+composer install
+composer ci
+composer audit
+```
 
-Docker is unavailable in the implementation environment, so fresh/repeat container startup and real frontend/backend/preview requests were **not executed**. That verification gap remains explicit and the included isolated DDEV smoke harness must run before local runtime acceptance is claimed.
+With the DDEV setup, run the commands inside its web container:
 
-Implementation references: [GitLab Composer publication](https://docs.gitlab.com/user/packages/composer_repository/), [TYPO3 14 DDEV setup](https://docs.typo3.org/m/typo3/tutorial-getting-started/14.3/en-us/Installation/Install.html), [PHPStan setup](https://phpstan.org/user-guide/getting-started).
+```bash
+cd ddev
+ddev exec --dir /var/www/html/packages/typo3_forum composer ci
+```
 
-## Existing-installation migration
+`composer ci` runs metadata validation, PHP syntax, PHPUnit, PHPStan,
+TypoScript lint and the non-mutating PHP style check. PHP uses the checked-in
+PSR-12-based fixer configuration. Project-owned editor/frontend sources use
+Prettier and EditorConfig; distributed third-party sources and generated bundles
+are not manually reformatted.
 
-The migration tooling is implemented in this branch. Existing installations can contain TYPO3 Forum plugins stored as legacy `list_type` records. The `v14` branch uses dedicated content types:
+```bash
+cd Resources/Private/Editor
+npm ci
+npm run format:check
+npm run build
+npx playwright install --with-deps chromium
+npm test
+npm audit
+```
 
-- `typo3forum_forum`
-- `typo3forum_userprofile`
-- `typo3forum_moderationreports`
-- `typo3forum_userlist`
-- `typo3forum_dashboard`
-- `typo3forum_taglist`
-- `typo3forum_postlist`
-- `typo3forum_topiclist`
-- `typo3forum_statsbox`
+`node site-check.mjs`, run in the DDEV web container from this directory, checks
+the authenticated real topic form, emoji popup, quote rendering and original-post
+route without submitting a post. Browser tests cover desktop/mobile viewports;
+they do not replace acceptance on real iOS/Android devices.
 
-The release package includes a TYPO3-independent PHP 8.1+ read-only preflight under `Resources/Private/Migration/`, followed on TYPO3 v14 by `forum:migration:check`, `forum:migration:plan`, `forum:migration:apply` and `forum:migration:verify`. The registered native wizard uses the same safety path. Nine standard mappings and the historically proven pi1 `Post->list` and `Topic->list` cases are automated; unknown pi1 semantics and non-equivalent permissions block instead of guessing. In the standard mapping the identifier stays equal, but moves from `CType=list` / `list_type=<identifier>` to `CType=<identifier>` / empty `list_type`.
+### CI and release tooling
 
-Readiness includes both content and backend-permission operations. Plain v12+ grants are converted to the three-part v14 form (`tt_content:CType:<identifier>`); obsolete ALLOW/DENY suffixes and aggregate pi1/widget rights block for Core normalization and access review. A default FAL storage or unrelated TYPO3 records alone are not legacy-forum evidence.
+The repository contains authoritative GitLab QA/package/publication jobs and a
+read-only GitHub verification workflow. Their configuration is not evidence that
+remote CI passed for a particular commit. GitLab publication is manually gated;
+local commits/pushes do not publish a release.
 
-Preflight and plan format 2.0 retain a versioned source baseline separately from the target snapshot captured immediately before apply. Older v1 artifacts must be regenerated and are not silently re-approved. Apply owns a tokenized migration lock through final verification, locks and revalidates each MySQL/MariaDB row before updating, and commits the journal with the record. Verification rejects blocked/indeterminate/error plans, requires journal evidence for every planned write, rechecks current scope, and distinguishes `NO_MIGRATION_REQUIRED` from a completed `SUCCESS`. Target-only checks disclose their reduced assurance.
+```bash
+./build-release.sh 14.0.0-test
+```
 
-The source information must be inventoried before the upgrade and `list_type`/`pi_flexform` retained until conversion. Additive TYPO3 schema updates may run first; destructive source cleanup must wait until verification. No v13-compatible forum runtime is required, but this does **not** by itself validate deployment of a complete website directly from TYPO3 12 to 14: both intervening Core change sets and every third-party/project integration still require review and real installation testing.
+The deterministic allowlisted package includes production PHP, templates,
+configuration, migration tools, documentation, TinyMCE assets and licenses. It
+excludes DDEV, credentials, tests, development dependencies and `node_modules`.
+See [development and publication](Documentation/Development/Index.rst).
 
-See [the complete migration runbook](Documentation/Migration/Index.rst) for commands, exit codes, approval/checksum handling, backups, permissions, recovery, test status and production acceptance.
+<a id="installation"></a>
+## 3. Installation
 
-### Real upgrade and integration testing – release blocker
+For a **new installation**, add this repository to the site's Composer
+repositories (if it is not already provided by your package registry) and require
+`pottkinder/typo3forum:dev-v14`. The package name and extension key differ.
+Run TYPO3's extension setup and review the database schema changes.
 
-Static checks, unit tests and TYPO3 CLI boot tests do not prove that a real upgraded installation works end-to-end.
+1. Include the extension's static TypoScript and provide the site's Bootstrap
+   layout/styles required by the shipped templates.
+2. Create storage folders for forum records and frontend users/groups.
+3. Set `plugin.tx_typo3forum.persistence.storagePid`, the relevant `settings.pids`
+   and the forum record's read/write/moderation ACLs.
+4. Create the dedicated **Forum** content type (`typo3forum_forum`), not a legacy
+   `CType=list` plugin with switchable actions.
+5. Configure frontend login and optional profile, reports, lists and statistics
+   pages. Import `Configuration/Routing/Routing.yaml` into the site's route enhancers.
+6. Configure FAL storage, allowed upload types/sizes and mail delivery. For
+   access-restricted attachments, storage must also prevent direct public access;
+   the controller's ACL check cannot protect an independently public file URL.
+7. Clear caches and verify access as guest, member and moderator.
 
-Before releasing the v14 branch, test at least:
+Guides: [installation](Documentation/BasicInstallation/Index.rst),
+[users/groups](Documentation/UserAndGroups/Index.rst),
+[moderation reports](Documentation/Report/Index.rst),
+[notification settings](Documentation/Notifications/Index.rst).
 
-- upgrade of an existing v12 installation and database;
-- execution and repeatability of the `list_type` -> `CType` data migration;
-- frontend forum rendering;
-- forum/topic/post CRUD flows;
-- HTML preview and TinyMCE editing in the deployed frontend;
-- quote rendering with real TypoScript overrides;
-- attachments upload/download;
-- FAL storage configuration and permissions;
-- user profiles and user fields;
-- subscriptions and notifications;
-- moderation/report workflows;
-- moderation authorization;
-- scheduled commands;
-- cache invalidation;
-- multi-site / TypoScript configuration;
-- mail delivery paths;
-- configured routes and page IDs;
-- backend editing of the dedicated content types.
+<a id="migration"></a>
+## 4. Migration
 
-This is a **release blocker**, handled separately and outside this tooling workstream.
+For an existing installation, follow the [migration runbook](Documentation/Migration/Index.rst).
+Do not run the DDEV fixture provisioner against its database.
 
-### 3. Final cleanup
+1. Back up the database/files and rehearse restoration. Capture the standalone
+   read-only preflight **before** removing legacy columns or upgrading away the
+   original plugin configuration.
+2. Upgrade the site and apply additive schema changes. Preserve `list_type`,
+   `pi_flexform`, source text and legacy formatting definitions until verification.
+3. Establish `utf8mb4` columns and connections on MySQL/MariaDB. The extension
+   checks this requirement; it does not automatically convert collations.
+4. Run `forum:migration:check` and `forum:migration:plan` with the source preflight.
+5. Resolve blocked/indeterminate findings, review the protected plan and run
+   `forum:migration:apply --dry-run`. Apply requires its exact checksum.
+6. Run `forum:migration:verify`, then the installation-specific acceptance checks.
 
-After compatibility and integration testing:
+The registered TYPO3 upgrade wizard uses the same migration service. Plans are
+versioned and contain sensitive source/target content: store them outside the web
+root with restricted permissions. Regenerate plans after migration-code changes.
 
-- remove newly confirmed dead files/assets;
-- remove obsolete service definitions;
-- re-run reverse-reference scans;
-- review icons and language resources;
-- review `SettingsHydrator` and other currently unreferenced infrastructure;
-- review remaining application TODOs;
-- clean remaining non-functional migration leftovers;
-- perform final package-content and Composer validation.
+The workflow converts known `list_type`/FlexForm and backend permission formats,
+then fills separate HTML fields for posts, signatures and moderation comments.
+Original BBCode fields are preserved by migration. Unknown custom BBCode,
+smileys, restricted definitions and unsupported links block automated conversion.
+A source baseline, row revalidation, locks and journals protect repeat/resume
+operations; do not manually bypass an active migration lock.
 
-### 4. Separate refactors / latent bug fixes
+A real v12-to-v14 upgrade on an anonymized copy, interrupted-run recovery and
+backup restoration remain **open acceptance items**. The extension migration
+alone does not validate a whole site's direct Core upgrade or third-party code.
 
-Architecture improvements and unrelated behavioral fixes should remain separate from the v14 compatibility migration unless they block runtime operation.
+<a id="changes"></a>
+## 5. Changes from v12 to v14
 
-Known follow-up candidates include:
+### TinyMCE, Unicode emoji and quotes
 
-- evaluating whether `SettingsHydrator` is dead or should become part of a deliberate entity-hydration architecture;
-- reconsidering entity service-locator fallbacks only as part of a complete Extbase hydration design;
-- adding the currently pending report PSR-14 event if application behavior requires it;
-- reconsidering the quote-settings conversion when TYPO3 provides an equivalent public API;
-- broader coding-style/line-ending normalization;
-- unrelated application or moderation-policy improvements identified during integration testing.
+- TinyMCE 8 is the sole editor and is bundled locally under GPL. No cloud account
+  is needed; optional “Powered by Tiny” branding is disabled.
+- Bold, italic, underline, strike-through, lists, links, quotes and code blocks
+  use server-sanitized HTML. Custom HTML/scripts are not accepted.
+- The local Emoji 17.0 catalog offers German/English search, categories and skin
+  variants. The compact popup stays within the viewport; only its emoji grid
+  scrolls, including after “Show more”. Appearance depends on device fonts.
+- Quotes have a visible frame. Quotes with a post reference get a localized link
+  to the original post, resolving the correct topic page and anchor at render time.
+- Links entered without a protocol receive HTTPS without a prompt. Targets are
+  fixed to a new tab/window; the server enforces safe `rel` attributes as well.
+- Attachments use a full-width file selector below the label “Anhänge:”.
+- The unused jQuery CDN inclusion is removed; custom templates must declare their own dependencies.
+- markItUp, its old ViewHelper/panels/parser pipeline and bundled GeSHi are removed.
+  Legacy definition records remain available for migration inspection.
 
-## Historical verification notes
+Custom forms must adopt `mmf:form.richTextEditor`; the existing preview endpoint
+(`type=43568275`, `tx_typo3forum_ajax[text]`) now accepts HTML. Old parser service
+configuration and `Format/Quote.html` overrides no longer control rendering.
+See [editor and content migration](Documentation/Editors/Index.rst).
 
-The single current repository verification baseline is the command/result table
-under “Composer and static analysis” above. Counts elsewhere in this section
-describe earlier focused audits and are not the current full-suite result.
+### TYPO3 APIs and content types
 
-For the DDEV bootstrap change, Bash syntax, command help, the missing-Docker
-failure path, Composer JSON syntax, PHP parsing, LF/final-newline rules and
-`git diff --check` were verified locally. A DDEV executable is installed, but
-no Docker client or daemon is available in this environment. The container-based
-`composer validate`, `composer ci`, fresh/repeat provisioning and HTTP checks
-were therefore **not executed** for this change; the tracked isolated smoke
-harness remains the required runtime follow-up.
+Dedicated CTypes replace legacy `list_type` plugins. Controller/model validation
+uses attributes, requests/responses use the current APIs, and removed TSFE,
+controller-context and Signal/Slot paths have been replaced. Repositories use
+current Extbase/DBAL APIs and parameter binding. Country handling uses the Core
+Country API. Fluid rendering, form mapping, pagination and resource URLs have
+been updated for v14.
 
-The read-only public GitHub Actions workflow provides PR verification. Its
-result is reported separately from local QA and does not replace authoritative
-private GitLab CI or real migration acceptance.
+Entity hydration fallbacks, `LazyLoadingProxy` and the active cache hook remain
+where current code still needs them. Unused `SettingsHydrator` has been removed;
+this does not replace the active entity hydration paths.
 
-### Fluid verification
+### Notifications and attachment protection
 
-Fluid verification used the installed TYPO3 14.3.6 / Fluid code.
+Subscription mail has five global content switches with per-forum inheritance:
+forum name in subject and full post text default off; forum, topic and unsubscribe
+links default on. Full post text can expose protected content in a recipient's
+mailbox, so enable it deliberately. See the [notification guide](Documentation/Notifications/Index.rst).
 
-During the Fluid audit:
+Downloads now check read access to the parent post before reading files or changing
+counters. Upload type checks inspect bytes rather than trusting browser MIME
+metadata, and generated storage names use cryptographic randomness.
 
-- `fluid:analyze --help` and `fluid:namespaces` were checked.
-- Since automatic discovery only considers `*.fluid.*`, each of the 59 `.html` files was supplied individually to `fluid:analyze --stdin --json`.
-- **43 files passed** without errors/deprecations.
-- **16 files were blocked** by the local failsafe CLI container because required frontend infrastructure such as frontend TypoScript request state, the `typo3forum_main` cache or `FlexFormTools` was unavailable.
-- JSON-mode exit status alone was not treated as evidence of success.
-- The same `TemplateValidator` and actual Fluid compiler successfully checked **all 59 files** with site/database collaborators isolated.
-- Behavioral tests cover compiled conditions and pagination.
-- `fluid:cache:warmup` was attempted but could not be completed in the failsafe bootstrap because the full frontend/site container was unavailable.
+### Maintenance and verification
 
-These limitations are explicitly integration-test items rather than silently classified as successful checks.
+Composer QA, PHPStan, PHPUnit, browser tests, DDEV bootstrap, migration tooling and
+deterministic release packaging are provided. Dead runtime dependencies and stale
+documentation have been cleaned up. The [security review](Documentation/Security/Index.rst)
+records reviewed boundaries and remaining risks; it is not a penetration-test
+certificate or a guarantee that no vulnerabilities exist.
 
-### TypoScript
+### Security and custom templates
 
-The TypoScript lint currently has four known pre-existing style warnings in unchanged configuration sections around:
+Explicit write actions now require POST and TYPO3 request tokens. Convert custom
+write-action links to Fluid forms with `requestToken="typo3_forum/mutation"`.
+Email unsubscribe links show a confirmation form. Attachment downloads check read
+access, uploads inspect actual MIME/size, and user-report moderation checks rights.
+Restricted attachments need non-public FAL storage; see the security guide.
 
-- common `if` paths;
-- common `fontawesome` paths.
+<a id="history"></a>
+## 6. Historical README information
 
-No migration-related TypoScript syntax error is known.
+The extension originated at Mittwald CM Service and was subsequently maintained
+upstream by Agentur Pottkinder. Older documents and screenshots belong to those
+versions; the current branch's code and guides above are authoritative here.
+Historical upstream support contact: `support@agentur-pottkinder.de`.
 
-### Remaining integration risks
+Migration from `mm_forum` was historically supported from `mm_forum` 1.0 to
+`typo3_forum` 1.1.0. It is separate from this branch's v12-to-v14 migration and is
+not offered as an automated path by the v14 tooling.
 
-Repository-level tests do not yet prove:
-
-- a real v12 database upgrade;
-- `list_type` -> `CType` migration on production data;
-- configured frontend routing/page IDs;
-- real FAL storage permissions;
-- editor behavior on real iOS/Android devices;
-- real frontend TypoScript overrides;
-- moderation authorization and workflows;
-- mail delivery;
-- scheduled task behavior in a configured installation;
-- backend editing against a migrated database.
-
-A successful TYPO3 CLI boot is considered a smoke test only. It does **not** replace frontend or upgraded-installation integration testing.
-
-## Development workflow for the v14 branch
-
-- Keep migration commits narrowly scoped.
-- Do not add TYPO3 v12/v13 compatibility code to `v14`.
-- Preserve existing application behavior unless a TYPO3 v14 incompatibility requires a behavioral change.
-- Keep release blockers explicit.
-- Prefer verified TYPO3 v14 APIs over assumptions based on earlier TYPO3 versions.
-- Do not replace a known internal API with another internal API unless there is a demonstrated compatibility benefit.
-- Reverse-reference-check code and assets before deletion.
-- Preserve existing copyright notices exactly.
-- Keep unrelated refactors and bug fixes out of migration commits.
-- Run the relevant unit/static/boot checks before each completed migration step.
-- Update this README after every completed migration phase so that the repository documents the actual migration state and the next planned task.
-
-## Migration from mm_forum
-
-Migration from `mm_forum` was historically supported only from `mm_forum` 1.0 up to typo3_forum 1.1.0. This historical migration path is separate from the current TYPO3 v12 -> v14 extension migration.
-
-## Contact
-
-This project was originally built by Mittwald and is now maintained by Agentur Pottkinder in Bochum, Germany.
-
-Support: support@agentur-pottkinder.de
+Earlier audit counts and environment limitations are preserved in Git history,
+not repeated as current guarantees. The README before this consolidation is
+available at [commit cc7d5088](https://github.com/heikojentzsch/typo3_forum/blob/cc7d508862709b5adf1df8dde65b877ba292078d/README.md).

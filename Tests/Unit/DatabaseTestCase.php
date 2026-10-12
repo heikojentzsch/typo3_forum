@@ -1,5 +1,6 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
 
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
@@ -25,7 +26,11 @@ abstract class DatabaseTestCase extends TestCase
         $this->pool = $this->createMock(ConnectionPool::class);
         $this->pool->method('getConnectionForTable')->willReturn($this->connection);
         $this->pool->method('getQueryBuilderForTable')->willReturnCallback(
-            fn() => new QueryBuilder($this->connection, new class extends DefaultRestrictionContainer { public function __construct() {} }, null, [])
+            fn () => new QueryBuilder($this->connection, new class () extends DefaultRestrictionContainer {
+                public function __construct()
+                {
+                }
+            }, null, [])
         );
     }
 }
@@ -34,5 +39,6 @@ abstract class DatabaseTestCase extends TestCase
 class IsolatedConnection extends Connection
 {
     protected function ensureDatabaseValueTypes(string $tableName, array &$data, array &$types): void
-    {}
+    {
+    }
 }

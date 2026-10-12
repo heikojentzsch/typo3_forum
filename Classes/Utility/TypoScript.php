@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Utility;
 
 use Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception;

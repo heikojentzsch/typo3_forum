@@ -49,16 +49,16 @@
 						</td>
 						<td class="align-middle">
 							<div class="btn-group">
-								<f:link.action
+								<f:form
 									controller="User"
 									pluginName="Forum"
 									action="subscribe"
-									arguments="{topic: topic, unsubscribe: 1, prioritizeRefererRedirect: 1}"
+									arguments="{topic: topic.uid, unsubscribe: 1, prioritizeRefererRedirect: 1}"
 									pageUid="{settings.pids.Forum}"
-									class="btn btn-secondary text-nowrap"
-								>
+
+								 method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit"	class="btn btn-secondary text-nowrap">
 									<f:translate key="User_ListSubscriptions_Unsubscribe"/>
-								</f:link.action>
+								</button></f:form>
 								<f:link.action
 									controller="Topic"
 									pluginName="Forum"

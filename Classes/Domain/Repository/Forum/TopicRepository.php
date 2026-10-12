@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
 
 /*                                                                    - *
@@ -295,7 +296,10 @@ class TopicRepository extends AbstractRepository
         // scope. Select full rows so Extbase can hydrate the returned Topic entities.
         $queryBuilder->getRestrictions()->removeAll();
         $queryBuilder->select('t.*')->from('tx_typo3forum_domain_model_forum_topic', 't')
-            ->leftJoin('t', 'tx_typo3forum_domain_model_user_readtopic', 'rt',
+            ->leftJoin(
+                't',
+                'tx_typo3forum_domain_model_user_readtopic',
+                'rt',
                 $queryBuilder->expr()->and(
                     $queryBuilder->expr()->eq('rt.uid_foreign', $queryBuilder->quoteIdentifier('t.uid')),
                     $queryBuilder->expr()->eq('rt.uid_local', $queryBuilder->createNamedParameter((int)$user->getUid(), Connection::PARAM_INT))

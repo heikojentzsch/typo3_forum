@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\User;
 
 /*                                                                    - *
@@ -43,7 +44,6 @@ class AvatarViewHelper extends AbstractTagBasedViewHelper
     }
 
     protected $tagName = 'img';
-
 
     /**
      * Avatar of user object

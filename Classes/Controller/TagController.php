@@ -33,7 +33,6 @@ use Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
 use Mittwald\Typo3Forum\Domain\Validator\Forum\TagValidator;
 use Psr\Http\Message\ResponseInterface;
-use TYPO3\CMS\Core\Http\ResponseFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
 use TYPO3\CMS\Extbase\Attribute\Validate;
@@ -131,7 +130,7 @@ class TagController extends AbstractController
 
         $uri = $this->uriBuilder->uriFor('list');
 
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 }

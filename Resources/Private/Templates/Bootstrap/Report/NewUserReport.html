@@ -9,7 +9,7 @@
 	<h2>
 		<f:translate key="Report_NewPostReport_Header"/>
 	</h2>
-	<f:form name="firstComment" object="{firstComment}" controller="Report" action="createUserReport" id="report">
+	<f:form name="firstComment" object="{firstComment}" controller="Report" action="createUserReport" id="report" requestToken="typo3_forum/mutation">
 		<div class="row mt-4">
 			<div class="col-12">
 				<f:render partial="User/InformationRow" arguments="{user: user}" />

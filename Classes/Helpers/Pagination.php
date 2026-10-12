@@ -6,7 +6,7 @@ use TYPO3\CMS\Core\Utility\ArrayUtility;
 
 class Pagination
 {
-    const DEFAULT_CONFIGURATION = [
+    public const DEFAULT_CONFIGURATION = [
         'itemsPerPage' => 10,
         'pageLookAround' => 5,
         'reverseOrder' => false,
@@ -26,7 +26,6 @@ class Pagination
     protected $reverseOrder;
     /** @var bool */
     protected $useEdgeSpacers;
-
 
     /**
      * @param array<string, mixed> $configuration
@@ -50,7 +49,6 @@ class Pagination
 
         return $this;
     }
-
 
     public function getOffset(): int
     {
@@ -89,8 +87,7 @@ class Pagination
             if ($this->getUseEdgeSpacers() && $start > 2) {
                 if ($start === 3) {
                     array_unshift($range, 2);
-                }
-                else {
+                } else {
                     array_unshift($range, 0);
                 }
             }
@@ -102,8 +99,7 @@ class Pagination
             if ($this->getUseEdgeSpacers() && $stop < $maxPage - 1) {
                 if ($stop === $maxPage - 2) {
                     array_push($range, $maxPage - 1);
-                }
-                else {
+                } else {
                     array_push($range, 0);
                 }
             }
@@ -141,7 +137,6 @@ class Pagination
         return $this->objects;
     }
 
-
     public function setCurrentPage(int $value): self
     {
         $value = max(1, min($this->getMaxPage(), $value));
@@ -160,7 +155,6 @@ class Pagination
         return count($this->getObjects());
     }
 
-
     public function setItemsPerPage(int $value): self
     {
         $this->itemsPerPage = $value;
@@ -171,7 +165,6 @@ class Pagination
     {
         return $this->itemsPerPage;
     }
-
 
     public function setPageLookAround(int $value): self
     {
@@ -184,7 +177,6 @@ class Pagination
         return $this->pageLookAround;
     }
 
-
     public function setReverseOrder(bool $value): self
     {
         $this->reverseOrder = $value;
@@ -195,7 +187,6 @@ class Pagination
     {
         return $this->reverseOrder;
     }
-
 
     public function setUseEdgeSpacers(bool $value): self
     {

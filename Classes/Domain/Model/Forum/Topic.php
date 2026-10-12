@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Forum;
 
 /*                                                                    - *
@@ -51,8 +52,6 @@ class Topic extends AbstractEntity implements AccessibleInterface, Subscribeable
 {
     use ConfigurableEntityTrait;
 
-    /**
-     */
     #[Validate(validator: 'NotEmpty')]
     protected string $subject = '';
 

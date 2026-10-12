@@ -36,10 +36,8 @@ use Mittwald\Typo3Forum\Domain\Repository\Moderation\PostReportRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Moderation\ReportRepository;
 use Mittwald\Typo3Forum\Domain\Repository\Moderation\UserReportRepository;
 use Psr\Http\Message\ResponseInterface;
-use TYPO3\CMS\Core\Http\ResponseFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
-use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class ReportController extends AbstractController
@@ -69,6 +67,9 @@ class ReportController extends AbstractController
         #[IgnoreValidation]
         ?ReportComment $firstComment = null
     ): ResponseInterface {
+        if ($this->getCurrentUser()->isAnonymous()) {
+            return $this->responseFactory->createResponse(403);
+        }
         $this->view->assignMultiple([
             'firstComment' => $firstComment,
             'user' => $user,
@@ -84,6 +85,9 @@ class ReportController extends AbstractController
         #[IgnoreValidation]
         ?ReportComment $firstComment = null
     ): ResponseInterface {
+        if ($this->getCurrentUser()->isAnonymous()) {
+            return $this->responseFactory->createResponse(403);
+        }
         $this->authenticationService->assertReadAuthorization($post);
         $this->view->assign('firstComment', $firstComment)->assign('post', $post);
         return $this->htmlResponse();
@@ -96,6 +100,9 @@ class ReportController extends AbstractController
         FrontendUser $user,
         ?ReportComment $firstComment = null
     ): ResponseInterface {
+        if ($this->getCurrentUser()->isAnonymous()) {
+            return $this->responseFactory->createResponse(403);
+        }
         /** @var UserReport $report */
         $report = $this->reportFactory->createUserReport($firstComment);
         $report->setUser($user);
@@ -122,6 +129,9 @@ class ReportController extends AbstractController
         Post $post,
         ?ReportComment $firstComment = null
     ): ResponseInterface {
+        if ($this->getCurrentUser()->isAnonymous()) {
+            return $this->responseFactory->createResponse(403);
+        }
         $this->authenticationService->assertReadAuthorization($post);
 
         /** @var PostReport $report */
@@ -135,9 +145,7 @@ class ReportController extends AbstractController
             new FlashMessage(LocalizationUtility::translate('Report_New_Success', 'Typo3Forum'))
         );
 
-        return (new ForwardResponse('show'))
-            ->withControllerName('Topic')
-            ->withArguments(['topic' => $post->getTopic()]);
+        return $this->redirect('show', 'Topic', null, ['topic' => $post->getTopic()]);
 
     }
 }

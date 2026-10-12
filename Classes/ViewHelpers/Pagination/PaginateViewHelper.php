@@ -23,9 +23,9 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Pagination;
 
 use Mittwald\Typo3Forum\Helpers\Pagination;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 use TYPO3Fluid\Fluid\Core\Variables\ScopedVariableProvider;
 use TYPO3Fluid\Fluid\Core\Variables\StandardVariableProvider;
+use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 class PaginateViewHelper extends AbstractViewHelper
 {

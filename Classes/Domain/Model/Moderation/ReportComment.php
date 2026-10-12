@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Moderation;
 
 /*                                                                    - *
@@ -32,7 +33,6 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
  */
 class ReportComment extends AbstractEntity
 {
-
     /**
      * The comment author
      * @var \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Validator\Forum;
 
 /*                                                                      *
@@ -41,9 +42,9 @@ class PostValidator extends AbstractValidator
     * to Result.
     *
     * @param \Mittwald\Typo3Forum\Domain\Model\Forum\Post $post
-    * @return void
-    */
-    protected function isValid($post):void
+     * @return void
+     */
+    protected function isValid($post): void
     {
         if (trim(str_replace("\u{00A0}", ' ', $post->getText())) === '') {
             $this->addError('The post can\'t be empty!.', 1221560718);

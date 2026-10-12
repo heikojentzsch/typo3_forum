@@ -9,7 +9,7 @@
 	<h2>
 		<f:translate key="Report_NewPostReport"/>
 	</h2>
-	<f:form name="firstComment" object="{firstComment}" controller="Report" action="createPostReport" id="report">
+
 		<div class="row mt-4">
 			<div class="col-12">
 				<mmf:forum.rootline rootline="{post.topic.rootline}" forumicon="far fa-folder-open me-2" topicicon="far fa-comments me-2" />
@@ -17,6 +17,7 @@
 			</div>
 		</div>
 
+	<f:form name="firstComment" object="{firstComment}" controller="Report" action="createPostReport" id="report" requestToken="typo3_forum/mutation">
 		<div class="card">
 			<div class="card-header">
 				<h2>

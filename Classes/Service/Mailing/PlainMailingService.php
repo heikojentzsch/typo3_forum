@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Service\Mailing;
 
 /*                                                                    - *
@@ -23,15 +24,14 @@ namespace Mittwald\Typo3Forum\Service\Mailing;
  *                                                                      *
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
+use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use TYPO3\CMS\Core\Mail\MailMessage;
-use \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 
 /**
  * Service class for sending plain text emails.
  */
 class PlainMailingService extends AbstractMailingService
 {
-
     /**
      * The format in which this service sends mails.
      */

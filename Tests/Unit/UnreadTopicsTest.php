@@ -1,5 +1,7 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
+
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Forum, Topic};
@@ -7,7 +9,7 @@ use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TopicRepository;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Extbase\Persistence\Generic\Query;
-use TYPO3\CMS\Extbase\Persistence\{QueryInterface, QueryResultInterface};
+use TYPO3\CMS\Extbase\Persistence\{QueryResultInterface};
 
 final class UnreadTopicsTest extends DatabaseTestCase
 {

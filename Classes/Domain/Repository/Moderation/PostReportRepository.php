@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\Moderation;
 
 /*                                                                    - *
@@ -37,7 +38,6 @@ class PostReportRepository extends AbstractRepository
 {
     protected AuthenticationServiceInterface $authenticationService;
     protected ConfigurationManagerInterface $configurationManager;
-
 
     public function __construct(AuthenticationServiceInterface $authenticationService, ConfigurationManagerInterface $configurationManager)
     {

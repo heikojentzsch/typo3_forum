@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Forum;
 
 /*                                                                      *
@@ -39,29 +40,29 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractValueObject;
  */
 class Access extends AbstractValueObject
 {
-    const TYPE_READ = 'read';
-    const TYPE_NEW_TOPIC = 'newTopic';
-    const TYPE_NEW_POST = 'newPost';
-    const TYPE_EDIT_POST = 'editPost';
-    const TYPE_DELETE_POST = 'deletePost';
-    const TYPE_MODERATE = 'moderate';
-    const TYPE_SOLUTION = 'solution';
-    const TYPE_DELETE_TOPIC = 'deleteTopic';
+    public const TYPE_READ = 'read';
+    public const TYPE_NEW_TOPIC = 'newTopic';
+    public const TYPE_NEW_POST = 'newPost';
+    public const TYPE_EDIT_POST = 'editPost';
+    public const TYPE_DELETE_POST = 'deletePost';
+    public const TYPE_MODERATE = 'moderate';
+    public const TYPE_SOLUTION = 'solution';
+    public const TYPE_DELETE_TOPIC = 'deleteTopic';
 
     /**
      * Anyone.
      */
-    const LOGIN_LEVEL_EVERYONE = 0;
+    public const LOGIN_LEVEL_EVERYONE = 0;
 
     /**
      * Any logged in user
      */
-    const LOGIN_LEVEL_ANYLOGIN = 1;
+    public const LOGIN_LEVEL_ANYLOGIN = 1;
 
     /**
      * A specifiy user group
      */
-    const LOGIN_LEVEL_SPECIFIC = 2;
+    public const LOGIN_LEVEL_SPECIFIC = 2;
 
     /**
      * The operation that is to be granted or denied.

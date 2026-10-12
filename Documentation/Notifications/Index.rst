@@ -146,3 +146,11 @@ subscriptions, access checks, MIME delivery through the injected TYPO3 mailer,
 and release-package contents. A real backend-checkbox and Mailpit exercise is
 still part of installation acceptance when Docker/DDEV is available; it must
 not send to real recipients.
+
+Unsubscribe confirmation
+=======================
+
+In v14 the email unsubscribe link opens a confirmation form. A GET request does
+not change subscriptions; confirming submits a POST with a TYPO3 request token.
+The recipient must be logged in as the relevant subscriber. This also prevents
+mail link scanners from silently unsubscribing users.

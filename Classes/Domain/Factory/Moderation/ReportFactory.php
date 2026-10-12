@@ -1,6 +1,6 @@
 <?php
-namespace Mittwald\Typo3Forum\Domain\Factory\Moderation;
 
+namespace Mittwald\Typo3Forum\Domain\Factory\Moderation;
 
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *

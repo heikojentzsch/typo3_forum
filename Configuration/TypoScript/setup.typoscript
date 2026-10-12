@@ -143,41 +143,6 @@ plugin {
 				}
 			}
 
-			textParsing {
-				enabledServices {
-					basic = Mittwald\Typo3Forum\TextParser\Service\BasicParserService
-					bbCodes = Mittwald\Typo3Forum\TextParser\Service\BBCodeParserService
-					smileys = Mittwald\Typo3Forum\TextParser\Service\SmileyParserService
-					quotes = Mittwald\Typo3Forum\TextParser\Service\QuoteParserService
-					quotes {
-						template = {$plugin.tx_typo3forum.view.partialRootPath}/Format/Quote.html
-					}
-					code = Mittwald\Typo3Forum\TextParser\Service\SyntaxHighlightingParserService
-					list = Mittwald\Typo3Forum\TextParser\Service\ListParserService
-					link = Mittwald\Typo3Forum\TextParser\Service\LinkParserService
-				}
-
-				editorPanel {
-					panels {
-						bbCodes {
-							className = Mittwald\Typo3Forum\TextParser\Panel\BbCodePanel
-							title = LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:Editor_Panel_Formatting
-						}
-
-						syntax {
-							className = Mittwald\Typo3Forum\TextParser\Panel\SyntaxHighlightingPanel
-							title = LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:Editor_Panel_SyntaxHighlighting
-							iconClassName = tx-typo3forum-miu-code tx-typo3forum-miu-button-container
-						}
-
-						smileys {
-							className = Mittwald\Typo3Forum\TextParser\Panel\SmileyPanel
-							title = LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:Editor_Panel_Smileys
-							iconClassName = tx-typo3forum-miu-smile_smiley tx-typo3forum-miu-button-container tx-typo3forum-miu-button-container-textless
-						}
-					}
-				}
-			}
 
 			userfields.core_fields {
 				username {
@@ -324,8 +289,10 @@ plugin {
 						file = EXT:typo3_forum/Resources/Public/Images/Icons/Topic/OverlayQuestion.png
 						stdWrap {
 							wrap = <div class="tx-typo3forum-icon-overlay-br" style="background-image: url(|)" title="Question"></div>
-							if.isTrue.field = question
-							if.isFalse.field = solved
+							if {
+								isTrue.field = question
+								isFalse.field = solved
+							}
 						}
 					}
 
@@ -401,18 +368,14 @@ page {
 		typo3_forum = EXT:typo3_forum/Resources/Public/CSS/typo3_forum.css
 
 		fontawesome = https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css
-		fontawesome.excludeFromConcatenation = 1
-		fontawesome.external = 1
+		fontawesome {
+			excludeFromConcatenation = 1
+			external = 1
+		}
 	}
 }
 [global]
 
-page {
-	includeJSFooterlibs {
-		jQuery = https://code.jquery.com/jquery-3.6.4.js
-		jQuery.external = 1
-	}
-}
 
 
 module {

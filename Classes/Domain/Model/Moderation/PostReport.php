@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Moderation;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;

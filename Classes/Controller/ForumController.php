@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Controller;
 
 use Mittwald\Typo3Forum\Domain\Exception\Authentication\NotLoggedInException;
@@ -46,7 +47,7 @@ class ForumController extends AbstractController
         ForumRepository $forumRepository,
         TopicRepository $topicRepository,
         RootForum $rootForum
-    ){
+    ) {
         $this->forumRepository = $forumRepository;
         $this->topicRepository = $topicRepository;
         $this->rootForum = $rootForum;
@@ -55,10 +56,10 @@ class ForumController extends AbstractController
     /**
      * Index action. Displays the first two levels of the forum tree.
      */
-    public function indexAction(int $page = 1):ResponseInterface
+    public function indexAction(int $page = 1): ResponseInterface
     {
         if (($forum = $this->forumRepository->findFirstRootForum())) {
-            return (new ForwardResponse('show'))->withArguments(['forum' => $forum])->withControllerName('Forum');
+            return (new ForwardResponse('show'))->withArguments(['forum' => $forum->getUid()])->withControllerName('Forum');
         }
         $this->view->assign('page', $page);
         return $this->htmlResponse();
@@ -67,8 +68,6 @@ class ForumController extends AbstractController
     /**
      * Show action. Displays a single forum, all subforums of this forum and the
      * topics contained in this forum.
-     *
-     *
      */
     public function showAction(Forum $forum, int $page = 1): ResponseInterface
     {
@@ -91,6 +90,7 @@ class ForumController extends AbstractController
     */
     public function markReadAction(Forum $forum): ResponseInterface
     {
+        $this->authenticationService->assertReadAuthorization($forum);
         $user = $this->getCurrentUser();
         if (!$user instanceof FrontendUser || $user->isAnonymous()) {
             throw new NotLoggedInException('You need to be logged in.', 1288084981);
@@ -111,7 +111,7 @@ class ForumController extends AbstractController
         }
 
         $uri = $this->uriBuilder->uriFor('show', ['forum' => $forum], 'Forum');
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 }

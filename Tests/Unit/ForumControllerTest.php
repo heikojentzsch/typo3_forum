@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
@@ -33,7 +33,7 @@ final class ForumControllerTest extends AbstractControllerTestCase
         $this->previousContainer = (new \ReflectionProperty(GeneralUtility::class, 'container'))->getValue();
         $language = $this->createStub(LanguageService::class);
         $language->method('translate')->willReturnCallback(
-            static fn(string $key): string => $key === 'Error_AccessDenied_Title'
+            static fn (string $key): string => $key === 'Error_AccessDenied_Title'
                 ? 'Access denied'
                 : 'You do not have permission to view this content.'
         );
@@ -45,10 +45,10 @@ final class ForumControllerTest extends AbstractControllerTestCase
         $locales->method('createLocaleFromRequest')->willReturn(new Locale('en'));
         $container = $this->createStub(ContainerInterface::class);
         $container->method('has')->willReturnCallback(
-            static fn(string $id): bool => in_array($id, [LanguageServiceFactory::class, Locales::class], true)
+            static fn (string $id): bool => in_array($id, [LanguageServiceFactory::class, Locales::class], true)
         );
         $container->method('get')->willReturnCallback(
-            static fn(string $id): object => $id === Locales::class ? $locales : $factory
+            static fn (string $id): object => $id === Locales::class ? $locales : $factory
         );
         GeneralUtility::setContainer($container);
         $this->forumRepository = $this->createMock(ForumRepository::class);
@@ -77,7 +77,7 @@ final class ForumControllerTest extends AbstractControllerTestCase
         self::assertInstanceOf(ForwardResponse::class, $response);
         self::assertSame('show', $response->getActionName());
         self::assertSame('Forum', $response->getControllerName());
-        self::assertSame(['forum' => $forum], $response->getArguments());
+        self::assertSame(['forum' => $forum->getUid()], $response->getArguments());
     }
 
     public function testIndexWithoutRootForumAssignsPageAndReturnsHtml(): void
@@ -189,7 +189,9 @@ final class ForumControllerTest extends AbstractControllerTestCase
         $user = $this->loggedInUser();
         $updated = [];
         $this->forumRepository->expects(self::exactly(2))->method('update')
-            ->willReturnCallback(static function (object $object) use (&$updated): void { $updated[] = $object; });
+            ->willReturnCallback(static function (object $object) use (&$updated): void {
+                $updated[] = $object;
+            });
         $this->expectShowUri($forum);
         $response = $this->controller->markReadAction($forum);
         self::assertSame([$forum, $child], $updated);
@@ -215,7 +217,7 @@ final class ForumControllerTest extends AbstractControllerTestCase
 
     private function assertShowRedirect(ResponseInterface $response): void
     {
-        self::assertSame(307, $response->getStatusCode());
+        self::assertSame(303, $response->getStatusCode());
         self::assertSame('/forum/show', $response->getHeaderLine('Location'));
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\Authentication;
 
 /*                                                                      *
@@ -25,8 +26,6 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Authentication;
  *                                                                      */
 
 use Mittwald\Typo3Forum\Utility\UserUtility;
-use TYPO3\CMS\Core\Context\Context;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Controller;
 
 /*                                                                      *
@@ -208,7 +209,7 @@ class UserController extends AbstractController
     public function showAction(?FrontendUser $user = null): ResponseInterface
     {
         if ($user === null) {
-            return (new ForwardResponse('show'))->withArguments(['user' => $this->getCurrentUser()]);
+            return (new ForwardResponse('show'))->withArguments(['user' => $this->getCurrentUser()->getUid()]);
             //$this->redirect('show', null, null, ['user' => $this->getCurrentUser()]);
         }
 
@@ -255,6 +256,14 @@ class UserController extends AbstractController
             throw new NotLoggedInException('You need to be logged in to subscribe or unsubscribe an object.', 1335121482);
         }
 
+        if ($this->request->getMethod() === 'GET') {
+            $this->view->assignMultiple(compact('forum', 'topic', 'unsubscribe'));
+            return $this->htmlResponse();
+        }
+        if (!$unsubscribe) {
+            $this->authenticationService->assertReadAuthorization($topic ?? $forum);
+        }
+
         // Create subscription
         $object = $topic ? $topic : $forum;
 
@@ -271,7 +280,7 @@ class UserController extends AbstractController
         );
         $this->clearCacheForCurrentPage();
 
-        if ($prioritizeRefererRedirect){
+        if ($prioritizeRefererRedirect) {
             $response = $this->redirectToReferrer();
             if ($response instanceof ResponseInterface) {
                 return $response;
@@ -333,12 +342,12 @@ class UserController extends AbstractController
     {
         if ($object instanceof Forum) {
             $uri = $this->uriBuilder->uriFor('show', ['forum' => $object], 'Forum');
-            return $this->responseFactory->createResponse(307)
+            return $this->responseFactory->createResponse(303)
                 ->withHeader('Location', $uri);
         }
         if ($object instanceof Topic) {
             $uri = $this->uriBuilder->uriFor('show', ['topic' => $object], 'Topic');
-            return $this->responseFactory->createResponse(307)
+            return $this->responseFactory->createResponse(303)
                 ->withHeader('Location', $uri);
         }
         return null;

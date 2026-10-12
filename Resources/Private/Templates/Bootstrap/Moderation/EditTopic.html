@@ -7,7 +7,7 @@
 	<h2>
 		<f:translate key="Moderation_EditTopic" arguments="{0: topic.subject}" />
 	</h2>
-	<f:form name="topic" object="{topic}" controller="Moderation" action="updateTopic" id="topic">
+	<f:form name="topic" object="{topic}" controller="Moderation" action="updateTopic" id="topic" requestToken="typo3_forum/mutation">
 		<div class="card card-body">
 			<div class="form-group row">
 				<label for="sticky" class="col-2 col-form-label">

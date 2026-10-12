@@ -33,7 +33,6 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractTagBasedViewHelper;
  */
 class RootlineViewHelper extends AbstractTagBasedViewHelper
 {
-
     /**
      * @var string
      */
@@ -118,7 +117,7 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
             $icon = $this->arguments['topicicon'];
         }
         $fullTitle = htmlspecialchars($object->getTitle());
-        $limit = (int)($this->settings['cutBreadcrumbOnChar']??0);
+        $limit = (int)($this->settings['cutBreadcrumbOnChar'] ?? 0);
         if ($limit == 0 || mb_strlen($object->getTitle()) < $limit) {
             $title = $fullTitle;
         } else {
@@ -130,9 +129,9 @@ class RootlineViewHelper extends AbstractTagBasedViewHelper
             ['pageUid' => (int)($this->settings['pids']['Forum'] ?? 0),
                 'extensionName' => 'Typo3Forum', 'pluginName' => 'Forum',
                 'controller' => $controller, 'action' => 'show',
-                'arguments' => array_map(static fn($node) => $node->getUid(), $arguments)],
+                'arguments' => array_map(static fn ($node) => $node->getUid(), $arguments)],
             $this->renderingContext,
-            static fn() => ''
+            static fn () => ''
         );
         $uri = htmlspecialchars($uri);
 

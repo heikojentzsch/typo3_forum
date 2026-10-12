@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\ViewHelpers\Format;
 
 /*                                                                      *
@@ -33,7 +34,6 @@ use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractViewHelper;
  */
 class FileSizeViewHelper extends AbstractViewHelper
 {
-
     /**
      * Diffentently scaled units for file sizes.
      * @var array

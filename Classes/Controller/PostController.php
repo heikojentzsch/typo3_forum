@@ -116,6 +116,7 @@ class PostController extends AbstractController
 
     public function supportAction(Post $post): ResponseInterface
     {
+        $this->authenticationService->assertReadAuthorization($post);
         /** @var FrontendUser $currentUser */
         $currentUser = $this->authenticationService->getUser();
 
@@ -148,6 +149,7 @@ class PostController extends AbstractController
 
     public function unsupportAction(Post $post): ResponseInterface
     {
+        $this->authenticationService->assertReadAuthorization($post);
         /** @var FrontendUser $currentUser */
         $currentUser = $this->authenticationService->getUser();
 
@@ -228,6 +230,9 @@ class PostController extends AbstractController
         $this->authenticationService->assertNewPostAuthorization($topic);
         \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Mittwald\Typo3Forum\RichText\CharsetRequirement::class)->assertReady();
 
+        if ($quote !== null) {
+            $this->authenticationService->assertReadAuthorization($quote);
+        }
         if ($post === null) {
             $post = ($quote !== null)
                 ? $this->postFactory->createPostWithQuote($quote)
@@ -425,7 +430,7 @@ class PostController extends AbstractController
                 'Topic'
             );
 
-            return $this->responseFactory->createResponse(307)
+            return $this->responseFactory->createResponse(303)
                 ->withHeader('Location', $uri);
         }
 
@@ -435,7 +440,7 @@ class PostController extends AbstractController
             'Forum'
         );
 
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 
@@ -444,6 +449,16 @@ class PostController extends AbstractController
      */
     public function downloadAttachmentAction(Attachment $attachment): ResponseInterface
     {
+        $post = $attachment->getPost();
+        if ($post === null) {
+            return $this->responseFactory->createResponse(404);
+        }
+        if (($denied = $this->readAccessFailureResponse($post)) !== null) {
+            return $denied;
+        }
+        if ($attachment->getFileReference() === null) {
+            return $this->responseFactory->createResponse(404);
+        }
         $attachment->increaseDownloadCount();
         $this->attachmentRepository->update($attachment);
         $this->persistenceManager->persistAll();
@@ -451,7 +466,9 @@ class PostController extends AbstractController
         $file = $attachment->getFileReference()->getOriginalResource();
         return $this->responseFactory->createResponse()
             ->withHeader('Content-Type', $file->getMimeType() ?: 'application/download')
-            ->withHeader('Content-Disposition', 'attachment; filename="' . addcslashes($attachment->getName(), '"\\') . '"')
+            ->withHeader('Content-Disposition', 'attachment; filename="' . addcslashes(str_replace(["\r", "\n"], '', $attachment->getName()), '"\\') . '"')
+            ->withHeader('X-Content-Type-Options', 'nosniff')
+            ->withHeader('Cache-Control', 'private, no-store')
             ->withHeader('Content-Length', (string)$file->getSize())
             ->withBody($this->streamFactory->createStream($file->getContents()));
     }

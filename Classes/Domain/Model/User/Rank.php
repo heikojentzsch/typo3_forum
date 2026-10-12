@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\User;
 
 /*                                                                    - *
@@ -28,7 +29,6 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 
 class Rank extends AbstractEntity
 {
-
     /**
      * The name of this rank
      * @var string

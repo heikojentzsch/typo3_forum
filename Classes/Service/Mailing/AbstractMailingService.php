@@ -38,12 +38,12 @@ abstract class AbstractMailingService extends AbstractService implements Mailing
     /**
      * HTML mail format.
      */
-    const MAILING_FORMAT_HTML = 'html';
+    public const MAILING_FORMAT_HTML = 'html';
 
     /**
      * Plaintext mail format.
      */
-    const MAILING_FORMAT_PLAIN = 'txt';
+    public const MAILING_FORMAT_PLAIN = 'txt';
 
     protected string $format = self::MAILING_FORMAT_HTML;
 

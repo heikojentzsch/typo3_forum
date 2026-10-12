@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\User;
 
 /*                                                                    - *
@@ -33,7 +34,6 @@ use TYPO3\CMS\Extbase\Persistence\Generic\LazyLoadingProxy;
 // TODO: Currently the notification feature is completely unused.
 class Notification extends AbstractEntity
 {
-
     /**
      * The execution date of the cron
      * @var \DateTime

@@ -1,5 +1,6 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
 
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
@@ -18,16 +19,22 @@ final class SiteCommandTest extends TestCase
         $finder->method('getAllSites')->willReturn([
             new Site('one', 1, []), new Site('two', 2, []), new Site('empty', 3, []),
         ]);
-        $command = new class($finder) extends AbstractSiteBasedTypoScriptCommand {
+        $command = new class ($finder) extends AbstractSiteBasedTypoScriptCommand {
             public array $runs = [];
-            public function __construct(SiteFinder $finder) { parent::__construct('test'); $this->siteFinder = $finder; }
-            protected function getSetupForSite(SiteInterface $site): array {
+            public function __construct(SiteFinder $finder)
+            {
+                parent::__construct('test');
+                $this->siteFinder = $finder;
+            }
+            protected function getSetupForSite(SiteInterface $site): array
+            {
                 return $site->getRootPageId() === 3 ? [] : ['plugin.' => ['tx_typo3forum.' => [
                     'settings.' => ['rankScore.' => ['newPost' => $site->getRootPageId()]],
                     'persistence.' => ['storagePid' => $site->getRootPageId() * 10],
                 ]]];
             }
-            protected function executeForSite(SiteInterface $site, InputInterface $input, OutputInterface $output): void {
+            protected function executeForSite(SiteInterface $site, InputInterface $input, OutputInterface $output): void
+            {
                 $this->runs[] = [$site->getIdentifier(), $this->storagePage, $this->settings];
             }
         };

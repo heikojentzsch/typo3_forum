@@ -340,7 +340,7 @@ silently replaced with a new baseline.
 
 On a disposable clone, then test forum/topic/post rendering and CRUD, existing
 login, permissions, profiles/lists, moderation, attachments, URLs/routes,
-BBCode preview, mail capture, scheduler commands, languages and workspaces.
+HTML preview, mail capture, scheduler commands, languages and workspaces.
 Never send real mail. Compare countries with TYPO3's current expected codes but
 do not guess or mass-convert unknown values. Only after these checks may an
 operator consider destructive schema cleanup.
@@ -348,35 +348,25 @@ operator consider destructive schema cleanup.
 Current verification status
 ---------------------------
 
-The current local baseline used PHP 8.4.25, TYPO3 14.3.7 and PHPUnit 11.5.56.
-The full suite passed 145 tests with 1,215 assertions and one skip. The skip is
-the database-specific locking case because no disposable MariaDB/MySQL service
-was available; SQLite coverage is not presented as row-lock proof. On an
-explicitly disposable InnoDB database, run it with two independent connections:
+The v14 suite includes synthetic migration coverage and a separate optional
+MariaDB locking test. SQLite tests do not prove InnoDB row-lock behavior.
+On an explicitly disposable database, run the latter with two connections:
 
 .. code-block:: bash
 
    FORUM_MIGRATION_MARIADB_TEST_CONFIRM=disposable \
    FORUM_MIGRATION_MARIADB_TEST_DSN='mysql://test_user:local_password@127.0.0.1:3306/forum_migration_test?charset=utf8mb4' \
-   vendor/bin/phpunit --testsuite 'Migration integration'
+   .Build/bin/phpunit --testsuite 'Migration integration'
 
-The standalone preflight was exercised with PDO SQLite on PHP 8.4.25. A PHP
-8.1/8.2 binary was not available in this environment, so the documented PHP
-8.1 minimum was not separately runtime-tested here.
+Current validation commands are maintained in the root README. Historical test
+counts, old environment limitations and the former style backlog are superseded
+by the current test output. The old smiley parser has been removed.
 
-Composer validation, syntax checks (217 PHP files), PHPStan and TypoScript lint
-passed. TypoScript lint scanned ``Configuration/TSconfig/pageTS.txt``,
-``Configuration/page.tsconfig`` and both files under
-``Configuration/TypoScript``; it reported 12 pre-existing warnings. The full
-``composer ci`` aggregate still exits 8 solely at the final PHP-CS-Fixer dry
-run because 139 of 206 files contain existing style debt. No repository-wide
-formatting was performed.
-
-The previous single PHPUnit deprecation was traced to this extension's smiley
-parser calling the deprecated internal Core
-``PathUtility::getPublicResourceWebPath()``. It now uses TYPO3 14.3's system
-resource factory/publisher, and the full PHPUnit run reports no deprecations.
-No production migration or real v12-to-v14 installation test was executed.
+No full migration on an anonymized copy of the existing v12 installation has been
+executed. This remains an explicit release acceptance gate, including interruption
+and resumption, in ``../Release/Index.rst``. The standalone preflight declares
+PHP 8.1 compatibility; this local cleanup was tested on PHP 8.4, not all supported
+PHP/database combinations.
 
 Official references
 -------------------

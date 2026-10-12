@@ -36,18 +36,10 @@
 					<f:translate key="Report_Edit_Status" />
 				</label>
 				<div class="col-auto">
-					<select
-						{f:if(condition: report.workflowStatus.followupStatus, else: 'disabled="disabled"')}
-						class="form-control"
-						onchange="let url = this.options[this.selectedIndex].dataset.url; if (url !== '' && url !== undefined) window.location = this.options[this.selectedIndex].dataset.url;"
-					>
-						<option>{report.workflowStatus.name}</option>
-						<f:for each="{report.workflowStatus.followupStatus}" as="followupStatus">
-							<option data-url="{f:uri.action(action: 'update{type}ReportStatus', arguments: {report: report, status: followupStatus})}">
-								<f:translate key="Report_Edit_SetStatus" arguments="{0: followupStatus.name}" />
-							</option>
-						</f:for>
-					</select>
+                    <f:form controller="Moderation" action="update{type}ReportStatus" arguments="{report: report.uid}" requestToken="typo3_forum/mutation">
+                        <f:form.select name="status" options="{report.workflowStatus.followupStatus}" optionValueField="uid" optionLabelField="name" class="form-control" />
+                        <button type="submit" class="btn btn-primary"><f:translate key="Report_Edit_Status" /></button>
+                    </f:form>
 				</div>
 			</div>
 		</div>
@@ -118,7 +110,7 @@
 				</tbody>
 			</table>
 
-			<f:form controller="Moderation" action="create{type}ReportComment">
+			<f:form controller="Moderation" action="create{type}ReportComment" requestToken="typo3_forum/mutation">
 				<div class="card">
 					<div class="card-header">
 						<h2>

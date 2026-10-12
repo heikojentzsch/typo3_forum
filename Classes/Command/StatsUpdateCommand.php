@@ -5,9 +5,9 @@ namespace Mittwald\Typo3Forum\Command;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
-use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 
 class StatsUpdateCommand extends AbstractDatabaseBasedCommand
 {

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * COPYRIGHT NOTICE
  *
@@ -21,6 +22,7 @@
  *
  *  This copyright notice MUST APPEAR in all copies of the script!
  */
+
 namespace Mittwald\Typo3Forum\Domain\Model;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Validator\Forum;
 
 /*                                                                      *
@@ -24,7 +25,6 @@ namespace Mittwald\Typo3Forum\Domain\Validator\Forum;
 *  This copyright notice MUST APPEAR in all copies of the script!      *
 *                                                                      */
 
-use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository;
 use TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator;
 
@@ -42,9 +42,9 @@ class TagValidator extends AbstractValidator
     * to Result.
     *
     * @param mixed $tag
-    * @return void
-    */
-    protected function isValid($tag):void
+     * @return void
+     */
+    protected function isValid($tag): void
     {
         $name = $tag->getName();
         if (trim($name) === '') {

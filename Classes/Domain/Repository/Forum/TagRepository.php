@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\Forum;
 
 /*                                                                    - *
@@ -31,7 +32,6 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
 /** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\Forum\Tag> */
 class TagRepository extends Repository
 {
-
     public function findOneByName(string $name): ?Tag
     {
         $query = $this->createQuery();

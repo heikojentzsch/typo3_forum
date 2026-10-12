@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Factory\Forum;
 
 use Mittwald\Typo3Forum\Domain\Factory\AbstractFactory;

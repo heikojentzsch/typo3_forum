@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Validator\Forum;
 
 /*                                                                    - *
@@ -35,10 +36,9 @@ class AttachmentPlainValidator extends AbstractValidator
     * to Result.
     *
     * @param mixed $value
-    *
-    * @return void
-    */
-    public function isValid($value):void
+     * @return void
+     */
+    public function isValid($value): void
     {
         $attachmentObj = GeneralUtility::makeInstance(Attachment::class);
         foreach ($value as $attachment) {
@@ -49,11 +49,25 @@ class AttachmentPlainValidator extends AbstractValidator
                 $this->addError('The file upload failed.', 1371041777);
                 continue;
             }
-            if (!in_array($attachment->getClientMediaType(), $attachmentObj->getAllowedMimeTypes())) {
-                $this->addError('The submitted mime-type is not allowed!.', 1371041777);
-            }
             if ($attachment->getSize() > $attachmentObj->getAllowedMaxSize()) {
-                $this->addError('The submitted file is to big!.', 1371041888);
+                $this->addError('The submitted file is too big.', 1371041888);
+                continue;
+            }
+            try {
+                $stream = $attachment->getStream();
+                $stream->rewind();
+                $contents = $stream->read(max(1, $attachmentObj->getAllowedMaxSize()) + 1);
+                $stream->rewind();
+                if (strlen($contents) > $attachmentObj->getAllowedMaxSize()) {
+                    $this->addError('The submitted file is too big.', 1371041888);
+                    continue;
+                }
+                $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($contents);
+                if (!in_array($mime, $attachmentObj->getAllowedMimeTypes(), true)) {
+                    $this->addError('The detected file type is not allowed.', 1371041777);
+                }
+            } catch (\RuntimeException $exception) {
+                $this->addError('The uploaded file could not be inspected.', 1371041777);
             }
         }
     }

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Forum;
 
 /* *
@@ -43,8 +44,6 @@ use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
  */
 class Post extends AbstractEntity implements AccessibleInterface, NotifiableInterface
 {
-    /**
-     */
     #[Validate(validator: 'NotEmpty')]
     protected string $text = '';
     protected ?string $textHtml = null;
@@ -359,7 +358,8 @@ class Post extends AbstractEntity implements AccessibleInterface, NotifiableInte
         if ($fileReference !== null) {
             try {
                 $fileReference->getOriginalResource()->getOriginalFile()->delete();
-            } catch (FileDoesNotExistException $e) {}
+            } catch (FileDoesNotExistException $e) {
+            }
         }
 
         $this->attachments->detach($attachment);

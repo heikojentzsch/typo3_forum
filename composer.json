@@ -5,6 +5,7 @@
 	"type": "typo3-cms-extension",
 	"require": {
 		"php": "^8.2",
+		"ext-fileinfo": "*",
 		"typo3/cms-backend": "^14.3",
 		"typo3/cms-core": "^14.3",
 		"typo3/cms-extbase": "^14.3",

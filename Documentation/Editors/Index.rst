@@ -78,8 +78,9 @@ Existing templates must use ``mmf:form.richTextEditor`` with
 ``property="text" value="{post.editorText}"``. The old markItUp assets are no
 longer loaded. The existing AJAX endpoint/argument name remains available, but
 its input is now HTML, not BBCode. Custom templates, integrations and frontend
-TypoScript overrides must be reviewed. Legacy parser definitions are retained
-for inspection, but the default rendering path no longer executes them.
+TypoScript overrides must be reviewed. Legacy database definitions are retained for migration inspection. The old
+regex parser, markItUp runtime and bundled GeSHi library have been removed;
+custom PHP integrations using those classes must be adapted.
 
 utf8mb4 prerequisite
 --------------------

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\User;
 
 /*                                                                    - *
@@ -27,7 +28,6 @@ namespace Mittwald\Typo3Forum\Domain\Repository\User;
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Model\User\Rank;
 use Mittwald\Typo3Forum\Domain\Repository\AbstractRepository;
-use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 
 /** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\User\Rank> */
 class RankRepository extends AbstractRepository

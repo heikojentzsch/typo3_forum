@@ -57,11 +57,11 @@ plugin.tx_typo3forum {
 			# cat=typo3_forum: config/110/260; type=int; label=User rank points when your post is selected as solution
 			gaveSolution = 5
 		}
-        mailing{
-            sender{
-                name = 'Typo3Forum'
-                address = typo3Forum@info.de
-            }
-        }
+		mailing {
+			sender {
+				name = 'Typo3Forum'
+				address = typo3Forum@info.de
+			}
+		}
 	}
 }

@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Typo3Forum\Build;
 
 use FilesystemIterator;
-use RecursiveDirectoryIterator;
 use RecursiveCallbackFilterIterator;
+use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
 use ZipArchive;

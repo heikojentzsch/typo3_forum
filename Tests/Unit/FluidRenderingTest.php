@@ -1,9 +1,11 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
+
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
-use Mittwald\Typo3Forum\Domain\Model\User\{FrontendUser, AnonymousFrontendUser};
+use Mittwald\Typo3Forum\Domain\Model\User\{AnonymousFrontendUser, FrontendUser};
 use Mittwald\Typo3Forum\ViewHelpers\Form\ForumSelectViewHelper;
 use PHPUnit\Framework\TestCase;
 use TYPO3Fluid\Fluid\Core\Cache\SimpleFileCache;
@@ -22,8 +24,8 @@ final class FluidRenderingTest extends TestCase
         $imageService = $this->createStub(\TYPO3\CMS\Extbase\Service\ImageService::class);
         $container = $this->createStub(\Psr\Container\ContainerInterface::class);
         $this->services[\TYPO3\CMS\Extbase\Service\ImageService::class] = $imageService;
-        $container->method('has')->willReturnCallback(fn($id) => isset($this->services[$id]));
-        $container->method('get')->willReturnCallback(fn($id) => $this->services[$id]);
+        $container->method('has')->willReturnCallback(fn ($id) => isset($this->services[$id]));
+        $container->method('get')->willReturnCallback(fn ($id) => $this->services[$id]);
         \TYPO3\CMS\Core\Utility\GeneralUtility::setContainer($container);
     }
 
@@ -56,8 +58,10 @@ final class FluidRenderingTest extends TestCase
             }
             return $reflection->newInstanceArgs($arguments);
         };
-        $resolver = new class($factory) extends ViewHelperResolver {
-            public function __construct(private \Closure $factory) {}
+        $resolver = new class ($factory) extends ViewHelperResolver {
+            public function __construct(private \Closure $factory)
+            {
+            }
             public function createViewHelperInstanceFromClassName($class): ViewHelperInterface
             {
                 return ($this->factory)($class);
@@ -87,7 +91,7 @@ final class FluidRenderingTest extends TestCase
         self::assertNotEmpty($files);
         // Same validator used by TYPO3 fluid:analyze; constructor collaborators are isolated from site/DB state.
         foreach ((new TemplateValidator())->validateTemplateFiles($files, $context) as $result) {
-            self::assertSame([], array_map(static fn($error) => $error->getMessage(), $result->errors), $result->path);
+            self::assertSame([], array_map(static fn ($error) => $error->getMessage(), $result->errors), $result->path);
             self::assertSame([], $result->deprecations, $result->path);
             $id = 'audit_' . hash('sha256', $result->path . file_get_contents($result->path));
             $parsed = $context->getTemplateParser()->parse(file_get_contents($result->path), $id);
@@ -234,7 +238,9 @@ final class FluidRenderingTest extends TestCase
     {
         $context = $this->context();
         foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 2) . '/Classes/ViewHelpers')) as $file) {
-            if ($file->getExtension() !== 'php') { continue; }
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
             $relative = substr(str_replace('\\', '/', $file->getPathname()), strlen(str_replace('\\', '/', dirname(__DIR__, 2) . '/Classes/')));
             $class = 'Mittwald\\Typo3Forum\\' . str_replace('/', '\\', substr($relative, 0, -4));
             $helper = $context->getViewHelperResolver()->createViewHelperInstanceFromClassName($class);
@@ -274,30 +280,6 @@ final class FluidRenderingTest extends TestCase
         self::assertContains('tx_typo3forum_forum[moveTopicTarget]', $context->getViewHelperVariableContainer()->get(\TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper::class, 'formFieldNames'));
     }
 
-    public function testBbCodeEditorRendersTextareaAndExistingPreviewContract(): void
-    {
-        $context = $this->formContext();
-        $request = $context->getAttribute(\Psr\Http\Message\ServerRequestInterface::class);
-        $page = new \TYPO3\CMS\Frontend\Page\PageInformation();
-        $page->setId(42);
-        $request = $request->withAttribute('frontend.page.information', $page);
-        $context->setAttribute(\Psr\Http\Message\ServerRequestInterface::class, $request);
-        $reader = $this->createStub(\Mittwald\Typo3Forum\Utility\TypoScript::class);
-        $reader->method('loadTyposcriptFromPath')->willReturn(['panels.' => []]);
-        $uriBuilder = $this->createMock(\TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder::class);
-        $uriBuilder->method('reset')->willReturnSelf();
-        $uriBuilder->expects(self::once())->method('setRequest')->with($request)->willReturnSelf();
-        $uriBuilder->expects(self::once())->method('setTargetPageUid')->with(42)->willReturnSelf();
-        $uriBuilder->expects(self::once())->method('setArguments')->with(['type' => 43568275])->willReturnSelf();
-        $uriBuilder->expects(self::once())->method('uriFor')->with('preview', [], 'Ajax', 'Typo3Forum', 'Ajax')->willReturn('/preview');
-        $helper = new \Mittwald\Typo3Forum\ViewHelpers\Form\BbCodeEditorViewHelper($this->createStub(\TYPO3\CMS\Core\Cache\Frontend\FrontendInterface::class), $reader, $uriBuilder);
-        $html = $context->getViewHelperInvoker()->invoke($helper, ['name' => 'post[text]', 'id' => 'editor', 'value' => '<text>', 'rows' => '7'], $context);
-        self::assertStringContainsString('tx_typo3forum_ajax[text]', $html);
-        self::assertStringContainsString('document.getElementById("editor")', $html);
-        self::assertStringContainsString('<textarea id="editor" rows="7" name="tx_typo3forum_forum[post][text]">&lt;text&gt;</textarea>', $html);
-        self::assertContains('tx_typo3forum_forum[post][text]', $context->getViewHelperVariableContainer()->get(\TYPO3\CMS\Fluid\ViewHelpers\FormViewHelper::class, 'formFieldNames'));
-    }
-
     public function testUploadValidatorAcceptsActualPsr7Files(): void
     {
         $attachment = $this->createStub(\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class);
@@ -306,12 +288,23 @@ final class FluidRenderingTest extends TestCase
         $this->services[\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class] = $attachment;
         $validator = new \Mittwald\Typo3Forum\Domain\Validator\Forum\AttachmentPlainValidator();
         $validator->setOptions([]);
-        $file = static fn($size, $error, $type) => new \TYPO3\CMS\Core\Http\UploadedFile('unused-test-file', $size, $error, 'file.txt', $type);
+        $file = static function ($size, $error, $type) {
+            $stream = new \TYPO3\CMS\Core\Http\Stream('php://temp', 'w+b');
+            $stream->write($type === 'text/html' ? '<html></html>' : str_repeat('hello ', 2));
+            return new \TYPO3\CMS\Core\Http\UploadedFile($stream, $size, $error, 'file.txt', $type);
+        };
         self::assertFalse($validator->validate([$file(10, UPLOAD_ERR_OK, 'text/plain')])->hasErrors());
         self::assertFalse($validator->validate([$file(0, UPLOAD_ERR_NO_FILE, '')])->hasErrors());
         self::assertTrue($validator->validate([$file(21, UPLOAD_ERR_OK, 'text/plain')])->hasErrors());
         self::assertTrue($validator->validate([$file(10, UPLOAD_ERR_OK, 'text/html')])->hasErrors());
         self::assertTrue($validator->validate([$file(0, UPLOAD_ERR_PARTIAL, 'text/plain')])->hasErrors());
+        foreach (['<html></html>', str_repeat('hello ', 10)] as $bytes) {
+            $stream = new \TYPO3\CMS\Core\Http\Stream('php://temp', 'w+b');
+            $stream->write($bytes);
+            // A forged MIME/size supplied by the browser must not bypass inspection.
+            $forged = new \TYPO3\CMS\Core\Http\UploadedFile($stream, 1, UPLOAD_ERR_OK, 'safe.txt', 'text/plain');
+            self::assertTrue($validator->validate([$forged])->hasErrors());
+        }
     }
 
     public function testUploadServiceHandsPsr7FileToFal(): void
@@ -322,7 +315,10 @@ final class FluidRenderingTest extends TestCase
         $storage->method('hasFolder')->willReturn(true);
         $storage->method('getFolder')->with('frontend_uploads')->willReturn($folder);
         $storage->expects(self::once())->method('addUploadedFile')->with(
-            $file, $folder, self::matchesRegularExpression('/^[a-f0-9]{40}\.txt$/'), \TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior::REPLACE
+            $file,
+            $folder,
+            self::matchesRegularExpression('/^[a-f0-9]{40}\.txt$/'),
+            \TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior::REPLACE
         )->willThrowException(new \RuntimeException('FAL boundary reached'));
         $factory = $this->createStub(\TYPO3\CMS\Core\Resource\StorageRepository::class);
         $factory->method('getDefaultStorage')->willReturn($storage);
@@ -332,50 +328,6 @@ final class FluidRenderingTest extends TestCase
         $service->initAttachments([$file]);
     }
 
-    public function testParserReceivesConfiguredServiceOptions(): void
-    {
-        $service = $this->createMock(\Mittwald\Typo3Forum\TextParser\Service\QuoteParserService::class);
-        $service->expects(self::once())->method('setSettings')->with(['template' => '/custom/Quote.html'])->willReturnSelf();
-        $this->services[$service::class] = $service;
-        $reader = $this->createStub(\Mittwald\Typo3Forum\Utility\TypoScript::class);
-        $reader->method('loadTyposcriptFromPath')->willReturn(['enabledServices.' => ['quotes' => $service::class, 'quotes.' => ['template' => '/custom/Quote.html']]]);
-        (new \Mittwald\Typo3Forum\TextParser\TextParserService($reader))->loadConfiguration();
-    }
-
-    public function testSmileyParserUsesTheStoredResourceIdentifier(): void
-    {
-        $resourceIdentifier = 'EXT:typo3_forum/Resources/Public/Images/Icons/Smiley/smile.gif';
-        $resource = $this->createStub(\TYPO3\CMS\Core\SystemResource\Type\PublicResourceInterface::class);
-        $resourceFactory = $this->createMock(\TYPO3\CMS\Core\SystemResource\SystemResourceFactory::class);
-        $resourceFactory->expects(self::once())->method('createPublicResource')->with($resourceIdentifier)->willReturn($resource);
-        $resourcePublisher = $this->createStub(\TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface::class);
-        $resourcePublisher->method('generateUri')->willReturn(new \TYPO3\CMS\Core\Http\Uri('/_assets/smile.gif'));
-        $this->services[\TYPO3\CMS\Core\SystemResource\SystemResourceFactory::class] = $resourceFactory;
-        $this->services[\TYPO3\CMS\Core\SystemResource\Publishing\SystemResourcePublisherInterface::class] = $resourcePublisher;
-
-        $smiley = new \Mittwald\Typo3Forum\Domain\Model\Format\Smiley();
-        $smiley->setImagePath($resourceIdentifier);
-        (new \ReflectionProperty($smiley, 'smileyShortcut'))->setValue($smiley, ':)');
-        $result = $this->createStub(\TYPO3\CMS\Extbase\Persistence\QueryResultInterface::class);
-        $result->method('toArray')->willReturn([$smiley]);
-        $repository = $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Format\SmileyRepository::class);
-        $repository->method('findAll')->willReturn($result);
-
-        self::assertStringContainsString(
-            'src="/_assets/smile.gif"',
-            (new \Mittwald\Typo3Forum\TextParser\Service\SmileyParserService($repository))->getParsedText(':)')
-        );
-    }
-
-    public function testEditorSmileyIconsUsePublishedRelativeAssets(): void
-    {
-        $css = (string)file_get_contents(dirname(__DIR__, 2) . '/Resources/Public/CSS/typo3_forum.css');
-
-        self::assertStringContainsString("url('../Images/Icons/Smiley/smile.gif')", $css);
-        self::assertStringContainsString("url('../Images/Icons/Smiley/confused.gif')", $css);
-        self::assertStringNotContainsString('/typo3conf/ext/', $css);
-    }
-
     public function testPreviewPreservesZeroAndEmptyContent(): void
     {
         $context = $this->context();
@@ -383,7 +335,7 @@ final class FluidRenderingTest extends TestCase
             $parser = $this->createMock(\Mittwald\Typo3Forum\TextParser\TextParserService::class);
             $parser->expects(self::once())->method('parseText')->with($content)->willReturn($content);
             $helper = new \Mittwald\Typo3Forum\ViewHelpers\Format\TextParserViewHelper($parser);
-            self::assertSame($content, $context->getViewHelperInvoker()->invoke($helper, ['content' => $content], $context, static fn() => 'fallback'));
+            self::assertSame($content, $context->getViewHelperInvoker()->invoke($helper, ['content' => $content], $context, static fn () => 'fallback'));
         }
     }
 
@@ -402,7 +354,7 @@ final class FluidRenderingTest extends TestCase
         $results = new \TYPO3\CMS\Extbase\Error\Result();
         $results->forProperty('post.text')->addError(new \TYPO3\CMS\Extbase\Error\Error('Invalid', 42));
         $request->getAttribute('extbase')->setOriginalRequestMappingResults($results);
-        $html = $context->getViewHelperInvoker()->invoke(\Mittwald\Typo3Forum\ViewHelpers\Form\RowViewHelper::class, ['label' => '<Label>', 'labelFor' => 'editor', 'error' => 'post.text', 'errorLLPrefix' => 'Error'], $context, static fn() => '');
+        $html = $context->getViewHelperInvoker()->invoke(\Mittwald\Typo3Forum\ViewHelpers\Form\RowViewHelper::class, ['label' => '<Label>', 'labelFor' => 'editor', 'error' => 'post.text', 'errorLLPrefix' => 'Error'], $context, static fn () => '');
         self::assertStringContainsString('class="control-group error"', $html);
         self::assertStringContainsString('&lt;Label&gt;', $html);
         self::assertStringContainsString('Invalid &lt;value&gt;', $html);
@@ -417,7 +369,10 @@ final class FluidRenderingTest extends TestCase
             $uri->method($method)->willReturnSelf();
         }
         $routes = [];
-        $uri->expects(self::exactly(2))->method('uriFor')->willReturnCallback(static function (...$args) use (&$routes) { $routes[] = $args; return '/target?one=1&two=2'; });
+        $uri->expects(self::exactly(2))->method('uriFor')->willReturnCallback(static function (...$args) use (&$routes) {
+            $routes[] = $args;
+            return '/target?one=1&two=2';
+        });
         $this->services[\TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder::class] = $uri;
         $user = $this->createStub(FrontendUser::class);
         $user->method('getUid')->willReturn(7);
@@ -433,54 +388,4 @@ final class FluidRenderingTest extends TestCase
         self::assertSame([['show', ['user' => 7], 'User', 'Typo3Forum', 'UserProfile'], ['show', ['forum' => 9], 'Forum', 'Typo3Forum', 'Forum']], $routes);
     }
 
-    public function testQuoteViewFactoryRendersActualPartialWithSettingsAndAuthorLink(): void
-    {
-        $language = $this->createStub(\TYPO3\CMS\Core\Localization\LanguageService::class);
-        $language->method('translate')->willReturn('Quote');
-        $language->method('getLocale')->willReturn(new \TYPO3\CMS\Core\Localization\Locale('en'));
-        $factory = $this->createStub(\TYPO3\CMS\Core\Localization\LanguageServiceFactory::class);
-        $factory->method('create')->willReturn($language);
-        $locales = $this->createStub(\TYPO3\CMS\Core\Localization\Locales::class);
-        $locales->method('createLocaleFromRequest')->willReturn(new \TYPO3\CMS\Core\Localization\Locale('en'));
-        $this->services[\TYPO3\CMS\Core\Localization\LanguageServiceFactory::class] = $factory;
-        $this->services[\TYPO3\CMS\Core\Localization\Locales::class] = $locales;
-        $uri = $this->createMock(\TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder::class);
-        foreach (['reset', 'setRequest', 'setNoCache', 'setLanguage', 'setSection', 'setFormat', 'setLinkAccessRestrictedPages', 'setArguments', 'setCreateAbsoluteUri'] as $method) {
-            $uri->method($method)->willReturnSelf();
-        }
-        $uri->expects(self::once())->method('setTargetPageUid')->with(23)->willReturnSelf();
-        $uri->expects(self::once())->method('uriFor')->with('show', ['user' => 7], 'User', 'Typo3Forum', 'UserProfile')->willReturn('/profile?user=7&test=1');
-        $this->services[\TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder::class] = $uri;
-        $typoScript = new \TYPO3\CMS\Core\TypoScript\FrontendTypoScript(new \TYPO3\CMS\Core\TypoScript\AST\Node\RootNode(), [], [], []);
-        $typoScript->setSetupArray(['plugin.' => ['tx_typo3forum.' => ['settings.' => ['pids.' => ['UserShow' => 23]]]]]);
-        $request = $this->formContext()->getAttribute(\Psr\Http\Message\ServerRequestInterface::class)->withAttribute('frontend.typoscript', $typoScript);
-        $previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? null;
-        $GLOBALS['TYPO3_REQUEST'] = $request;
-        try {
-            $author = $this->createStub(FrontendUser::class);
-            $author->method('getUid')->willReturn(7);
-            $author->method('getUsername')->willReturn('<Author>');
-            $post = $this->createStub(\Mittwald\Typo3Forum\Domain\Model\Forum\Post::class);
-            $post->method('getAuthor')->willReturn($author);
-            $repository = $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Forum\PostRepository::class);
-            $repository->method('findByUid')->willReturn($post);
-            $viewFactory = $this->createMock(\TYPO3\CMS\Core\View\ViewFactoryInterface::class);
-            $viewFactory->expects(self::exactly(2))->method('create')->willReturnCallback(function ($data) use ($request) {
-                self::assertSame($request, $data->request);
-                self::assertSame('EXT:typo3_forum/Resources/Private/Partials/Bootstrap/Format/Quote.html', $data->templatePathAndFilename);
-                $context = $this->context();
-                $context->setAttribute(\Psr\Http\Message\ServerRequestInterface::class, $request);
-                $context->getTemplatePaths()->setTemplatePathAndFilename(dirname(__DIR__, 2) . '/Resources/Private/Partials/Bootstrap/Format/Quote.html');
-                return new \TYPO3\CMS\Fluid\View\FluidViewAdapter(new \TYPO3Fluid\Fluid\View\TemplateView($context));
-            });
-            $parser = new \Mittwald\Typo3Forum\TextParser\Service\QuoteParserService($repository, $viewFactory);
-            $html = $parser->getParsedText('[quote=1]<strong>Already parsed</strong>[/quote]');
-            self::assertStringContainsString('&lt;Author&gt;', $html);
-            self::assertStringContainsString('/profile?user=7&amp;test=1', $html);
-            self::assertStringContainsString('<strong>Already parsed</strong>', $html);
-            self::assertStringContainsString('Anonymous quote', $parser->getParsedText('[quote]Anonymous quote[/quote]'));
-        } finally {
-            if ($previousRequest === null) { unset($GLOBALS['TYPO3_REQUEST']); } else { $GLOBALS['TYPO3_REQUEST'] = $previousRequest; }
-        }
-    }
 }

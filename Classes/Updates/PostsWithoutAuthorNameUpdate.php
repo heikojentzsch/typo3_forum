@@ -1,4 +1,5 @@
 <?php
+
 /*                                                                      *
  *  COPYRIGHT NOTICE                                                    *
  *                                                                      *
@@ -36,7 +37,8 @@ use TYPO3\CMS\Core\Upgrades\UpgradeWizardInterface;
 class PostsWithoutAuthorNameUpdate implements UpgradeWizardInterface, RepeatableInterface
 {
     public function __construct(private readonly ConnectionPool $connectionPool)
-    {}
+    {
+    }
 
     public function getTitle(): string
     {

@@ -1,6 +1,6 @@
 {namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
 
-<div class="{f:if(condition: '{forum.parent}', then: 'mb-3')}">
+<div class="tx-typo3forum-action-menu {f:if(condition: '{forum.parent}', then: 'mb-3')}">
 	<mmf:authentication.ifAccess object="{forum}" accessType="newTopic">
 		<f:link.action controller="Topic" action="new" class="btn btn-primary me-1 mb-1" arguments="{forum: forum}">
 			<i class="fas fa-plus me-1"></i> {f:translate(key:'Button_Topic_New')}
@@ -10,21 +10,21 @@
 	<mmf:authentication.ifLoggedIn>
 		<mmf:user.ifSubscribed object="{forum}">
 			<f:then>
-				<f:link.action controller="User" action="subscribe" class="btn btn-primary me-1 mb-1" arguments="{forum: forum, unsubscribe: 1}">
+				<f:form controller="User" action="subscribe" arguments="{forum: forum.uid, unsubscribe: 1}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="btn btn-primary me-1 mb-1">
 					<i class="fas fa-bell-slash me-1"></i> {f:translate(key:'Button_Unsubscribe')}
-				</f:link.action>
+				</button></f:form>
 			</f:then>
 			<f:else>
-				<f:link.action controller="User" action="subscribe" class="btn btn-primary me-1 mb-1" arguments="{forum: forum, unsubscribe: 0}">
+				<f:form controller="User" action="subscribe" arguments="{forum: forum.uid, unsubscribe: 0}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="btn btn-primary me-1 mb-1">
 					<i class="fas fa-bell me-1"></i> {f:translate(key:'Button_Subscribe')}
-				</f:link.action>
+				</button></f:form>
 			</f:else>
 		</mmf:user.ifSubscribed>
 
 		<f:if condition="!{forum.beenReadByCurrentUser}">
-			<f:link.action controller="Forum" action="markRead" class="btn btn-primary me-1 mb-1" arguments="{forum: forum}">
+			<f:form controller="Forum" action="markRead" arguments="{forum: forum.uid}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="btn btn-primary me-1 mb-1">
 				<i class="fas fa-eye me-1"></i> {f:translate(key:'Button_Mark_Read')}
-			</f:link.action>
+			</button></f:form>
 		</f:if>
 	</mmf:authentication.ifLoggedIn>
 </div>

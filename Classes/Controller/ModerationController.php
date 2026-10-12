@@ -43,7 +43,6 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
-use TYPO3\CMS\Extbase\Http\ForwardResponse;
 use TYPO3\CMS\Extbase\Mvc\Exception\InvalidArgumentValueException;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 
@@ -81,7 +80,7 @@ class ModerationController extends AbstractController
     public function indexReportAction(int $page = 1): ResponseInterface
     {
         $this->view->assign('postReports', $this->postReportRepository->findAllAuthorizedToEdit());
-        $this->view->assign('userReports', $this->userReportRepository->findAll());
+        $this->view->assign('userReports', $this->getCurrentUser()->isInModerationGroup() ? $this->userReportRepository->findAll() : []);
         $this->view->assign('page', $page);
         return $this->htmlResponse();
     }
@@ -91,8 +90,6 @@ class ModerationController extends AbstractController
      */
     public function editReportAction(?UserReport $userReport = null, ?PostReport $postReport = null): ResponseInterface
     {
-        $this->persistenceManager->persistAll();
-
         if ($userReport === null && $postReport === null) {
             throw new InvalidArgumentValueException('You need to select a user report or post report!', 1285059341);
         }
@@ -104,6 +101,9 @@ class ModerationController extends AbstractController
         } else {
             $type = 'User';
             $report = $userReport;
+            if (!$this->getCurrentUser()->isInModerationGroup()) {
+                throw new \Mittwald\Typo3Forum\Domain\Exception\Authentication\NoAccessException('User moderation requires permission.', 1791839101);
+            }
         }
 
         $this->view->assignMultiple([
@@ -117,6 +117,9 @@ class ModerationController extends AbstractController
 
     public function createUserReportCommentAction(UserReport $report, ReportComment $comment): ResponseInterface
     {
+        if (!$this->getCurrentUser()->isInModerationGroup()) {
+            throw new \Mittwald\Typo3Forum\Domain\Exception\Authentication\NoAccessException('User moderation requires permission.', 1791839101);
+        }
         $comment->setAuthor($this->authenticationService->getUser());
         $report->addComment($comment);
         $this->reportRepository->update($report);
@@ -126,7 +129,7 @@ class ModerationController extends AbstractController
         );
 
         $this->clearCacheForCurrentPage();
-        return (new ForwardResponse('editReport'))->withArguments(['userReport' => $report]);
+        return $this->redirect('editReport', null, null, ['userReport' => $report]);
     }
 
     /**
@@ -147,7 +150,7 @@ class ModerationController extends AbstractController
 
         $this->clearCacheForCurrentPage();
         $uri = $this->uriBuilder->uriFor('editReport', ['postReport' => $report]);
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 
@@ -165,6 +168,9 @@ class ModerationController extends AbstractController
         ReportWorkflowStatus $status,
         $redirect = 'indexReport'
     ): ResponseInterface {
+        if (!$this->getCurrentUser()->isInModerationGroup()) {
+            throw new \Mittwald\Typo3Forum\Domain\Exception\Authentication\NoAccessException('User moderation requires permission.', 1791839101);
+        }
         $report->setWorkflowStatus($status);
 
         /** @var ReportComment $comment */
@@ -177,8 +183,8 @@ class ModerationController extends AbstractController
         $this->addLocalizedFlashmessage('Report_UpdateStatus_Success', [$report->getUid(), $status->getName()]);
         $this->clearCacheForCurrentPage();
 
-        $uri = $this->uriBuilder->uriFor($redirect, ['postReport' => $report]);
-        return $this->responseFactory->createResponse(307)
+        $uri = $this->uriBuilder->uriFor('editReport', ['userReport' => $report]);
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 
@@ -207,7 +213,7 @@ class ModerationController extends AbstractController
         $this->clearCacheForCurrentPage();
 
         $uri = $this->uriBuilder->uriFor('editReport', ['postReport' => $report]);
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 
@@ -246,16 +252,12 @@ class ModerationController extends AbstractController
             $this->topicFactory->moveTopic($topic, $moveTopicTarget);
         }
 
-        $this->persistenceManager->persistAll();
-
         $this->getFlashMessageQueue()->enqueue(
             new FlashMessage(Localization::translate('Moderation_UpdateTopic_Success', 'Typo3Forum'))
         );
         $this->clearCacheForCurrentPage();
 
-        return (new ForwardResponse('show'))
-            ->withControllerName('Topic')
-            ->withArguments(['topic' => $topic]);
+        return $this->redirect('show', 'Topic', null, ['topic' => $topic]);
     }
 
     public function confirmDeleteTopicAction(Topic $topic): ResponseInterface
@@ -279,8 +281,6 @@ class ModerationController extends AbstractController
         );
         $this->clearCacheForCurrentPage();
 
-        return (new ForwardResponse('show'))
-            ->withControllerName('Forum')
-            ->withArguments(['forum' => $topic->getForum()]);
+        return $this->redirect('show', 'Forum', null, ['forum' => $topic->getForum()]);
     }
 }

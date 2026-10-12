@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Format;
 
 /*                                                                      *
@@ -24,8 +25,6 @@ namespace Mittwald\Typo3Forum\Domain\Model\Format;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-use Mittwald\Typo3Forum\TextParser\Panel\MarkItUpExportableInterface;
-
 /**
  * A BBCode element. This class implements the abstract AbstractTextParserElement
  * class.
@@ -35,7 +34,7 @@ use Mittwald\Typo3Forum\TextParser\Panel\MarkItUpExportableInterface;
  * @license    GNU public License, version 2
  *             http://opensource.org/licenses/gpl-license.php
  */
-class BBCode extends AbstractTextParserElement implements MarkItUpExportableInterface
+class BBCode extends AbstractTextParserElement
 {
     /**
      * The regular expression that will be used to match the BBCode.
@@ -95,21 +94,6 @@ class BBCode extends AbstractTextParserElement implements MarkItUpExportableInte
         $this->regularExpressionReplacementBlocked = $regularExpressionReplacementBlocked;
 
         return $this;
-    }
-
-    /**
-     * Exports this BBCode object as a plain array, that can be used in
-     * a MarkItUp configuration object.
-     * @phpstan-return array<string, mixed>
-     */
-    public function exportForMarkItUp(): array
-    {
-        return [
-            'name' => $this->getName(),
-            'className' => $this->getEditorIconClass(),
-            'openWith' => $this->getLeftBBCode(),
-            'closeWith' => $this->getRightBBCode()
-        ];
     }
 
     /**

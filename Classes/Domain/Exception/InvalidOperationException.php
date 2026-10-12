@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Exception;
 
 /*                                                                      *
@@ -26,7 +27,6 @@ namespace Mittwald\Typo3Forum\Domain\Exception;
 
 class InvalidOperationException extends AbstractException
 {
-
     /**
      * Exception message.
      * @var string

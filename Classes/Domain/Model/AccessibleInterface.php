@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model;
 
 /*                                                                      *
@@ -34,7 +35,6 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Access;
  */
 interface AccessibleInterface
 {
-
     /**
      * Checks if a certain frontend user has access to a specific operation.
      *

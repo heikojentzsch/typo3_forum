@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\User;
 
 /*                                                                    - *
@@ -30,7 +31,6 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
 /** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\User\Notification> */
 class NotificationRepository extends Repository
 {
-
     /**
      * Find notifications for a specific user
      *

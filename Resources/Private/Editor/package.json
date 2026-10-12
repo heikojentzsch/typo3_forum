@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "playwright test"
+    "test": "playwright test",
+    "format": "prettier --write \"*.{js,mjs,json}\" \"../../Public/CSS/*.css\" \"../../Public/Javascript/bootstrap-tags.js\" \"../../../Configuration/**/*.yaml\" \"../../../*.yml\" \"../../../.github/workflows/*.yml\"",
+    "format:check": "prettier --check \"*.{js,mjs,json}\" \"../../Public/CSS/*.css\" \"../../Public/Javascript/bootstrap-tags.js\" \"../../../Configuration/**/*.yaml\" \"../../../*.yml\" \"../../../.github/workflows/*.yml\""
   },
   "dependencies": {
     "emojibase-data": "17.0.0",
@@ -12,6 +14,7 @@
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "prettier": "3.6.2"
   }
 }

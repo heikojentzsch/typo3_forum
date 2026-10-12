@@ -42,7 +42,6 @@ class LinkViewHelper extends AbstractViewHelper
 
     /**
      * Initialize viewHelper and add given settings
-     *
      */
     public function initialize(): void
     {
@@ -86,7 +85,7 @@ class LinkViewHelper extends AbstractViewHelper
                 'extensionName' => 'Typo3Forum', 'pluginName' => 'UserProfile',
                 'controller' => 'User', 'action' => 'show', 'arguments' => ['user' => $user->getUid()]],
             $this->renderingContext,
-            static fn() => ''
+            static fn () => ''
         );
         $uri = htmlspecialchars($uri);
 

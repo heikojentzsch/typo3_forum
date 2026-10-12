@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Forum;
 
 /*                                                                      *
@@ -43,7 +44,7 @@ use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
  * are submitted to the access control mechanism and can be subscribed by users.
  */
 class Forum // NOSONAR we are not going reduce the amount of functions
-    extends AbstractEntity implements AccessibleInterface, SubscribeableInterface, ReadableInterface
+extends AbstractEntity implements AccessibleInterface, SubscribeableInterface, ReadableInterface
 {
     /**
      * @var ObjectStorage<Access>
@@ -84,8 +85,6 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      */
     #[Lazy]
     protected ObjectStorage $subscribers;
-    /**
-     */
     #[Validate(validator: 'NotEmpty')]
     protected string $title = '';
     protected string $slug = '';
@@ -655,8 +654,8 @@ class Forum // NOSONAR we are not going reduce the amount of functions
      * Sets the access rules for this forum.
      *
      * @param ObjectStorage $acls
-     * @return void
      * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<Access> $acls
+     * @return void
      */
     public function setAcls(ObjectStorage $acls)
     {

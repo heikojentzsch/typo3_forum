@@ -1,10 +1,10 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Service;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\TagRepository;
 use TYPO3\CMS\Core\SingletonInterface;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 class TagService implements SingletonInterface

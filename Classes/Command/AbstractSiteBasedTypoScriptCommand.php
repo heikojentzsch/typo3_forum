@@ -5,10 +5,10 @@ namespace Mittwald\Typo3Forum\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Extbase\Configuration\BackendConfigurationManager;
-use TYPO3\CMS\Core\Http\ServerRequest;
 
 abstract class AbstractSiteBasedTypoScriptCommand extends Command
 {
@@ -64,7 +64,8 @@ abstract class AbstractSiteBasedTypoScriptCommand extends Command
      * Override to set the storage page for repositories.
      */
     protected function setStoragePage(int $storagePid): void
-    {}
+    {
+    }
 
     /**
      * Execute this command for a site. Automatically called for every

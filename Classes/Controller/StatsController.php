@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Controller;
 
 /*                                                                      *
@@ -40,7 +41,7 @@ class StatsController extends AbstractController
     /**
      * Listing Action.
      */
-    public function listAction():ResponseInterface
+    public function listAction(): ResponseInterface
     {
         $this->view->assign('summaries', $this->summaryRepository->findAll());
         return $this->htmlResponse();

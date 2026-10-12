@@ -1,106 +1,19 @@
-Report
-======
+Reports and moderation
+======================
 
-Preface
--------
+Logged-in users can report users or posts; reporting a post requires read access.
+Post reports use the affected forum's moderation ACL. User reports require the
+user-moderation group flag. Server-side authorization also protects direct requests.
 
-The report tool in typo3forum is used to report posts or users. These reports are then edited by a moderator and if necessary deleted or edited.
-Every logged in user can report a user or post.
-Reported users or posts can only be edited by typo3 forum users with moderation rights. :ref:`User`.
+Create workflow-status records in the forum storage folder. Configure an initial
+status, a final status and the allowed follow-up relationship between them. These
+are statuses, not separate workflows. Additional allowed transitions can be added.
 
+Add the dedicated moderation/reports content element and configure its storage
+and target pages. The old generic plugin dropdown with switchable actions is not
+the v14 installation path. Existing content elements are handled by migration.
 
-.. image:: Images/reportsymbol.png
-
-
-Installing
-------------
-
-In order for the reporting workflow to work properly, the first thing we need to do is create a workflow in the data folder where the forum stores its data.
-
-|
-
-Navigate in your page tree to the folder where your forum data is stored, for us this is Data.
-
-|
-|
-
-.. image:: Images/Subfolder.png
-
-|
-|
-
-Create a new workflow record in this.
-
-|
-|
-
-.. image:: Images/Workflow.png
-
-|
-|
-
-Now we create a new workflow status, there are two types we can create once the Final status and an Initial status we have to create for the Report Tool, two workflows for each status one.
-
-|
-
-First choose a name for the Initial status and tick the right field. Repeat this process for the Final Status. Then you have created 2 workflows.
-
-|
-|
-
-.. image:: Images/WorkflowBasic.png
-
-|
-|
-
-The Initial status must also get the Followup status of the Final status
-
-|
-|
-
-.. image:: Images/InitialStatus.png
-
-|
-|
-
-Displaying the reports in the frontend
--------------------------------
-
-To display the reports in the frontend for the moderators you have to create a new plugin Content elemet. We do this on a new page that we call Reports
-
-|
-|
-
-.. image:: Images/reportspage.png
-
-|
-|
-
-Here we create a new plugin content element. This will be created exactly as we brought the forum to the frontend. :ref:`basic`.  Now we go again to the tab Plugin in the Content element.
-
-
-|
-
-- Here we select again the typo3_forum at the plugin.
-
-- In the plugin options we select Moderator/Reports.
-
-- At last we have to specify the location where our forum is stored, for us this is in the folder Data
-
-|
-|
-
-.. image:: Images/ReportContentElemet.png
-
-|
-|
-
- If you now, as a logged in moderator, go to the Forntend Reports page you will see everything that has been reported.
-
-|
-|
-
-.. image:: Images/FrontendReports.png
-
-
-
+Moderators can inspect reports, add sanitized rich-text comments and select an
+allowed follow-up status. Status changes and comments submit POST forms with
+TYPO3 request tokens. Custom templates must preserve these fields. Old screenshots
+under Images are retained only as historical illustrations.

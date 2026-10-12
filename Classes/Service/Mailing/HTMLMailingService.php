@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Service\Mailing;
 
 /*                                                                      *
@@ -23,9 +24,9 @@ namespace Mittwald\Typo3Forum\Service\Mailing;
  *                                                                      *
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
+use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use TYPO3\CMS\Core\Mail\MailMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 
 /**
  * Service class for sending HTML mails.

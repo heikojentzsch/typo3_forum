@@ -110,12 +110,12 @@ routeEnhancers:
       - routePath: '/tag/{tag_alias}'
         _controller: 'Tag::show'
         _arguments:
-            tag_alias: tag
+          tag_alias: tag
       - routePath: '/tag/{tag_alias}/page/{page_number}'
         _controller: 'Tag::show'
         _arguments:
-            tag_alias: tag
-            page_number: page
+          tag_alias: tag
+          page_number: page
     aspects:
       forum_alias:
         type: PersistedAliasMapper
@@ -209,7 +209,7 @@ routeEnhancers:
       - routePath: '/reports/{page_number}'
         _controller: 'Moderation::indexReport'
         _arguments:
-            page_number: page
+          page_number: page
 
       - routePath: '/report/post/{report_alias}/edit'
         _controller: 'Moderation::editReport'
@@ -254,12 +254,12 @@ routeEnhancers:
       - routePath: '/users/{page_number}'
         _controller: 'User::list'
         _arguments:
-            page_number: page
+          page_number: page
       - routePath: '/users/{page_number}/search/{search_string}'
         _controller: 'User::list'
         _arguments:
-            page_number: page
-            search_string: nameSearch
+          page_number: page
+          search_string: nameSearch
     aspects:
       page_number:
         type: StaticRangeMapper
@@ -279,23 +279,23 @@ routeEnhancers:
       - routePath: '/subscriptions/topics/{page_number}'
         _controller: 'User::listSubscriptions'
         _arguments:
-            page_number: topicPage
+          page_number: topicPage
       - routePath: '/subscriptions/forums/{page_number}'
         _controller: 'User::listSubscriptions'
         _arguments:
-            page_number: forumPage
+          page_number: forumPage
       - routePath: '/subscriptions/topics/{page_number}/forums/{page_number_2}'
         _controller: 'User::listSubscriptions'
         _arguments:
-            page_number: topicPage
-            page_number_2: forumPage
+          page_number: topicPage
+          page_number_2: forumPage
 
       - routePath: '/notifications/'
         _controller: 'User::listNotifications'
       - routePath: '/notifications/page/{page_number}'
         _controller: 'User::listNotifications'
         _arguments:
-            page_number: page
+          page_number: page
     aspects:
       page_number:
         type: StaticRangeMapper
@@ -318,7 +318,7 @@ routeEnhancers:
       - routePath: '/tags/{page_number}'
         _controller: 'Tag::list'
         _arguments:
-            page_number: page
+          page_number: page
     aspects:
       page_number:
         type: StaticRangeMapper
@@ -335,7 +335,7 @@ routeEnhancers:
       - routePath: '/posts/{page_number}'
         _controller: 'Post::list'
         _arguments:
-            page_number: page
+          page_number: page
     aspects:
       page_number:
         type: StaticRangeMapper
@@ -352,7 +352,7 @@ routeEnhancers:
       - routePath: '/topics/{page_number}'
         _controller: 'Topic::list'
         _arguments:
-            page_number: page
+          page_number: page
     aspects:
       page_number:
         type: StaticRangeMapper

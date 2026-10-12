@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Cache;
 
 /*                                                                    - *
@@ -31,7 +32,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class CacheManager
 {
-    const FILE_CACHE_PATHS = ['typo3temp/typo3_forum', 'typo3temp/typo3_forum/gravatar'];
+    public const FILE_CACHE_PATHS = ['typo3temp/typo3_forum', 'typo3temp/typo3_forum/gravatar'];
 
     protected FrontendInterface $cache;
     public function __construct()

@@ -1,6 +1,6 @@
 {namespace mmf=Mittwald\Typo3Forum\ViewHelpers}
 
-<div class="mb-2">
+<div class="tx-typo3forum-action-menu mb-2">
 	<f:if condition="{topic.closed}">
 		<button type="button" class="btn btn-dark me-1 mb-1" disabled>
 			<i class="fas fa-lock me-1"></i>
@@ -19,16 +19,16 @@
 		<f:if condition="!{topic.closed}">
 			<mmf:user.ifSubscribed object="{topic}">
 				<f:then>
-					<f:link.action pageUid="{settings.pids.Forum}" pluginName="Forum" controller="User" class="btn btn-primary me-1 mb-1" action="subscribe" arguments="{topic: topic, unsubscribe: 1}">
+					<f:form pageUid="{settings.pids.Forum}" pluginName="Forum" controller="User" action="subscribe" arguments="{topic: topic.uid, unsubscribe: 1}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="btn btn-primary me-1 mb-1">
 						<i class="fas fa-bell-slash me-1"></i>
 						<f:translate key="Button_Unsubscribe" />
-					</f:link.action>
+					</button></f:form>
 				</f:then>
 				<f:else>
-					<f:link.action pageUid="{settings.pids.Forum}" pluginName="Forum" controller="User" class="btn btn-primary me-1 mb-1" action="subscribe" arguments="{topic: topic, unsubscribe: 0}">
+					<f:form pageUid="{settings.pids.Forum}" pluginName="Forum" controller="User" action="subscribe" arguments="{topic: topic.uid, unsubscribe: 0}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="btn btn-primary me-1 mb-1">
 						<i class="fas fa-bell me-1"></i>
 						<f:translate key="Button_Subscribe" />
-					</f:link.action>
+					</button></f:form>
 				</f:else>
 			</mmf:user.ifSubscribed>
 		</f:if>

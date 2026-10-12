@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\User\Userfield;
 
 /*                                                                      *
@@ -29,7 +30,6 @@ namespace Mittwald\Typo3Forum\Domain\Model\User\Userfield;
  */
 class TextUserfield extends TyposcriptUserfield
 {
-
     /**
      * The typoscript path that is to be used for rendering this field.
      * @var string

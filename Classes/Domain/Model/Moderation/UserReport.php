@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\Moderation;
 
 /*                                                                    - *
@@ -35,7 +36,6 @@ namespace Mittwald\Typo3Forum\Domain\Model\Moderation;
  */
 class UserReport extends Report
 {
-
     /**
      * A set of comments that are assigned to this report.
      * @var \Mittwald\Typo3Forum\Domain\Model\User\FrontendUser

@@ -35,7 +35,8 @@ if (PHP_SAPI !== 'cli') {
 // Define in which folders to search and which folders to exclude
 // Exclude some directories that are excluded by Git anyways to speed up the sniffing
 $finder = PhpCsFixer\Finder::create()
-    ->in([__DIR__ . '/Classes', __DIR__ . '/Configuration', __DIR__ . '/Tests', __DIR__ . '/Build']);
+    ->in([__DIR__ . '/Classes', __DIR__ . '/Configuration', __DIR__ . '/Tests', __DIR__ . '/Build', __DIR__ . '/Resources/Private/Migration', __DIR__ . '/ddev/Packages/typo3_forum_dev'])
+    ->append(glob(__DIR__ . '/*.php'));
 // Return a Code Sniffing configuration using
 // all sniffers needed for PSR-12
 // and additionally:
@@ -77,7 +78,7 @@ return (new PhpCsFixer\Config())
         'no_whitespace_in_blank_line' => true,
         'ordered_imports' => true,
         'phpdoc_no_access' => true,
-        'phpdoc_no_empty_return' => true,
+        'phpdoc_no_empty_return' => false,
         'phpdoc_no_package' => true,
         'phpdoc_scalar' => true,
         'phpdoc_trim' => true,

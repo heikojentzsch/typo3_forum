@@ -13,16 +13,16 @@
 				<f:else>
 					<mmf:post.ifSupports post="{post}">
 						<f:then>
-							<f:link.action pageUid="{settings.pids.Forum}" controller="Post" pluginName="Forum" action="unsupport" arguments="{post: post}" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_Unsupport')}">
+							<f:form pageUid="{settings.pids.Forum}" controller="Post" pluginName="Forum" action="unsupport" arguments="{post: post.uid}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_Unsupport')}">
 								<i class="fas fa-heart" aria-hidden="true"></i>
 								<f:translate key="Button_Like" /> ({post.helpfulCount})
-							</f:link.action>
+							</button></f:form>
 						</f:then>
 						<f:else>
-							<f:link.action pageUid="{settings.pids.Forum}" controller="Post" pluginName="Forum" action="support" arguments="{post: post}" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_Support')}">
+							<f:form pageUid="{settings.pids.Forum}" controller="Post" pluginName="Forum" action="support" arguments="{post: post.uid}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_Support')}">
 								<i class="far fa-heart" aria-hidden="true"></i>
 								<f:translate key="Button_Like" /> ({post.helpfulCount})
-							</f:link.action>
+							</button></f:form>
 						</f:else>
 					</mmf:post.ifSupports>
 				</f:else>
@@ -70,16 +70,16 @@
 		<li class="nav-item">
 			<f:if condition="{post.solution}">
 				<f:then>
-					<f:link.action pageUid="{settings.pids.Forum}" pluginName="Forum" controller="Topic" action="removeSolution" arguments="{topic: post.topic}" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_RemoveSolution')}">
+					<f:form pageUid="{settings.pids.Forum}" pluginName="Forum" controller="Topic" action="removeSolution" arguments="{topic: post.topic.uid}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_RemoveSolution')}">
 						<i class="far fa-square-minus" aria-hidden="true"></i>
 						<f:translate key="Button_RemoveSolution" />
-					</f:link.action>
+					</button></f:form>
 				</f:then>
 				<f:else>
-					<f:link.action pageUid="{settings.pids.Forum}" pluginName="Forum" controller="Topic" action="solution" arguments="{post: post}" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_Solution')}">
+					<f:form pageUid="{settings.pids.Forum}" pluginName="Forum" controller="Topic" action="solution" arguments="{post: post.uid}" method="post" requestToken="typo3_forum/mutation" class="d-inline"><button type="submit" class="tx-typo3forum-post-menu-action" title="{f:translate(key: 'Button_Solution')}">
 						<i class="fas fa-square-check" aria-hidden="true"></i>
 						<f:translate key="Button_Solution" />
-					</f:link.action>
+					</button></f:form>
 				</f:else>
 			</f:if>
 		</li>

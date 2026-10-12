@@ -2,7 +2,7 @@
 <f:layout name="default" />
 
 <f:section name="main">
-	<f:form action="deleteTopic" id="deleteTopic">
+	<f:form action="deleteTopic" id="deleteTopic" requestToken="typo3_forum/mutation">
 		<div class="alert alert-danger">
 			<h2 class="alert-heading"><f:translate key="Topic_ConfirmDelete_Header" arguments="{0: topic.subject}" /></h2>
 			<div>

@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Service;
 
 /*                                                                    - *

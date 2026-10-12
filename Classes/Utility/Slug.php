@@ -1,8 +1,9 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Utility;
 
-use Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception;
 use Doctrine\DBAL\ParameterType;
+use Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\Model\RecordStateFactory;
 use TYPO3\CMS\Core\DataHandling\SlugHelper;
@@ -54,9 +55,11 @@ class Slug
         $evalInfo = GeneralUtility::trimExplode(',', $fieldConfig['eval'], true);
         if (in_array('uniqueInSite', $evalInfo)) {
             return $slugHelper->buildSlugForUniqueInSite($slug, $state);
-        } else if (in_array('uniqueInPid', $evalInfo)) {
+        }
+        if (in_array('uniqueInPid', $evalInfo)) {
             return $slugHelper->buildSlugForUniqueInPid($slug, $state);
-        } else if (in_array('unique', $evalInfo)) {
+        }
+        if (in_array('unique', $evalInfo)) {
             return $slugHelper->buildSlugForUniqueInTable($slug, $state);
         }
         return $slug;

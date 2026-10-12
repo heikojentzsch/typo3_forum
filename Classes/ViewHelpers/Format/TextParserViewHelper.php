@@ -51,14 +51,6 @@ class TextParserViewHelper extends AbstractViewHelper
         $this->registerArgument('html', 'string', 'Explicit HTML v1 content; never auto-detected.', false, null);
 
         $this->registerArgument(
-            'configuration',
-            'string',
-            'The configuration path',
-            false,
-            'plugin.tx_typo3forum.settings.textParsing'
-        );
-
-        $this->registerArgument(
             'post',
             Post::class,
             '',

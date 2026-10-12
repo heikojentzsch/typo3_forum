@@ -10,11 +10,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class UserUtility
 {
     public function __construct(private readonly FrontendUserRepository $frontendUserRepository)
-    {}
+    {
+    }
 
     public static function isUserLoggedIn(): bool
     {
-        return (bool) self::getLoggedInUserId();
+        return (bool)self::getLoggedInUserId();
     }
 
     public static function getLoggedInUserId(): int

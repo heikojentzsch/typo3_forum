@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Repository\Moderation;
 
 /*                                                                    - *
@@ -34,7 +35,6 @@ use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 /** @extends AbstractRepository<\Mittwald\Typo3Forum\Domain\Model\Moderation\ReportWorkflowStatus> */
 class ReportWorkflowStatusRepository extends AbstractRepository
 {
-
     /**
      * Finds the initial status that is to be used for new reports.
      *

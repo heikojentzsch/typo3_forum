@@ -1,5 +1,6 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
 
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
@@ -19,8 +20,10 @@ final class PostsWithoutAuthorNameUpdateTest extends DatabaseTestCase
         self::assertTrue($wizard->updateNecessary());
         self::assertTrue($wizard->executeUpdate());
         self::assertFalse($wizard->updateNecessary());
-        self::assertSame(['Anonymous', 'Anonymous: A', 'Anonymous: AB', 'ABC', 'Anonymous: Ä', 'Anonymous: éé', ''],
-            $this->connection->executeQuery("SELECT author_name FROM $table ORDER BY uid")->fetchFirstColumn());
+        self::assertSame(
+            ['Anonymous', 'Anonymous: A', 'Anonymous: AB', 'ABC', 'Anonymous: Ä', 'Anonymous: éé', ''],
+            $this->connection->executeQuery("SELECT author_name FROM $table ORDER BY uid")->fetchFirstColumn()
+        );
         self::assertTrue($wizard->executeUpdate());
     }
 }

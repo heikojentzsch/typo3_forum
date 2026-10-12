@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Utility;
 
 /*                                                                      *
@@ -31,7 +32,6 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
  */
 class Localization
 {
-
     /**
      * Translates something. Basically, this is just a wrapper function for the
      * Tx_Extbase_Utility_Localization::translate method. However, this methods

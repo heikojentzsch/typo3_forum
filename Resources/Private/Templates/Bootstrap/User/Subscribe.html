@@ -1,0 +1,12 @@
+<f:layout name="default" />
+<f:section name="main">
+	<f:form action="subscribe" method="post" requestToken="typo3_forum/mutation" arguments="{forum: forum.uid, topic: topic.uid, unsubscribe: unsubscribe}">
+		<button type="submit" class="btn btn-primary">
+			<f:if condition="{unsubscribe}">
+				<f:then><f:translate key="Button_Unsubscribe" /></f:then>
+				<f:else><f:translate key="Button_Subscribe" /></f:else>
+			</f:if>
+		</button>
+	</f:form>
+</f:section>
+<f:section name="menu"></f:section>

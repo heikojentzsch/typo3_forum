@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\User;
 
 /*                                                                      *
@@ -34,13 +35,14 @@ use Mittwald\Typo3Forum\Domain\Model\SubscribeableInterface;
 use Mittwald\Typo3Forum\Domain\Repository\User\RankRepository;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
+use TYPO3\CMS\Extbase\Attribute\ORM\Lazy;
 use TYPO3\CMS\Extbase\Domain\Model\FileReference;
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
-use TYPO3\CMS\Extbase\Attribute\ORM\Lazy;
+use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 
 class FrontendUser extends AbstractEntity
 {
+    use ConfigurableEntityTrait;
 
     /**
      * @var string
@@ -588,18 +590,15 @@ class FrontendUser extends AbstractEntity
         return $this;
     }
 
-
     public function getLastlogin(): ?DateTime
     {
         return $this->lastlogin;
     }
 
-    const GENDER_MALE = 0;
-    const GENDER_FEMALE = 1;
-    const GENDER_OTHER = 2;
-    const GENDER_PRIVATE = 99;
-
-    use ConfigurableEntityTrait;
+    public const GENDER_MALE = 0;
+    public const GENDER_FEMALE = 1;
+    public const GENDER_OTHER = 2;
+    public const GENDER_PRIVATE = 99;
 
     protected RankRepository $rankRepository;
 
@@ -702,8 +701,6 @@ class FrontendUser extends AbstractEntity
     {
         $this->rankRepository = $rankRepository;
     }
-
-
 
     public function ensureObjectStorages(): void
     {
@@ -1030,13 +1027,13 @@ class FrontendUser extends AbstractEntity
         }
         switch ($this->gender) {
             case self::GENDER_MALE:
-                $imageFilename = $this->getSettings()['images.']['avatar.']['dummyMale']??'';
+                $imageFilename = $this->getSettings()['images.']['avatar.']['dummyMale'] ?? '';
                 break;
             case self::GENDER_FEMALE:
-                $imageFilename = $this->getSettings()['images.']['avatar.']['dummyFemale']??'';
+                $imageFilename = $this->getSettings()['images.']['avatar.']['dummyFemale'] ?? '';
                 break;
             case self::GENDER_OTHER:
-                $imageFilename = $this->getSettings()['images.']['avatar.']['dummyOther']??'';
+                $imageFilename = $this->getSettings()['images.']['avatar.']['dummyOther'] ?? '';
                 break;
         }
 
@@ -1252,8 +1249,8 @@ class FrontendUser extends AbstractEntity
      * a JSON serialized format.
      *
      * @param array $values All contact data of this user.
-     * @return void
      * @phpstan-param array<string, string> $values
+     * @return void
      */
     public function setContactData(array $values)
     {
@@ -1345,8 +1342,8 @@ class FrontendUser extends AbstractEntity
 
     /**
      * @param ObjectStorage $readTopics
-     * @return void
      * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Topic> $readTopics
+     * @return void
      */
     public function setReadTopics($readTopics)
     {
@@ -1364,8 +1361,8 @@ class FrontendUser extends AbstractEntity
 
     /**
      * @param ObjectStorage $readForum
-     * @return void
      * @phpstan-param \TYPO3\CMS\Extbase\Persistence\ObjectStorage<\Mittwald\Typo3Forum\Domain\Model\Forum\Forum> $readForum
+     * @return void
      */
     public function setReadForum($readForum)
     {

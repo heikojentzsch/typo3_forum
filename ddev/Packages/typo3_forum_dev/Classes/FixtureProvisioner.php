@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Pottkinder\Typo3ForumDev;
 
@@ -259,8 +259,18 @@ final class FixtureProvisioner
 
         $constants = sprintf(
             "plugin.tx_typo3forum.persistence.storagePid = %d,%d\nplugin.tx_typo3forum.settings.pids.Login = %d\nplugin.tx_typo3forum.settings.pids.Forum = %d\nplugin.tx_typo3forum.settings.pids.UserShow = %d\nplugin.tx_typo3forum.settings.pids.UserList = %d\nplugin.tx_typo3forum.settings.pids.UserEdit = %d\nplugin.tx_typo3forum.settings.pids.Dashboard = %d\nplugin.tx_typo3forum.settings.pids.TagList = %d\nplugin.tx_typo3forum.settings.pids.ReportList = %d\nstyles.content.loginform.pid = %d\nstyles.content.loginform.redirectMode = getpost,login\nstyles.content.loginform.redirectFirstMethod = 1\nstyles.content.loginform.redirectPageLogin = %d\n",
-            $pages['forum_storage'], $pages['users_storage'], $pages['login'], $pages['forum'], $pages['profile'], $pages['users'], $pages['profile'],
-            $pages['dashboard'], $pages['tags'], $pages['moderation'], $pages['users_storage'], $pages['forum']
+            $pages['forum_storage'],
+            $pages['users_storage'],
+            $pages['login'],
+            $pages['forum'],
+            $pages['profile'],
+            $pages['users'],
+            $pages['profile'],
+            $pages['dashboard'],
+            $pages['tags'],
+            $pages['moderation'],
+            $pages['users_storage'],
+            $pages['forum']
         );
         $setup = <<<'TYPOSCRIPT'
 page = PAGE

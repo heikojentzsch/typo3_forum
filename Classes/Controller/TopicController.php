@@ -41,7 +41,6 @@ use Mittwald\Typo3Forum\Domain\Validator\Forum\PostValidator;
 use Mittwald\Typo3Forum\Service\AttachmentService;
 use Mittwald\Typo3Forum\Service\TagService;
 use Psr\Http\Message\ResponseInterface;
-use TYPO3\CMS\Core\Http\ResponseFactory;
 use TYPO3\CMS\Core\PageTitle\RecordTitleProvider;
 use TYPO3\CMS\Extbase\Attribute\IgnoreValidation;
 use TYPO3\CMS\Extbase\Attribute\Validate;
@@ -142,6 +141,7 @@ class TopicController extends AbstractController
         $posts = $this->postRepository->findForTopic($topic);
 
         if ($quote !== null) {
+            $this->authenticationService->assertReadAuthorization($quote);
             $this->view->assign(
                 'quote',
                 $this->postFactory->createPostWithQuote($quote)
@@ -237,7 +237,15 @@ class TopicController extends AbstractController
                 ])
                 ->build();
 
-            $this->purgeUrl('http://' . $_SERVER['HTTP_HOST'] . '/' . $uri);
+            $site = $this->request->getAttribute('site');
+            if ($site instanceof \TYPO3\CMS\Core\Site\Entity\Site) {
+                $base = $site->getBase();
+                if (in_array($base->getScheme(), ['http', 'https'], true) && $base->getHost() !== '') {
+                    $target = $base->withPath('/' . ltrim((string)parse_url($uri, PHP_URL_PATH), '/'))
+                        ->withQuery((string)parse_url($uri, PHP_URL_QUERY));
+                    $this->purgeUrl((string)$target);
+                }
+            }
         }
 
         $uri = $this->uriBuilder->reset()->uriFor(
@@ -246,7 +254,7 @@ class TopicController extends AbstractController
             'Topic'
         );
 
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 
@@ -283,7 +291,7 @@ class TopicController extends AbstractController
             'Topic'
         );
 
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 
@@ -311,7 +319,7 @@ class TopicController extends AbstractController
             'Topic'
         );
 
-        return $this->responseFactory->createResponse(307)
+        return $this->responseFactory->createResponse(303)
             ->withHeader('Location', $uri);
     }
 

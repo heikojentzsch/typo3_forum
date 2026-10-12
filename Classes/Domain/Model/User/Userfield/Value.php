@@ -1,4 +1,5 @@
 <?php
+
 namespace Mittwald\Typo3Forum\Domain\Model\User\Userfield;
 
 /*                                                                      *
@@ -32,7 +33,6 @@ use TYPO3\CMS\Extbase\DomainObject\AbstractValueObject;
  */
 class Value extends AbstractValueObject
 {
-
     /**
      * The userfield.
      * @var \Mittwald\Typo3Forum\Domain\Model\User\Userfield\AbstractUserfield

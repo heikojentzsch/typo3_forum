@@ -106,7 +106,8 @@ class MarkForumsReadCommand extends AbstractDatabaseBasedCommand
                         'users',
                         'tx_typo3forum_domain_model_user_readtopic',
                         'read',
-                        $userQueryBuilder->expr()->and(...
+                        $userQueryBuilder->expr()->and(
+                            ...
                             [
                                 $userQueryBuilder->expr()->eq('read.uid_local', 'users.uid'),
                                 $userQueryBuilder->expr()->in('read.uid_foreign', $topics)

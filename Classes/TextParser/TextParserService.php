@@ -3,10 +3,6 @@
 namespace Mittwald\Typo3Forum\TextParser;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
-use Mittwald\Typo3Forum\Service\AbstractService;
-use Mittwald\Typo3Forum\TextParser\Service\AbstractTextParserService;
-use Mittwald\Typo3Forum\Utility\TypoScript;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /*                                                                    - *
  *  COPYRIGHT NOTICE                                                    *
@@ -31,59 +27,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  *  This copyright notice MUST APPEAR in all copies of the script!      *
  *                                                                      */
 
-class TextParserService extends AbstractService
+class TextParserService
 {
-    /** @var array<string, mixed> */
-    protected array $settings = [];
-
-    /**
-     * @var AbstractTextParserService[]
-     */
-    protected array $parsingServices = [];
-
-    protected TypoScript $typoscriptReader;
-
-    public function __construct(
-        TypoScript $typoScriptReader
-    ) {
-        $this->typoscriptReader = $typoScriptReader;
-    }
-
-    public function loadConfiguration(
-        string $configurationPath = 'plugin.tx_typo3forum.settings.textParsing'
-    ): void {
-        if (count($this->settings) > 0) {
-            return;
-        }
-
-        $this->settings = $this->typoscriptReader
-            ->loadTyposcriptFromPath($configurationPath);
-
-        foreach ($this->settings['enabledServices.'] as $key => $className) {
-            if (substr($key, -1, 1) === '.') {
-                continue;
-            }
-
-            /** @var class-string $className TypoScript names the service; its interface is checked below. */
-            $newService = GeneralUtility::makeInstance($className);
-
-            if (!$newService instanceof AbstractTextParserService) {
-                throw new \Mittwald\Typo3Forum\Domain\Exception\TextParser\Exception(
-                    'Invalid class; expected an instance of '
-                    . AbstractTextParserService::class
-                    . '!',
-                    1315916625
-                );
-            }
-
-            $newService->setSettings(
-                (array)($this->settings['enabledServices.'][$key . '.'] ?? [])
-            );
-
-            $this->parsingServices[] = $newService;
-        }
-    }
-
     public function parseText(
         string $text,
         ?Post $post = null

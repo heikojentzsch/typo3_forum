@@ -1,5 +1,7 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
+
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Post, Tag};
@@ -52,7 +54,7 @@ final class ValidatorLifecycleTest extends TestCase
             foreach (['existing tag' => [1373871960], 'unknown tag' => [], ' ' => [1373871955]] as $name => $codes) {
                 $tag = new Tag();
                 $tag->setName($name);
-                self::assertSame($codes, array_map(fn($error) => $error->getCode(), $validator->validate($tag)->getErrors()));
+                self::assertSame($codes, array_map(fn ($error) => $error->getCode(), $validator->validate($tag)->getErrors()));
             }
             self::assertSame(['Existing Tag', 'Unknown Tag', ' '], $lookups);
             $validator = $resolver->createValidator(PostValidator::class, [], new ServerRequest());
@@ -60,7 +62,7 @@ final class ValidatorLifecycleTest extends TestCase
                 $post = $this->createStub(Post::class);
                 $post->method('getText')->willReturn($text);
                 $post->method('getAuthorName')->willReturn($name);
-                self::assertSame($codes, array_map(fn($error) => $error->getCode(), $validator->validate($post)->getErrors()));
+                self::assertSame($codes, array_map(fn ($error) => $error->getCode(), $validator->validate($post)->getErrors()));
             }
         } finally {
             $property->setValue(null, $previous);

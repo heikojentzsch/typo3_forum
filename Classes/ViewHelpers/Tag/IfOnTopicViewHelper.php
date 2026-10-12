@@ -27,9 +27,6 @@ namespace Mittwald\Typo3Forum\ViewHelpers\Tag;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Tag;
 use Mittwald\Typo3Forum\Domain\Model\Forum\Topic;
-use Mittwald\Typo3Forum\Domain\Model\User\AnonymousFrontendUser;
-use Mittwald\Typo3Forum\Service\Authentication\AuthenticationService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3Fluid\Fluid\Core\Rendering\RenderingContextInterface;
 use TYPO3Fluid\Fluid\Core\ViewHelper\AbstractConditionViewHelper;
 

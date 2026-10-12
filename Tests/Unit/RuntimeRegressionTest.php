@@ -1,20 +1,22 @@
 <?php
-declare(strict_types=1);
+
+declare(strict_types = 1);
+
 namespace Mittwald\Typo3Forum\Tests\Unit;
 
 use Mittwald\Typo3Forum\Configuration\ConfigurationBuilder;
+use Mittwald\Typo3Forum\Configuration\NotificationConfigurationResolver;
 use Mittwald\Typo3Forum\Configuration\NotificationEmailConfigurationInterface;
 use Mittwald\Typo3Forum\Configuration\NotificationEmailOptions;
-use Mittwald\Typo3Forum\Configuration\NotificationConfigurationResolver;
 use Mittwald\Typo3Forum\Controller\{AjaxController, PostController, ReportController, TopicController};
 use Mittwald\Typo3Forum\Domain\Factory\Forum\{PostFactory, TopicFactory};
 use Mittwald\Typo3Forum\Domain\Model\Forum\{Access, Forum, Post, RootForum, Topic};
 use Mittwald\Typo3Forum\Domain\Model\User\FrontendUser;
 use Mittwald\Typo3Forum\Domain\Repository\Forum\ForumRepository;
-use Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService;
-use Mittwald\Typo3Forum\Service\Notification\NotificationService;
-use Mittwald\Typo3Forum\Service\Notification\NotificationEmailRenderer;
 use Mittwald\Typo3Forum\Service\{AttachmentService, TagService};
+use Mittwald\Typo3Forum\Service\Mailing\HTMLMailingService;
+use Mittwald\Typo3Forum\Service\Notification\NotificationEmailRenderer;
+use Mittwald\Typo3Forum\Service\Notification\NotificationService;
 use Psr\Container\ContainerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\UploadedFileInterface;
@@ -23,8 +25,8 @@ use TYPO3\CMS\Core\Localization\{LanguageService, LanguageServiceFactory, Locale
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Request;
-use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
+use TYPO3\CMS\Extbase\Persistence\ObjectStorage;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 final class RuntimeRegressionTest extends AbstractControllerTestCase
@@ -44,8 +46,8 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $locales = $this->createStub(Locales::class);
         $locales->method('createLocaleFromRequest')->willReturn(new Locale('en'));
         $container = $this->createStub(ContainerInterface::class);
-        $container->method('has')->willReturnCallback(fn($id) => in_array($id, [LanguageServiceFactory::class, Locales::class], true));
-        $container->method('get')->willReturnCallback(fn($id) => $id === Locales::class ? $locales : $factory);
+        $container->method('has')->willReturnCallback(fn ($id) => in_array($id, [LanguageServiceFactory::class, Locales::class], true));
+        $container->method('get')->willReturnCallback(fn ($id) => $id === Locales::class ? $locales : $factory);
         GeneralUtility::setContainer($container);
     }
 
@@ -89,10 +91,12 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $parent->method('getParent')->willReturn(null);
         foreach ([[$forum, [1, 2, 3]], [$parent, [1, 2, 3, 4, 5]]] as [$node, $uids]) {
             $storage = new ObjectStorage();
-            foreach ($uids as $uid) { $storage->attach($users[$uid]); }
+            foreach ($uids as $uid) {
+                $storage->attach($users[$uid]);
+            }
             $node->method('getSubscribers')->willReturn($storage);
             $node->method('checkReadAccess')->willReturnCallback(
-                fn($user) => $node === $parent || !in_array($user->getUid(), [3, 5], true)
+                fn ($user) => $node === $parent || !in_array($user->getUid(), [3, 5], true)
             );
         }
         $post = $this->createStub(Post::class);
@@ -286,6 +290,8 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $attachment->expects(self::once())->method('increaseDownloadCount')->willReturnSelf();
         $attachment->method('getFileReference')->willReturn($fileReference);
         $attachment->method('getName')->willReturn('test.txt');
+        $attachment->method('getPost')->willReturn($this->createStub(Post::class));
+        $this->authenticationService->method('checkAuthorization')->willReturn(true);
         $repository = $this->createMock(\Mittwald\Typo3Forum\Domain\Repository\Forum\AttachmentRepository::class);
         $repository->expects(self::once())->method('update')->with($attachment);
         $persistenceManager = $this->createMock(PersistenceManager::class);
@@ -300,6 +306,37 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         self::assertSame((string)strlen($contents), $response->getHeaderLine('Content-Length'));
         self::assertSame($contents, (string)$response->getBody());
         self::assertStringNotContainsString('<!DOCTYPE html>', (string)$response->getBody());
+    }
+
+    public function testPrivateAttachmentIsDeniedBeforeReadingFileOrChangingCounter(): void
+    {
+        $controller = $this->controller(PostController::class);
+        $attachment = $this->createMock(\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class);
+        $attachment->method('getPost')->willReturn($this->createStub(Post::class));
+        $attachment->expects(self::never())->method('getFileReference');
+        $attachment->expects(self::never())->method('increaseDownloadCount');
+        $this->authenticationService->method('checkAuthorization')->willReturn(false);
+        $this->frontendUserRepository->method('findCurrent')->willReturn($this->createStub(FrontendUser::class));
+        self::assertSame(403, $controller->downloadAttachmentAction($attachment)->getStatusCode());
+    }
+
+    public function testUserReportCommentRequiresUserModerationBeforeMutatingReport(): void
+    {
+        $controller = $this->controller(\Mittwald\Typo3Forum\Controller\ModerationController::class);
+        $this->frontendUserRepository->method('findCurrent')->willReturn($this->createStub(FrontendUser::class));
+        $report = $this->createMock(\Mittwald\Typo3Forum\Domain\Model\Moderation\UserReport::class);
+        $report->expects(self::never())->method('addComment');
+        $this->expectException(\Mittwald\Typo3Forum\Domain\Exception\Authentication\NoAccessException::class);
+        $controller->createUserReportCommentAction($report, new \Mittwald\Typo3Forum\Domain\Model\Moderation\ReportComment());
+    }
+
+    public function testOrphanAttachmentCannotBeDownloaded(): void
+    {
+        $controller = $this->controller(PostController::class);
+        $attachment = $this->createMock(\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class);
+        $attachment->method('getPost')->willReturn(null);
+        $attachment->expects(self::never())->method('getFileReference');
+        self::assertSame(404, $controller->downloadAttachmentAction($attachment)->getStatusCode());
     }
 
     public function testCreatingTopicWithAttachmentResetsUriBuilderAfterCachePurge(): void
@@ -332,6 +369,7 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         $this->setProperty($controller, 'tagService', $tagService);
         $this->setProperty($controller, 'topicFactory', $topicFactory);
         $this->setProperty($controller, 'persistenceManager', $persistenceManager);
+        $this->setProperty($controller, 'request', $this->createStub(\TYPO3\CMS\Extbase\Mvc\RequestInterface::class));
         $this->setProperty($controller, 'settings', ['purgeCache' => true, 'pids' => ['Forum' => 23]]);
 
         $this->uriBuilder->expects(self::once())->method('setTargetPageUid')->with(23)->willReturnSelf();
@@ -358,7 +396,7 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
             }
         }
 
-        self::assertSame(307, $response->getStatusCode());
+        self::assertSame(303, $response->getStatusCode());
         self::assertSame('/forum/topic/test', $response->getHeaderLine('Location'));
     }
 }

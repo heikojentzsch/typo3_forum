@@ -6,8 +6,8 @@ use Mittwald\Typo3Forum\Domain\Model\Forum\Attachment;
 use Psr\Http\Message\UploadedFileInterface;
 use TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior;
 use TYPO3\CMS\Core\Resource\FileReference as CoreFileReference;
-use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
+use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Domain\Model\FileReference as ExtbaseFileReference;
@@ -58,7 +58,7 @@ class AttachmentService implements SingletonInterface
             $falFile = $this->storage->addUploadedFile(
                 $attachmentData,
                 $this->storage->getFolder($folderIdentifier),
-                sha1($filename . time()) . '.' . $extension,
+                bin2hex(random_bytes(20)) . '.' . $extension,
                 DuplicationBehavior::REPLACE
             );
 

@@ -1,70 +1,21 @@
 .. _user:
 
+Users and groups
+================
 
-Users and User Groups
-=====================
+v14 extends standard ``fe_users`` and ``fe_groups`` records, including type 0.
+Create frontend users/groups normally in the configured storage folders. No
+special forum record subtype must be chosen before the first save. Historical
+screenshots in Images describe the previous backend and are not v14 instructions.
 
-Preface
--------
+Configure frontend login and group membership, then set forum ACL records for
+read, topic/post creation and moderation. Test those rights with both authorized
+and unauthorized accounts; hiding a menu entry is not an access-control boundary.
 
-User and User Group must be extended from typo3_forum.
-If the Fe users are not extended from typo3_forum, errors may occur when displaying the forum or creating posts.
+The group user-moderation flag grants user moderation and permission to create
+tags. Forum/post moderation uses the relevant forum ACL. The user-report list,
+comments and status changes require user-moderation rights server-side.
 
-Create Frontend user
----------------------
-
-To create a Frontend user that can access the Typo3 forum, create a Frontend user as usual.
-
-|
-|
-
-.. image:: Images/User.png
-
-|
-|
-
-In order to make the user a typo3forum user, you have to make it a typo3_forum User in the extended tab **before** you save it. If you **don't** do this when creating the user, this will **not** work afterwards.
-
-|
-|
-
-.. image:: Images/ExtendedUser.png
-
-|
-|
-
-After you have selected the record type, further settings for the now created typo3 forum user appear. We will not go into these settings any further.
-
-|
-|
-
-.. image:: Images/typo3forumsettings.png
-
-|
-|
-
-Moderators
-----------
-
-If you want to make a typo3forum user a moderator you have to give him a group that has moderation rights.
-So that a group gets moderation rights you have to select this group in the area Extended as typo3_forum_group.
-
-|
-|
-
-.. image:: Images/GroupExtended.png
-
-|
-|
-
-In the settings that appear by confirming this operation you can enable the moderator rights
-
-|
-|
-
-.. image:: Images/typo3ForumGroupSettings.png
-
-|
-|
-
-If you have followed these steps everything should have worked and you have successfully created a typo3Forum fe_user and typo3_forum.
+Existing users, groups and content must follow the migration guide; do not create
+duplicate records to work around legacy subtype values. Signatures use sanitized
+HTML with preserved legacy source during migration, as described in the editor guide.
