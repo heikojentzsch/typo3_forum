@@ -8,7 +8,7 @@ defined('TYPO3') || die();
     [
         \Mittwald\Typo3Forum\Controller\ForumController::class => 'index, show, markRead',
         \Mittwald\Typo3Forum\Controller\TopicController::class => 'show, new, create, solution, removeSolution',
-        \Mittwald\Typo3Forum\Controller\PostController::class => 'show, new, create, edit, update, delete, support, unsupport, confirmDelete, downloadAttachment',
+        \Mittwald\Typo3Forum\Controller\PostController::class => 'show, new, create, edit, update, delete, support, unsupport, confirmDelete, downloadAttachment, inlineImage',
         \Mittwald\Typo3Forum\Controller\UserController::class => 'subscribe',
         \Mittwald\Typo3Forum\Controller\ReportController::class => 'newUserReport, newPostReport, createUserReport, createPostReport',
         \Mittwald\Typo3Forum\Controller\ModerationController::class => 'editTopic, updateTopic, confirmDeleteTopic, deleteTopic',
@@ -16,8 +16,8 @@ defined('TYPO3') || die();
     ],
     [
         \Mittwald\Typo3Forum\Controller\ForumController::class => 'index, show, markRead',
-        \Mittwald\Typo3Forum\Controller\TopicController::class => 'create, solution, removeSolution',
-        \Mittwald\Typo3Forum\Controller\PostController::class => 'new, create, edit, update, delete, support, unsupport, confirmDelete, downloadAttachment',
+        \Mittwald\Typo3Forum\Controller\TopicController::class => 'show, new, create, solution, removeSolution',
+        \Mittwald\Typo3Forum\Controller\PostController::class => 'new, create, edit, update, delete, support, unsupport, confirmDelete, downloadAttachment, inlineImage',
         \Mittwald\Typo3Forum\Controller\UserController::class => 'subscribe',
         \Mittwald\Typo3Forum\Controller\ReportController::class => 'newUserReport, newPostReport, createUserReport, createPostReport',
         \Mittwald\Typo3Forum\Controller\ModerationController::class => 'editTopic, updateTopic, confirmDeleteTopic, deleteTopic',
@@ -87,7 +87,7 @@ defined('TYPO3') || die();
         \Mittwald\Typo3Forum\Controller\PostController::class => 'list, show',
     ],
     [
-        \Mittwald\Typo3Forum\Controller\PostController::class => 'list',
+        \Mittwald\Typo3Forum\Controller\PostController::class => 'list, show',
     ]
 );
 

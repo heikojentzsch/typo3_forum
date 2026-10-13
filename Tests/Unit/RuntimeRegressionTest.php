@@ -339,6 +339,55 @@ final class RuntimeRegressionTest extends AbstractControllerTestCase
         self::assertSame(404, $controller->downloadAttachmentAction($attachment)->getStatusCode());
     }
 
+    public function testInlineImageChecksPostAccessBeforeTouchingTheFile(): void
+    {
+        $controller = $this->controller(PostController::class);
+        $attachment = $this->createMock(\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class);
+        $attachment->method('getPost')->willReturn($this->createStub(Post::class));
+        $attachment->expects(self::never())->method('getFileReference');
+        $attachment->expects(self::never())->method('increaseDownloadCount');
+        $repository = $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Forum\AttachmentRepository::class);
+        $repository->method('findInlineImage')->willReturn($attachment);
+        $this->setProperty($controller, 'attachmentRepository', $repository);
+        $this->authenticationService->method('checkAuthorization')->willReturn(false);
+        $response = $controller->inlineImageAction(str_repeat('a', 32), true);
+        self::assertSame(403, $response->getStatusCode());
+        self::assertSame('private, no-store', $response->getHeaderLine('Cache-Control'));
+    }
+
+    public function testInlineImageReturnsActualRasterBytesWithoutChangingCounters(): void
+    {
+        $controller = $this->controller(PostController::class);
+        $bytes = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jS1kAAAAASUVORK5CYII=');
+        $file = $this->createStub(\TYPO3\CMS\Core\Resource\FileReference::class);
+        $file->method('getContents')->willReturn($bytes);
+        $reference = $this->createStub(\TYPO3\CMS\Extbase\Domain\Model\FileReference::class);
+        $reference->method('getOriginalResource')->willReturn($file);
+        $attachment = $this->createMock(\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment::class);
+        $attachment->method('getPost')->willReturn($this->createStub(Post::class));
+        $attachment->method('getFileReference')->willReturn($reference);
+        $attachment->expects(self::never())->method('increaseDownloadCount');
+        $repository = $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Forum\AttachmentRepository::class);
+        $repository->method('findInlineImage')->willReturn($attachment);
+        $this->setProperty($controller, 'attachmentRepository', $repository);
+        $this->authenticationService->method('checkAuthorization')->willReturn(true);
+        $response = $controller->inlineImageAction(str_repeat('b', 32));
+        self::assertSame(200, $response->getStatusCode());
+        self::assertSame('image/png', $response->getHeaderLine('Content-Type'));
+        self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
+        self::assertSame('private, no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame($bytes, (string)$response->getBody());
+    }
+
+    public function testUnknownInlineImageReturnsNotFound(): void
+    {
+        $controller = $this->controller(PostController::class);
+        $repository = $this->createStub(\Mittwald\Typo3Forum\Domain\Repository\Forum\AttachmentRepository::class);
+        $repository->method('findInlineImage')->willReturn(null);
+        $this->setProperty($controller, 'attachmentRepository', $repository);
+        self::assertSame(404, $controller->inlineImageAction('unknown')->getStatusCode());
+    }
+
     public function testCreatingTopicWithAttachmentResetsUriBuilderAfterCachePurge(): void
     {
         $controller = $this->controller(TopicController::class);

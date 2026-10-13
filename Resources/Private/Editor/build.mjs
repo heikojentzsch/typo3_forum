@@ -3,7 +3,7 @@ import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 const out = '../../Public/Editor';
 await mkdir(out, { recursive: true });
 await build({
-    entryPoints: ['editor.js'],
+    entryPoints: ['editor.js', 'submit.js', 'gallery.js'],
     bundle: true,
     format: 'esm',
     minify: true,

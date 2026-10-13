@@ -210,6 +210,7 @@ class TopicController extends AbstractController
             $post->setAttachments($attachments);
         }
 
+        $this->attachmentService->bindInlineImages($post);
         $tags = $this->tagService->hydrateTags($tags);
 
         $topic = $this->topicFactory->createTopic(

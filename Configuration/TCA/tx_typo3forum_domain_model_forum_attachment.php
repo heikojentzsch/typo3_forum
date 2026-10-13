@@ -14,6 +14,7 @@ return [
         '1' => ['showitem' => 'name,referenced_files,download_count'],
     ],
     'columns' => [
+        'inline_image_key' => ['config' => ['type' => 'passthrough']],
         't3ver_label' => [
             'displayCond' => 'FIELD:t3ver_label:REQ:true',
             'label' => 'LLL:EXT:core/Resources/Private/Language/locallang_general.xlf:LGL.versionLabel',

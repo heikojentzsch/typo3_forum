@@ -255,3 +255,8 @@ button.tx-typo3forum-post-menu-action {
 .tx-typo3forum-action-menu > form > .btn {
 	margin: 0 !important;
 }
+
+.tx-typo3forum-parsed-text img {
+	max-width: 100%;
+	height: auto;
+}

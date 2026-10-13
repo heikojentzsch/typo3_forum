@@ -112,3 +112,8 @@
 	gap: 6px;
 	padding-top: 8px;
 }
+
+.forum-rich-editor input[type='file'][hidden],
+input[data-forum-inline-upload][hidden] {
+	display: none !important;
+}

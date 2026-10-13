@@ -30,4 +30,14 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
 /** @extends Repository<\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment> */
 class AttachmentRepository extends Repository
 {
+    public function findInlineImage(string $key): ?\Mittwald\Typo3Forum\Domain\Model\Forum\Attachment
+    {
+        if (!preg_match('/^[a-f0-9]{32}$/D', $key)) {
+            return null;
+        }
+        $query = $this->createQuery();
+        $query->getQuerySettings()->setRespectStoragePage(false);
+        return $query->matching($query->equals('inlineImageKey', $key))->execute()->getFirst();
+    }
+
 }

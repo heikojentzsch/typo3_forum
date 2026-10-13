@@ -15,6 +15,13 @@ Boundaries reviewed
 * Attachment authorization before reading files or incrementing download counts,
   server-side MIME inspection with Fileinfo, actual/declarative size limits,
   random stored filenames, private/no-store and nosniff download headers.
+* Inline images use server-generated references, independent GD decoding,
+  bounded dimensions/size/count, and non-public FAL storage. Local
+  storage inside the web root is rejected. Inline delivery checks the source
+  post ACL before reading originals or producing FAL thumbnails. It returns only
+  detected JPEG/PNG/WebP bytes without changing counters. Originals retain all
+  metadata; processing storage must be private as well. Original delivery uses
+  nosniff and a sandbox Content-Security-Policy.
 * Read access for quoted/supported posts and moderator rights for user reports.
 * POST plus TYPO3 request-token validation before argument mapping for explicit
   mutations. Missing/invalid/wrong-scope tokens return 403; unsupported methods

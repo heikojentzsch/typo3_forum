@@ -18,6 +18,8 @@ Frontend forum extension for TYPO3. This README describes the `v14` branch of
 `v14` targets TYPO3 14.3 and contains no v12/v13 runtime compatibility layer.
 The branch modernizes the extension, provides an explicit existing-data
 migration, and replaces the BBCode editor with TinyMCE and Unicode emoji.
+It also provides original-image uploads, private thumbnails, a built-in gallery
+and loading feedback that prevents repeated clicks on submit buttons.
 
 The branch provides nine frontend content types:
 
@@ -46,7 +48,7 @@ See also the [security review](Documentation/Security/Index.rst).
 | TYPO3 | Composer `^14.3` (14.x); extension key `typo3_forum` |
 | PHP | Composer `^8.2`, plus the extensions required by TYPO3 and Composer |
 | Database | TYPO3-supported database; MySQL/MariaDB forum/user text columns and connections must use `utf8mb4` |
-| Upload inspection | PHP Fileinfo; configure the attachment MIME/size allowlist and FAL storage |
+| Upload inspection and inline images | PHP Fileinfo and GD (JPEG/PNG/WebP), configured TYPO3 image processing (ImageMagick/GraphicsMagick), attachment MIME/size allowlist, and private original/processing storage outside the web root |
 | Development fixture | Docker and DDEV with PHP 8.4 and MariaDB 10.11 |
 | Editor build/tests | Node.js/npm; CI uses Node.js 24 and Playwright Chromium |
 | Release packaging | Bash, PHP 8.2+ and ext-zip |
@@ -109,6 +111,13 @@ the authenticated real topic form, emoji popup, quote rendering and original-pos
 route without submitting a post. Browser tests cover desktop/mobile viewports;
 they do not replace acceptance on real iOS/Android devices.
 
+After configuring private image storage, `node image-site-check.mjs` checks a
+real upload, byte-identical original download, thumbnail, gallery, quote/edit,
+access denial and removal in the managed DDEV fixture. It creates a temporary
+moderator topic and deletes it on success; a failed run may leave that topic for
+inspection. The default format is PNG; use `FORUM_IMAGE_TEST_FORMAT=jpeg` or
+`FORUM_IMAGE_TEST_FORMAT=webp` to cover the other original formats.
+
 ### CI and release tooling
 
 The repository contains authoritative GitLab QA/package/publication jobs and a
@@ -132,6 +141,11 @@ For a **new installation**, add this repository to the site's Composer
 repositories (if it is not already provided by your package registry) and require
 `pottkinder/typo3forum:dev-v14`. The package name and extension key differ.
 Run TYPO3's extension setup and review the database schema changes.
+For inline pictures, create a writable, non-public FAL storage outside the public
+web root and set its UID in the extension configuration `inlineImages.storageUid`.
+Include that directory in backups. The default public `fileadmin` storage is not
+accepted for inline pictures; see the [editor guide](Documentation/Editors/Index.rst).
+
 
 1. Include the extension's static TypoScript and provide the site's Bootstrap
    layout/styles required by the shipped templates.
@@ -190,8 +204,8 @@ alone does not validate a whole site's direct Core upgrade or third-party code.
 
 This is the cumulative migration record, covering the original v12 baseline
 [`f340a489`](https://github.com/heikojentzsch/typo3_forum/commit/f340a489359da1514fa0984727ca7d17fa56ea2a)
-through the v14 implementation at
-[`68d3ed92`](https://github.com/heikojentzsch/typo3_forum/commit/68d3ed923d43a10f24fe935b8ee052379338dec0).
+through the v14 implementation in this revision, including original-image
+uploads, private thumbnails, the gallery and submit-button loading feedback.
 It includes compatibility work, runtime fixes, data migration, tooling and the
 subsequent editor/security changes. Earlier migration stages remain documented
 when a later stage replaced their implementation. Repository implementation and
@@ -204,6 +218,8 @@ Changes by area:
 - [Repositories, DBAL and domain behavior](#changes-repositories)
 - [Fluid, forms and frontend rendering](#changes-fluid)
 - [TinyMCE, Unicode emoji and quotes](#changes-editor)
+- [Original images, private thumbnails and gallery](#changes-images)
+- [Submit protection and loading feedback](#changes-submit)
 - [Installation and content migration](#changes-migration)
 - [Subscription notifications and mail delivery](#changes-notifications)
 - [Attachments, access control and CSRF](#changes-security)
@@ -320,6 +336,11 @@ forms, links, pagination, preview, mail and local resource references.
   partial with the current sanitized quote renderer and original-post links.
 - Passed PSR-7 upload objects through validation and FAL using the current
   storage repository and duplication enum.
+- Added a browser-side single-submit guard for forum POST forms. A valid submit
+  disables send buttons and displays an accessible loading indicator. Invalid or
+  cancelled forms stay editable; returning with browser Back restores the controls.
+  This prevents repeated clicks in the same page, not retries from multiple tabs
+  or server-side replay; it does not replace CSRF protection.
 - Corrected attachment filename/download links and preserved raw download
   content. Missing avatars no longer produce broken image output.
 - Added action labels/tooltips and compact attachment details in the local demo.
@@ -352,6 +373,8 @@ Fluid mail templates.
   to the original post, resolving the topic page and anchor at render time.
 - Links without a protocol receive HTTPS without a prompt. Targets are fixed to
   a new tab/window; the server enforces safe `rel` attributes as well.
+- Added [original-image uploads and the built-in gallery](#changes-images),
+  with private thumbnails and permission checks for originals and previews.
 - Attachments use a full-width file selector below the label “Anhänge:”.
 - Added nullable HTML fields for posts, report comments and user signatures.
   NULL distinguishes unmigrated content from a migrated empty value. Migration
@@ -369,6 +392,70 @@ Fluid mail templates.
 Custom forms must adopt `mmf:form.richTextEditor`; the existing preview endpoint
 now accepts HTML. Old parser service settings and `Format/Quote.html` overrides
 no longer control rendering. See [editor and content migration](Documentation/Editors/Index.rst).
+
+<a id="changes-images"></a>
+### Original images, private thumbnails and gallery
+
+- Insert JPEG, PNG and WebP pictures through TinyMCE's image button, drag-and-drop
+  or clipboard paste. Local previews remain in the browser until the post is
+  submitted; discarded drafts do not create permanent uploads. Image-only posts
+  are supported, with an `[Image]` plain-text projection for search/notifications.
+- Preserve original file bytes, dimensions, format and filename. WebP stays WebP;
+  originals retain metadata, including EXIF/GPS. The earlier resizing approach
+  was replaced by separate thumbnails. Previously reduced uploads cannot regain
+  their original resolution without uploading the source file again.
+- Generate reusable FAL thumbnails on demand, fitting within 800 × 600 pixels
+  without upscaling. Posts and reopened editors load these previews; the gallery
+  loads the selected original only when opened.
+- Open the gallery from a post thumbnail or its inline-image attachment entry.
+  Images are grouped by post, with duplicate references shown only once. Controls
+  support Previous/Next, arrow keys, swipe, Escape, fit-to-window, original-pixel
+  size with scrolling, and original download. Closing restores keyboard focus.
+  Failed image loads produce a message; without JavaScript the link opens the
+  original. Ordinary non-inline attachments retain their download workflow.
+- Store originals as FAL attachments and only opaque `data-forum-image` references
+  in post HTML; no base64 bytes, blob URLs or permanent file URLs enter the post.
+  Server-generated references replace browser preview IDs when the post is saved.
+- Require `inlineImages.storageUid` to select a writable, non-public FAL storage.
+  Zero accepts only a private default storage. Local originals and processing
+  folders must be outside the public web root; public processing overrides are
+  rejected. Include original files and FAL records in consistent backups.
+- Add the attachment `inline_image_key` column/index through TYPO3's additive
+  schema update. Existing attachments retain empty keys; migration does not
+  download legacy external images or automatically import them into the gallery.
+- Check source-post read access before serving an original or producing/reading
+  a thumbnail. Both use the Post/inlineImage endpoint on PAGE type 43568276,
+  private/no-store and nosniff headers; original delivery also has a sandbox CSP.
+  Gallery views do not increment attachment download counters. Quoting an image
+  does not grant permission to read its source post.
+- Validate actual MIME, GD decodability, dimensions and bytes on the server,
+  including uploads while editing posts. Allow up to 10 new pictures per submit,
+  16 megapixels per image and the configured attachment size limit (default
+  4 MiB, hard ceiling 20 MiB). Oversized originals are rejected rather than reduced;
+  PHP/web-server request limits also apply. HEIC, GIF and SVG are not accepted by
+  the inline workflow. The default attachment MIME allowlist now includes WebP.
+- Keep images when editing or quoting; removing an owned inline image in the editor
+  removes its attachment on save and makes its image URL unavailable. New files
+  must be selected again after a reload or rejected server-side submission.
+- Custom post forms require multipart encoding, `mmf:form.richTextEditor` and the
+  existing multiple `newAttachments` field. Custom layouts must load the bundled
+  `gallery.js` and `gallery.css`; no external gallery service is required.
+
+See [image setup, limits and migration](Documentation/Editors/Index.rst).
+
+<a id="changes-submit"></a>
+### Submit protection and loading feedback
+
+- Added a shared submit module for all forum POST forms, including forms without
+  TinyMCE. The first valid submission disables submit controls and displays a
+  localized “Sending …” indicator; further clicks cannot submit the same form.
+- Preserve the activated button's name/value, including submit controls outside
+  the form. Native validation, editor loading and pending image preparation can
+  cancel submission without leaving controls locked. Browser Back restores them.
+- Respect reduced-motion preferences and expose busy state to assistive technology.
+  Custom layouts must load the bundled `submit.js` and `submit.css` assets.
+- This browser interaction guard does not provide server-side idempotency across
+  tabs or replayed requests; POST/request-token checks remain separate controls.
 
 <a id="changes-migration"></a>
 ### Installation and content migration
@@ -451,6 +538,8 @@ and the language-marker contract.
 <a id="changes-security"></a>
 ### Attachments, access control and CSRF
 
+- Topic display/new-topic pages and the Post List show action are uncached so
+  rendered write forms carry the current browser's request tokens.
 - Explicitly handle a missing default FAL storage rather than failing later on
   a null storage object. Existing storage/attachment paths use current FAL APIs.
 - Check read access to the parent post before reading attachment bytes or
@@ -529,7 +618,14 @@ cannot protect a publicly served static URL. See the [security review](Documenta
   not manually reformatted. The formerly advisory style job is now blocking.
 - Added desktop/mobile-viewport editor tests for Unicode, formatting, links,
   quotes, load failure and emoji popup behavior, plus real DDEV editor/route and
-  CSRF checks. Real devices remain a separate acceptance gate.
+  CSRF checks. Added original-byte preservation, image MIME/dimension validation,
+  thumbnail access denial before file access, gallery navigation/swipe/focus,
+  removed uploads, and single-submit/validation/Back regression coverage.
+- Verified real DDEV PNG, JPEG and WebP uploads against the original bytes,
+  separate thumbnails, gallery, quote/edit/remove, and anonymous/member denial
+  in the moderator forum. The implementation passed 30 desktop/mobile-viewport
+  browser tests and Composer QA (265 PHP tests, one optional MariaDB test skipped).
+  Real devices remain a separate acceptance gate.
 
 Current commands are in [section 2](#requirements). Old test totals, unavailable
 Docker notes and former style debt describe earlier stages, not the current
@@ -542,7 +638,9 @@ status. A skipped MariaDB locking test is not proof of row-lock correctness.
   `.Build/vendor`, `.Build/bin`, supported `.Build/Web` location and required
   TYPO3 installer/alias-loader permissions. Removed the extra composer.typo3.org
   repository, stale `dev-master` alias and unused `cms-package-dir`; prefer dist.
-- Added Fileinfo as an explicit runtime dependency for upload inspection.
+- Added Fileinfo as an explicit runtime dependency for upload inspection, and GD
+  for server-side inline-image validation. TYPO3 image processing generates the
+  private thumbnails; originals retain their metadata and dimensions.
   The extension still does not track a root Composer lockfile; each site resolves
   its own compatible dependencies. Editor builds do use a pinned npm lockfile.
 - Replaced Travis and old release configuration with authoritative GitLab QA
@@ -622,8 +720,10 @@ it with only the most recent feature summary.
 <a id="changes-commits"></a>
 ### Complete migration commit chronology
 
-Every non-merge commit from the v12 baseline to `68d3ed92` is listed below in
-history order, including documentation, test and intermediate fix commits.
+The non-merge history from the v12 baseline through the preceding README review
+is listed by immutable commit below, followed by the current image/gallery change
+set. Its row links to the v14 history because a commit cannot embed its own final
+hash. Documentation, test and intermediate fix commits remain included.
 Merge-only commits are omitted to avoid duplicating their constituent changes.
 Titles describe the change at that point; the area descriptions above explain
 which intermediate implementations were subsequently replaced.
@@ -727,6 +827,8 @@ which intermediate implementations were subsequently replaced.
 | [`3fa9e4dd`](https://github.com/heikojentzsch/typo3_forum/commit/3fa9e4dd5d9c465fcecce7559585d3d0f5a425ff) | [DOCS] Document configurable notification emails |
 | [`cc7d5088`](https://github.com/heikojentzsch/typo3_forum/commit/cc7d508862709b5adf1df8dde65b877ba292078d) | Replace BBCode editor with TinyMCE and Unicode emoji support |
 | [`68d3ed92`](https://github.com/heikojentzsch/typo3_forum/commit/68d3ed923d43a10f24fe935b8ee052379338dec0) | Harden v14 security, remove legacy runtime and consolidate documentation |
+| [`b7709f06`](https://github.com/heikojentzsch/typo3_forum/commit/b7709f06b527178cafb80eb418bc2cd3bf0270c6) | Restore the cumulative v12-to-v14 migration record and frontend component table |
+| [Current image/gallery change set](https://github.com/heikojentzsch/typo3_forum/commits/v14/) | Add original image uploads, private thumbnails, gallery, submit feedback, upload validation on edit, uncached token-bearing pages, regression tests and documentation |
 
 </details>
 

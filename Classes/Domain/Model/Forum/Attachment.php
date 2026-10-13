@@ -44,6 +44,17 @@ class Attachment extends AbstractEntity implements ConfigurableInterface
     protected ?Post $post = null;
     protected int $downloadCount = 0;
     protected string $name = '';
+    protected string $inlineImageKey = '';
+
+    public function getInlineImageKey(): string
+    {
+        return $this->inlineImageKey;
+    }
+    public function setInlineImageKey(string $key): self
+    {
+        $this->inlineImageKey = $key;
+        return $this;
+    }
 
     public function __construct()
     {

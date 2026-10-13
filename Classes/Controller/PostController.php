@@ -270,6 +270,7 @@ class PostController extends AbstractController
             $post->setAttachments($attachments);
         }
 
+        $this->attachmentService->bindInlineImages($post);
         $topic->addPost($post);
         $this->topicRepository->update($topic);
 
@@ -319,6 +320,7 @@ class PostController extends AbstractController
     public function updateAction(
         #[Validate(validator: PostValidator::class)]
         Post $post,
+        #[Validate(validator: AttachmentPlainValidator::class)]
         array $newAttachments = [],
         array $keepAttachments = [],
         array $tags = []
@@ -336,7 +338,11 @@ class PostController extends AbstractController
         \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Mittwald\Typo3Forum\RichText\CharsetRequirement::class)->assertReady();
 
         foreach ($post->getAttachments()->toArray() as $existingAttachment) {
-            if (!in_array($existingAttachment->getUid(), $keepAttachments)) {
+            $imageKey = $existingAttachment->getInlineImageKey();
+            $keep = $imageKey !== ''
+                ? str_contains($post->getEditorText(), 'data-forum-image="' . $imageKey . '"')
+                : in_array($existingAttachment->getUid(), $keepAttachments, true);
+            if (!$keep) {
                 $post->removeAttachment($existingAttachment);
             }
         }
@@ -349,6 +355,7 @@ class PostController extends AbstractController
             }
         }
 
+        $this->attachmentService->bindInlineImages($post);
         $topic = $post->getTopic();
 
         if ($post->isFirstPost()) {
@@ -472,4 +479,42 @@ class PostController extends AbstractController
             ->withHeader('Content-Length', (string)$file->getSize())
             ->withBody($this->streamFactory->createStream($file->getContents()));
     }
+    /** Inline image delivery uses the same post ACL as attachment downloads. */
+    public function inlineImageAction(string $image, bool $thumbnail = false): ResponseInterface
+    {
+        $attachment = $this->attachmentRepository->findInlineImage($image);
+        $post = $attachment?->getPost();
+        if ($post === null) {
+            return $this->responseFactory->createResponse(404);
+        }
+        if (!$this->authenticationService->checkAuthorization($post, \Mittwald\Typo3Forum\Domain\Model\Forum\Access::TYPE_READ)) {
+            return $this->responseFactory->createResponse(403)->withHeader('Cache-Control', 'private, no-store');
+        }
+        $file = $attachment->getFileReference()?->getOriginalResource();
+        if ($file === null) {
+            return $this->responseFactory->createResponse(404);
+        }
+        if ($thumbnail) {
+            $original = $file->getOriginalFile();
+            $processingStorage = $original->getStorage()->getProcessingFolder($original)->getStorage();
+            \Mittwald\Typo3Forum\RichText\PrivateImageStorage::assertPrivate($processingStorage);
+            $file = $original->process(\TYPO3\CMS\Core\Resource\ProcessedFile::CONTEXT_IMAGECROPSCALEMASK, [
+                'width' => '800m', 'height' => '600m', 'fileExtension' => 'png',
+            ]);
+        }
+        $bytes = $file->getContents();
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            return $this->responseFactory->createResponse(415);
+        }
+        return $this->responseFactory->createResponse()
+            ->withHeader('Content-Type', $mime)
+            ->withHeader('Content-Disposition', 'inline; filename="' . addcslashes(str_replace(["\r", "\n"], '', $attachment->getName()), '"\\') . '"')
+            ->withHeader('Content-Security-Policy', "default-src 'none'; sandbox")
+            ->withHeader('X-Content-Type-Options', 'nosniff')
+            ->withHeader('Cache-Control', 'private, no-store')
+            ->withHeader('Content-Length', (string)strlen($bytes))
+            ->withBody($this->streamFactory->createStream($bytes));
+    }
+
 }

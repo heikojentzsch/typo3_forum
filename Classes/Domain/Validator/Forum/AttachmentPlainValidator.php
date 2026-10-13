@@ -26,6 +26,8 @@ namespace Mittwald\Typo3Forum\Domain\Validator\Forum;
 *                                                                      */
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Attachment;
+use Mittwald\Typo3Forum\RichText\ImageUpload;
+use Mittwald\Typo3Forum\RichText\PrivateImageStorage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Validation\Validator\AbstractValidator;
 
@@ -41,6 +43,7 @@ class AttachmentPlainValidator extends AbstractValidator
     public function isValid($value): void
     {
         $attachmentObj = GeneralUtility::makeInstance(Attachment::class);
+        $inlineCount = 0;
         foreach ($value as $attachment) {
             if ($attachment->getError() === UPLOAD_ERR_NO_FILE) {
                 continue;
@@ -63,6 +66,14 @@ class AttachmentPlainValidator extends AbstractValidator
                     continue;
                 }
                 $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($contents);
+                if (ImageUpload::reference($attachment->getClientFilename()) !== null) {
+                    if (++$inlineCount > 10) {
+                        throw new \RuntimeException('At most 10 images per submission.');
+                    }
+                    (new ImageUpload())->inspect($contents);
+                    GeneralUtility::makeInstance(PrivateImageStorage::class)->get();
+                }
+
                 if (!in_array($mime, $attachmentObj->getAllowedMimeTypes(), true)) {
                     $this->addError('The detected file type is not allowed.', 1371041777);
                 }

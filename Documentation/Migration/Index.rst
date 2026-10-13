@@ -182,6 +182,13 @@ from v12 code to v14 code is safe. A v12-to-v14 deployment still has to account
 for both intervening Core change sets and validate all third-party/project
 dependencies separately.
 
+Inline pictures additionally require the attachment ``inline_image_key`` column
+and index supplied by the additive schema update. Existing attachments keep an
+empty key; existing BBCode/external images are not downloaded or re-uploaded.
+Configure ``inlineImages.storageUid`` with private storage outside the web root
+before enabling uploads; see ``../Editors/Index.rst``. Include this storage in
+backup/restore procedures.
+
 Under TYPO3 14.3, first run additive schema updates so the two journal/lock
 tables exist, but do not run destructive schema cleanup that removes
 ``list_type``. ``DatabaseUpdatedPrerequisite`` performs blocking additive

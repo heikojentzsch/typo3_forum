@@ -14,6 +14,8 @@ Automated and installation checks
 * [ ] Confirm utf8mb4 connections/columns, routing, login, permissions and mail.
 * [ ] Review overridden templates: token-bearing POST forms replace action links.
 * [ ] Verify denied downloads and direct-file access for restricted attachments.
+* [ ] Configure private inline-image FAL storage outside the public web root,
+      apply the image-reference schema update, verify GD and run image-site-check.
 * [ ] Run optional MariaDB locking/concurrency integration test on a disposable DB.
 
 Migration rehearsal -- OPEN acceptance item
@@ -36,6 +38,11 @@ Real mobile devices and desktop
 * [ ] iOS Safari and Android Chrome: type, select, format, paste, undo and submit.
 * [ ] Soft keyboard, rotation, zoom and narrow viewport: toolbar and emoji popup
       remain reachable; only the emoji grid scrolls after repeated Show more.
+* [ ] Verify byte-identical original downloads, private 800 x 600 thumbnails,
+      gallery keyboard/swipe navigation, focus restoration and original-size view.
+* [ ] Select photos, paste/drop images, edit/remove/quote pictures and test
+      image-only posts, rejected formats, upload limits and session expiry.
+* [ ] Submit buttons lock and animate once; validation errors and Back remain usable.
 * [ ] Desktop keyboard navigation, focus visibility, emoji search and selection.
 * [ ] Upload attachments, edit/delete posts, quote links, new-window links, report
       workflows and subscription confirmation, including session expiry.
@@ -44,6 +51,8 @@ Backup and restore
 ------------------
 
 * [ ] Take a consistent pre-migration DB/files/configuration backup in maintenance.
+* [ ] Include the private inline-image directory and matching FAL references;
+      restored images must remain unavailable to unauthorized and anonymous users.
 * [ ] Restore that backup into an isolated environment and prove login, attachments
       and original content work. Record recovery time and responsible operator.
 * [ ] Rehearse rollback with matching extension version, schema, files and caches.

@@ -3,6 +3,7 @@
 namespace Mittwald\Typo3Forum\ViewHelpers\Format;
 
 use Mittwald\Typo3Forum\Domain\Model\Forum\Post;
+use Mittwald\Typo3Forum\RichText\InlineImageRenderer;
 use Mittwald\Typo3Forum\TextParser\TextParserService;
 
 /*                                                                    - *
@@ -92,12 +93,12 @@ class TextParserViewHelper extends AbstractViewHelper
     {
         $html = (new \Mittwald\Typo3Forum\RichText\Html())->sanitize($html);
         if (!str_contains($html, '<blockquote data-post="')) {
-            return $html;
+            return (new InlineImageRenderer())->render($html, $this->renderingContext, true);
         }
         $settings = $this->renderingContext->getVariableProvider()->get('settings');
         $pageUid = (int)($settings['pids']['Forum'] ?? 0);
         $label = \TYPO3\CMS\Extbase\Utility\LocalizationUtility::translate('quote.originalPost', 'Typo3Forum') ?? 'Original post';
-        return (new \Mittwald\Typo3Forum\RichText\QuoteRenderer())->render($html, function (int $uid) use ($pageUid): string {
+        $html = (new \Mittwald\Typo3Forum\RichText\QuoteRenderer())->render($html, function (int $uid) use ($pageUid): string {
             return (string)$this->renderingContext->getViewHelperInvoker()->invoke(
                 \TYPO3\CMS\Fluid\ViewHelpers\Uri\ActionViewHelper::class,
                 ['pageUid' => $pageUid, 'extensionName' => 'Typo3Forum', 'pluginName' => 'Forum',
@@ -106,5 +107,6 @@ class TextParserViewHelper extends AbstractViewHelper
                 static fn (): string => ''
             );
         }, $label);
+        return (new InlineImageRenderer())->render($html, $this->renderingContext, true);
     }
 }

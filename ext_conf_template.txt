@@ -16,3 +16,6 @@ notifications.includeTopicLink = 1
 
 # cat=Notifications/Content; type=boolean; label=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeUnsubscribeLink; description=LLL:EXT:typo3_forum/Resources/Private/Language/locallang.xlf:config.notifications.includeUnsubscribeLink.description
 notifications.includeUnsubscribeLink = 1
+
+# cat=Inline images; type=int+; label=Private image storage UID: Non-public, writable FAL storage. 0 uses the default storage only if it is non-public. Store local files outside the public web root.
+inlineImages.storageUid = 0

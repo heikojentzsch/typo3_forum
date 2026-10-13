@@ -91,6 +91,8 @@ CREATE TABLE tx_typo3forum_domain_model_forum_attachment (
   hidden tinyint(4) NOT NULL default '0',
   referenced_files int(11) NOT NULL default '0',
   name varchar(255) NOT NULL default '',
+  inline_image_key varchar(32) NOT NULL default '',
+  KEY inline_image_key (inline_image_key),
   PRIMARY KEY (uid),
   KEY parent (pid)
 );

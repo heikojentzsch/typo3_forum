@@ -9,7 +9,7 @@
 			<f:for each="{attachments}" as="attachment">
 				<li class="list-group-item list-group-item-action">
 					<div class="tx-typo3forum-attachment-row">
-						<f:if condition="{argumentName}">
+						<f:if condition="{argumentName} && !{attachment.inlineImageKey}">
 							<label class="d-flex" style="z-index: 500;" for="attachment-{attachment.uid}">
 								<div class="justify-content-center d-flex align-items-center">
 									<f:form.checkbox
@@ -22,7 +22,12 @@
 								</div>
 							</label>
 						</f:if>
-						<f:if condition="{settings.forum.post.showImagesInline}">
+						<f:if condition="{attachment.inlineImageKey}">
+                            <f:link.action controller="Post" pluginName="Forum" action="inlineImage" arguments="{image: attachment.inlineImageKey}" pageUid="{settings.pids.Forum}" pageType="43568276" class="forum-gallery-item forum-gallery-attachment" additionalAttributes="{data-forum-gallery: ''}">
+                                <img src="{f:uri.action(controller: 'Post', pluginName: 'Forum', action: 'inlineImage', arguments: {image: attachment.inlineImageKey, thumbnail: 1}, pageUid: settings.pids.Forum, pageType: 43568276)}" alt="{attachment.name}" loading="lazy" width="64" />
+                            </f:link.action>
+                        </f:if>
+						<f:if condition="{settings.forum.post.showImagesInline} && !{attachment.inlineImageKey}">
 							<div class="justify-content-center d-flex align-items-center">
 								<f:alias map="{mimeType: attachment.fileReference.originalResource.mimeType}">
 									<f:if condition="{mimeType} == 'image/jpeg' || {mimeType} == 'image/png' || {mimeType} == 'image/gif'">

@@ -46,6 +46,7 @@ final class Html
     {
         $html = $this->sanitize($html);
         $html = preg_replace('~</(?:p|div|li|blockquote|pre)>|<br\s*/?>~i', "\n", $html) ?? '';
+        $html = preg_replace('/<img\b[^>]*>/', '[Image]', $html) ?? $html;
         return trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 
@@ -79,6 +80,11 @@ final class Html
                 }
                 $attributes = ' href="' . self::escape($href) . '" target="_blank" rel="nofollow ugc noopener noreferrer"';
             } elseif ($tag === 'img') {
+                $imageKey = $node->getAttribute('data-forum-image');
+                if (preg_match('/^[a-f0-9]{32}$/D', $imageKey)) {
+                    $html .= '<img data-forum-image="' . $imageKey . '" alt="' . self::escape($node->getAttribute('alt')) . '">';
+                    continue;
+                }
                 $src = $node->getAttribute('src');
                 if (!self::url($src, true)) {
                     $html .= self::escape($node->getAttribute('alt'));

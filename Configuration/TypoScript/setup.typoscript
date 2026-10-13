@@ -32,7 +32,7 @@ plugin {
 			}
 
 			attachment {
-				allowedMimeTypes = image/gif,image/jpeg,image/png,application/pdf,application/xml,text/xml,text/plain
+				allowedMimeTypes = image/gif,image/jpeg,image/png,image/webp,application/pdf,application/xml,text/xml,text/plain
 				allowedSizeInByte = 4194304
 			}
 

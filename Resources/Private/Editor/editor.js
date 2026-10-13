@@ -1,3 +1,4 @@
+import { mountInlineImages } from './images.js';
 import { mountEmojiPicker } from './emojis.js';
 const base = new URL('.', import.meta.url);
 const scripts = new Map();
@@ -19,7 +20,7 @@ function script(url) {
         );
     return scripts.get(url);
 }
-async function create(host, html) {
+async function create(host, html, wrapper) {
     await script(new URL('tinymce/tinymce.min.js', base).href);
     const field = document.createElement('textarea');
     field.value = html;
@@ -35,18 +36,21 @@ async function create(host, html) {
         height: 320,
         resize: true,
         plugins: 'lists link codesample',
+        automatic_uploads: false,
+        paste_data_images: false,
+        setup: (editor) => mountInlineImages(editor, wrapper),
         link_default_target: '_blank',
         link_target_list: false,
         link_assume_external_targets: 'https',
         toolbar:
-            'undo redo | bold italic underline strikethrough | link bullist numlist blockquote codesample',
+            'undo redo | bold italic underline strikethrough | forumImages link bullist numlist blockquote codesample',
         toolbar_mode: 'sliding',
         formats: {
             underline: { inline: 'u', exact: true },
             strikethrough: { inline: 's', exact: true },
         },
         valid_elements:
-            'p,br,strong/b,em/i,u,s,ul,ol,li,blockquote[data-post],pre,code[class],a[href|rel|target],img[src|alt]',
+            'p,br,strong/b,em/i,u,s,ul,ol,li,blockquote[data-post],pre,code[class],a[href|rel|target],img[src|alt|data-forum-image]',
         convert_urls: false,
         entity_encoding: 'raw',
         content_style:
@@ -108,7 +112,7 @@ async function mount(wrapper) {
     textarea.readOnly = true;
     status.textContent = wrapper.dataset.loading;
     try {
-        editor = await create(host, textarea.value);
+        editor = await create(host, textarea.value, wrapper);
         editor.onChange(sync);
         textarea.hidden = true;
         status.textContent = wrapper.dataset.ready;

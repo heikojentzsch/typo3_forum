@@ -366,3 +366,7 @@ services:
 
   Mittwald\Typo3Forum\Utility\UserUtility:
     autowire: true
+
+  Mittwald\Typo3Forum\RichText\PrivateImageStorage:
+    autowire: true
+    public: true

@@ -318,7 +318,7 @@ final class FluidRenderingTest extends TestCase
             $file,
             $folder,
             self::matchesRegularExpression('/^[a-f0-9]{40}\.txt$/'),
-            \TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior::REPLACE
+            \TYPO3\CMS\Core\Resource\Enum\DuplicationBehavior::CANCEL
         )->willThrowException(new \RuntimeException('FAL boundary reached'));
         $factory = $this->createStub(\TYPO3\CMS\Core\Resource\StorageRepository::class);
         $factory->method('getDefaultStorage')->willReturn($storage);
